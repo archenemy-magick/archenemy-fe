@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/hhoburg/archenemy/frontend/app/root.tsx"],"sourcesContent":["import { Provider } from \"react-redux\";\nimport store from \"./store\";\n\nimport \"@mantine/core/styles.css\";\nimport \"@mantine/carousel/styles.css\";\nimport { createTheme, MantineProvider } from \"@mantine/core\";\n\nconst theme = createTheme({\n  // Define your theme here\n});\n\nexport default function App({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang=\"en\">\n      <head></head>\n      <body>\n        <Provider store={store}>{children}</Provider>\n      </body>\n    </html>\n  );\n}\n"],"names":[],"mappings":";;;;;AAAA;AACA;AAIA;;;;;;;AAEA,MAAM,QAAQ,IAAA,4NAAW,EAAC;AAE1B;AAEe,SAAS,IAAI,KAA2C;QAA3C,EAAE,QAAQ,EAAiC,GAA3C;IAC1B,qBACE,6LAAC;QAAK,MAAK;;0BACT,6LAAC;;;;;0BACD,6LAAC;0BACC,cAAA,6LAAC,wKAAQ;oBAAC,OAAO,mIAAK;8BAAG;;;;;;;;;;;;;;;;;AAIjC;KATwB","debugId":null}}]
-}
