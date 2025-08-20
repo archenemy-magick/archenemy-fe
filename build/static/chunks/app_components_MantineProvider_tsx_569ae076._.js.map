@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/hhoburg/archenemy/frontend/app/components/MantineProvider.tsx"],"sourcesContent":["\"use client\";\n\nimport { MantineProvider, createTheme } from \"@mantine/core\";\n\nconst theme = createTheme({\n  // Define your theme here\n});\n\nexport default function CustomMantineProvider({\n  children,\n}: {\n  children: React.ReactNode;\n}) {\n  return <MantineProvider theme={theme}>{children}</MantineProvider>;\n}\n"],"names":[],"mappings":";;;;;AAEA;AAAA;AAFA;;;AAIA,MAAM,QAAQ,IAAA,4NAAW,EAAC;AAE1B;AAEe,SAAS,sBAAsB,KAI7C;QAJ6C,EAC5C,QAAQ,EAGT,GAJ6C;IAK5C,qBAAO,6LAAC,6MAAe;QAAC,OAAO;kBAAQ;;;;;;AACzC;KANwB","debugId":null}}]
+}
