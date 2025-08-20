@@ -11,12 +11,20 @@ import {
   abandonScheme,
 } from "src/store/reducers";
 import { Carousel } from "@mantine/carousel";
+import type { RootState } from "~/store";
+import type { AppDispatch } from "~/store/configureStore";
 
 const Home = () => {
-  const dispatch = useDispatch();
-  const currentCard = useSelector((state) => state.cards.currentCard);
-  const previousCards = useSelector((state) => state.cards.previousCards);
-  const ongoingCards = useSelector((state) => state.cards.ongoingCards);
+  const dispatch = useDispatch<AppDispatch>();
+  const currentCard = useSelector(
+    (state: RootState) => state.cards.currentCard
+  );
+  const previousCards = useSelector(
+    (state: RootState) => state.cards.previousCards
+  );
+  const ongoingCards = useSelector(
+    (state: RootState) => state.cards.ongoingCards
+  );
 
   useEffect(() => {
     dispatch(fetchAllArchenemyCards());
@@ -29,7 +37,7 @@ const Home = () => {
   return (
     <Grid>
       <Grid.Col span={4}>
-        <Image src={currentCard.image_uris?.normal} />
+        <Image src={currentCard?.image_uris?.normal} />
         <Button mt="md" onClick={() => dispatch(chooseSingleCard())}>
           Play {previousCards.length > 0 ? "New" : "A"} Scheme
         </Button>
