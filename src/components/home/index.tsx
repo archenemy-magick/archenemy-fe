@@ -1,9 +1,9 @@
 "use client";
-// import { fetchSingleCard, test } from "~/store/actions/cards";
 // TODO: figure out absolute imports
-import CardCard from "../common/CardCard";
-import { Box, Button, Grid, Title, Stack } from "@mantine/core";
-import { useEffect } from "react";
+import { useDisclosure } from "@mantine/hooks";
+import CardCard from "../common/SchemeCard/SchemeCard";
+import { Box, Button, Grid, Title, Stack, Center, Modal } from "@mantine/core";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllArchenemyCards,
@@ -13,6 +13,7 @@ import {
 import { Carousel } from "@mantine/carousel";
 import type { RootState } from "~/store";
 import type { AppDispatch } from "~/store/configureStore";
+import { ScryfallCard } from "@scryfall/api-types";
 
 const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -31,50 +32,94 @@ const Home = () => {
     dispatch(fetchAllArchenemyCards());
   }, []);
 
-  useEffect(() => {
-    console.log("currentCard", currentCard);
-  }, [currentCard]);
+  const [opened, { open: openModal, close }] = useDisclosure(false);
+  const [selectedModalCard, setSelectedModalCard] =
+    useState<ScryfallCard.Scheme | null>(null);
+
+  const displayCardInModal = (card: ScryfallCard.Scheme) => {
+    setSelectedModalCard(card);
+    openModal();
+  };
 
   return (
     <Grid>
+      {/* TODO: make this a common component */}
+      <Modal
+        opened={opened}
+        onClose={close}
+        title={selectedModalCard?.name || "Card"}
+        size="lg"
+      >
+        {selectedModalCard && <CardCard card={selectedModalCard} />}
+      </Modal>
       <Grid.Col span={4}>
-        <CardCard imageUrl={currentCard?.image_uris?.normal} />
+        {currentCard && (
+          <CardCard onOpenModal={displayCardInModal} card={currentCard} />
+        )}
         <Button mt="md" onClick={() => dispatch(chooseSingleCard())}>
-          Play {previousCards.length > 0 ? "New" : "A"} Scheme
+          Play {previousCards.length > 0 || currentCard ? "New" : "A"} Scheme
         </Button>
       </Grid.Col>
       <Grid.Col span={8}>
         <Stack>
           <Box>
+            {/* TODO: make this a repeatable component */}
             <Title order={3}>Ongoing Schemes</Title>
-            {ongoingCards.map((card, index) => (
-              <CardCard
-                key={card.id}
-                imageUrl={card.image_uris?.normal}
-                buttonText="Abandon Scheme"
-                onButtonClick={() => dispatch(abandonScheme({ index }))}
-              />
-            ))}
+            <Carousel
+              slideSize="200px"
+              slideGap="md"
+              controlsOffset="sm"
+              controlSize={26}
+              withControls
+              withIndicators={false}
+              orientation="horizontal"
+              emblaOptions={{ dragFree: true }}
+              mih={200}
+            >
+              {ongoingCards.length > 0 ? (
+                ongoingCards.map((card, index) => (
+                  <Carousel.Slide key={card.id}>
+                    <CardCard
+                      buttonText="Abandon Scheme"
+                      onButtonClick={() => dispatch(abandonScheme({ index }))}
+                      onOpenModal={displayCardInModal}
+                      card={card}
+                    />
+                  </Carousel.Slide>
+                ))
+              ) : (
+                <Box style={{ width: "100%", height: "100%" }}>
+                  <Center>No ongoing schemes</Center>
+                </Box>
+              )}
+            </Carousel>
           </Box>
           <Box>
             <div>
               <Title order={3}>Previous Schemes</Title>
               <Carousel
                 slideSize="200px"
-                // height={200}
-                slideGap="none"
+                mih={200}
+                slideGap="md"
                 controlsOffset="sm"
                 controlSize={26}
                 withControls
                 withIndicators={false}
                 orientation="horizontal"
+                emblaOptions={{ dragFree: true }}
               >
-                {previousCards.map((card) => (
-                  <Carousel.Slide key={card.id}>
-                    <CardCard imageUrl={card.image_uris?.normal} />
-                    {/* <Image src={card.image_uris?.small} /> */}
-                  </Carousel.Slide>
-                ))}
+                {previousCards.length > 0 ? (
+                  previousCards.map((card) => (
+                    <Carousel.Slide key={card.id}>
+                      <CardCard card={card} onOpenModal={displayCardInModal} />
+                      {/* <Image src={card.image_uris?.small} /> */}
+                    </Carousel.Slide>
+                  ))
+                ) : (
+                  <Box style={{ width: "100%", height: "100%" }}>
+                    <Center>No previous schemes</Center>
+                  </Box>
+                )}
               </Carousel>
             </div>
           </Box>
