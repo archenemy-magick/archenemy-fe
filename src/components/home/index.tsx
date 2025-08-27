@@ -17,8 +17,6 @@ import type { AppDispatch } from "~/store/configureStore";
 const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
 
-  console.log("env", process.env.CARDS_API);
-
   const currentCard = useSelector(
     (state: RootState) => state.cards.currentCard
   );
