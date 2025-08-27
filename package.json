@@ -1,12 +1,13 @@
 {
-  "name": "",
+  "name": "archenemy-frontend",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "npx serve@latest ./build",
-    "lint": "eslint . --ext .ts,.tsx,.js,.jsx"
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "prepare": "husky"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -39,6 +40,7 @@
     "@types/react-dom": "^19.0.1",
     "eslint": "^9.34.0",
     "eslint-config-next": "^15.5.2",
+    "husky": "^9.1.7",
     "postcss": "^8.5.6",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
