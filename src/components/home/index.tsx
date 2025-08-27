@@ -2,7 +2,7 @@
 // import { fetchSingleCard, test } from "~/store/actions/cards";
 // TODO: figure out absolute imports
 import CardCard from "../common/CardCard";
-import { Box, Button, Grid, Image, Title, Stack } from "@mantine/core";
+import { Box, Button, Grid, Title, Stack } from "@mantine/core";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -16,6 +16,10 @@ import type { AppDispatch } from "~/store/configureStore";
 
 const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
+
+  const state = useSelector((state: RootState) => state);
+  console.log("state", state);
+
   const currentCard = useSelector(
     (state: RootState) => state.cards.currentCard
   );
@@ -37,7 +41,7 @@ const Home = () => {
   return (
     <Grid>
       <Grid.Col span={4}>
-        <Image src={currentCard?.image_uris?.normal} />
+        <CardCard imageUrl={currentCard?.image_uris?.normal} />
         <Button mt="md" onClick={() => dispatch(chooseSingleCard())}>
           Play {previousCards.length > 0 ? "New" : "A"} Scheme
         </Button>
