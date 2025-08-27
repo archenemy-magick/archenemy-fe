@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "npx serve@latest ./build",
+<<<<<<< Updated upstream
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx"
+=======
+    "lint": "next lint"
+>>>>>>> Stashed changes
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -38,7 +42,10 @@
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
     "eslint": "^9.34.0",
+<<<<<<< Updated upstream
     "eslint-config-next": "^15.5.2",
+=======
+>>>>>>> Stashed changes
     "postcss": "^8.5.6",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",

@@ -3,7 +3,14 @@ import CardApi from "src/http/cards";
 import type { RootState } from "../configureStore";
 import { ScryfallCard } from "@scryfall/api-types";
 
-const initialCardsState: RootState = {
+type InitialCardsState = {
+  currentCard: ScryfallCard.Scheme | null;
+  cardPool: ScryfallCard.Scheme[];
+  ongoingCards: ScryfallCard.Scheme[];
+  previousCards: ScryfallCard.Scheme[];
+};
+
+const initialCardsState: InitialCardsState = {
   currentCard: {} as ScryfallCard.Scheme,
   cardPool: [],
   ongoingCards: [],
