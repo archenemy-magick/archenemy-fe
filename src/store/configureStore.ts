@@ -10,11 +10,10 @@ const store = configureStore({
 });
 
 export type RootState = {
-  cards: {
-    currentCard: ScryfallCard.Any | null;
-    previousCards: ScryfallCard.Any[];
-    ongoingCards: ScryfallCard.Any[];
-  };
+  currentCard: ScryfallCard.Scheme;
+  previousCards: ScryfallCard.Scheme[];
+  ongoingCards: ScryfallCard.Scheme[];
+  cardPool: ScryfallCard.Scheme[];
 };
 export type AppDispatch = typeof store.dispatch;
 

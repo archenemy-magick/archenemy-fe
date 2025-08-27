@@ -16,6 +16,8 @@ import type { AppDispatch } from "~/store/configureStore";
 
 const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const state = useSelector((state: RootState) => state);
+  console.log("state", state);
   const currentCard = useSelector(
     (state: RootState) => state.cards.currentCard
   );
@@ -37,16 +39,17 @@ const Home = () => {
   return (
     <Grid>
       <Grid.Col span={4}>
-        <Image src={currentCard?.image_uris?.normal} />
+        {/* <Image src={currentCard?.image_uris?.normal} /> */}
+        <CardCard imageUrl={currentCard?.image_uris?.normal} />
         <Button mt="md" onClick={() => dispatch(chooseSingleCard())}>
-          Play {previousCards.length > 0 ? "New" : "A"} Scheme
+          Play {previousCards?.length > 0 ? "New" : "A"} Scheme
         </Button>
       </Grid.Col>
       <Grid.Col span={8}>
         <Stack>
           <Box>
             <Title order={3}>Ongoing Schemes</Title>
-            {ongoingCards.map((card, index) => (
+            {ongoingCards?.map((card, index) => (
               <CardCard
                 key={card.id}
                 imageUrl={card.image_uris?.normal}
@@ -68,7 +71,7 @@ const Home = () => {
                 withIndicators={false}
                 orientation="horizontal"
               >
-                {previousCards.map((card) => (
+                {previousCards?.map((card) => (
                   <Carousel.Slide key={card.id}>
                     <CardCard imageUrl={card.image_uris?.normal} />
                     {/* <Image src={card.image_uris?.small} /> */}

@@ -1,8 +1,10 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import CardApi from "src/http/cards";
+import type { RootState } from "../configureStore";
+import { ScryfallCard } from "@scryfall/api-types";
 
-const initialState = {
-  currentCard: {},
+const initialCardsState: RootState = {
+  currentCard: {} as ScryfallCard.Scheme,
   cardPool: [],
   ongoingCards: [],
   previousCards: [],
@@ -22,27 +24,32 @@ export const fetchAllArchenemyCards = createAsyncThunk(
       })
 );
 
+type CardsState = typeof initialCardsState;
+
 const cardSliceReducer = {
-  chooseSingleCard(state) {
+  chooseSingleCard(state: CardsState) {
     console.log("cardpool length", state.cardPool.length);
 
     const randomCard = state.cardPool.splice(
       Math.floor(state.cardPool.length * Math.random()),
       1
     );
-    // console.log("state.cardPool", state.cardPool);
 
-    // console.log("randomCard", randomCard);
-
-    if (state.currentCard.type_line.toLowerCase() === "ongoing scheme") {
+    if (
+      (state.currentCard as any)?.type_line?.toLowerCase() ===
+        "ongoing scheme" &&
+      state.currentCard
+    ) {
       state.ongoingCards.push(state.currentCard);
     } else {
-      state.previousCards.push(state.currentCard);
+      if (state.currentCard) {
+        state.previousCards.push(state.currentCard);
+      }
     }
 
     state.currentCard = randomCard[0];
   },
-  abandonScheme(state, action) {
+  abandonScheme(state: CardsState, action: { payload: { index: number } }) {
     const index = action.payload.index;
     console.log("index", index);
 
@@ -56,7 +63,7 @@ const cardSliceReducer = {
 
 export const cardsSlice = createSlice({
   name: "cards",
-  initialState,
+  initialState: initialCardsState as CardsState,
   reducers: cardSliceReducer,
   extraReducers: (builder) => {
     builder.addCase(fetchAllArchenemyCards.fulfilled, (state, action) => {
