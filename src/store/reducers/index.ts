@@ -1,6 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import CardApi from "src/http/cards";
-import type { RootState } from "../configureStore";
 import { ScryfallCard } from "@scryfall/api-types";
 
 type InitialCardsState = {
@@ -11,7 +10,7 @@ type InitialCardsState = {
 };
 
 const initialCardsState: InitialCardsState = {
-  currentCard: {} as ScryfallCard.Scheme,
+  currentCard: null,
   cardPool: [],
   ongoingCards: [],
   previousCards: [],
