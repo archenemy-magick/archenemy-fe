@@ -14,7 +14,7 @@ export default class CardApi {
   // constructor() {}
   static fetchAllArchenemyCards = async () =>
     await instance
-      .post("/archenemy")
+      .post("/cards/archenemy")
       .then(({ data }) => data)
       .catch((e) => console.log("e", e));
 }
