@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: process.env.CARDS_API,
+  baseURL: process.env.NEXT_PUBLIC_CARDS_API,
   // baseURL: "https://api.scryfall.com",
   headers: {
     // "User-Agent": "ArchenemySelector/0.1",
