@@ -73,8 +73,6 @@ export const cardsSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(fetchAllArchenemyCards.fulfilled, (state, action) => {
       // TODO: type the response and stuff
-      console.log("payload", action.payload);
-
       state.cardPool = action.payload.data;
 
       state.currentCard = action.payload.data[0];
