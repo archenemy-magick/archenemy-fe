@@ -36,8 +36,7 @@ const cardSliceReducer = {
     );
 
     if (
-      (state.currentCard as any)?.type_line?.toLowerCase() ===
-        "ongoing scheme" &&
+      state.currentCard?.type_line?.toLowerCase() === "ongoing scheme" &&
       state.currentCard
     ) {
       state.ongoingCards.push(state.currentCard);
