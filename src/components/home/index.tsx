@@ -1,7 +1,7 @@
 "use client";
 // TODO: figure out absolute imports
 import { useDisclosure } from "@mantine/hooks";
-import CardCard from "../common/SchemeCard/SchemeCard";
+import CardCard from "../common/SchemeCard";
 import { Box, Button, Grid, Title, Stack, Center, Modal } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
