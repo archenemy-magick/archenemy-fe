@@ -34,8 +34,6 @@ type CardsState = typeof initialCardsState;
 
 const cardSliceReducer = {
   chooseSingleCard(state: CardsState) {
-    console.log("cardpool length", state.cardPool.length);
-
     const randomCard = state.cardPool.splice(
       Math.floor(state.cardPool.length * Math.random()),
       1
