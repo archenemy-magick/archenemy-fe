@@ -19,15 +19,18 @@ import DeckSelectorModal from "~/components/DeckSelectorModal";
 const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
 
-  // const [hasSelectedDeck, setHasSelectedDeck] = useState(false);
+  // TODO: use this boolean to enable the 'start game' button when there are options for more than one deck
+  const [hasSelectedDeck, setHasSelectedDeck] = useState(false);
   const [hasStartedGame, setHasStartedGame] = useState(false);
 
-  // const onSelectDeck = () => {
-  //   setHasSelectedDeck(true);
-  // };
+  const onSelectDeck = () => {
+    setHasSelectedDeck(true);
+    setHasStartedGame(true);
+  };
 
   const [deckModalOpened, { open: openDeckModal, close: closeDeckModal }] =
     useDisclosure(true);
+
   const onStartGame = () => {
     setHasStartedGame(true);
   };
@@ -62,7 +65,11 @@ const Home = () => {
   return (
     <Grid>
       {/* TODO: make this a common component */}
-      <DeckSelectorModal open={deckModalOpened} onClose={closeDeckModal} />
+      <DeckSelectorModal
+        open={deckModalOpened && !hasStartedGame}
+        onClose={closeDeckModal}
+        onSelectDeck={onSelectDeck}
+      />
       <Modal
         opened={cardModalOpened}
         onClose={closeCardModal}

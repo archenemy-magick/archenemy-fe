@@ -73,7 +73,10 @@ export const cardsSlice = createSlice({
       // TODO: type the response and stuff
       state.cardPool = action.payload.data;
 
-      state.currentCard = action.payload.data[0];
+      state.currentCard =
+        action.payload.data[
+          Math.floor(Math.random() * action.payload.data.length)
+        ];
     });
   },
 });
