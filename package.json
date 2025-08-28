@@ -20,6 +20,7 @@
     "@mui/material": "^6.4.7",
     "@reduxjs/toolkit": "^2.6.1",
     "@scryfall/api-types": "^1.0.0-alpha.4",
+    "@tabler/icons-react": "^3.34.1",
     "axios": "^1.8.2",
     "embla-carousel": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
