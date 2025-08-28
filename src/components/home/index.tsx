@@ -14,9 +14,23 @@ import { Carousel } from "@mantine/carousel";
 import type { RootState } from "~/store";
 import type { AppDispatch } from "~/store/configureStore";
 import { ScryfallCard } from "@scryfall/api-types";
+import DeckSelectorModal from "~/components/DeckSelectorModal";
 
 const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
+
+  // const [hasSelectedDeck, setHasSelectedDeck] = useState(false);
+  const [hasStartedGame, setHasStartedGame] = useState(false);
+
+  // const onSelectDeck = () => {
+  //   setHasSelectedDeck(true);
+  // };
+
+  const [deckModalOpened, { open: openDeckModal, close: closeDeckModal }] =
+    useDisclosure(true);
+  const onStartGame = () => {
+    setHasStartedGame(true);
+  };
 
   const currentCard = useSelector(
     (state: RootState) => state.cards.currentCard
@@ -29,24 +43,29 @@ const Home = () => {
   );
 
   useEffect(() => {
-    dispatch(fetchAllArchenemyCards());
-  }, []);
+    if (hasStartedGame) {
+      // TODO: in the future, unless they choose the default deck, we can display only their deck
+      dispatch(fetchAllArchenemyCards());
+    }
+  }, [dispatch, hasStartedGame]);
 
-  const [opened, { open: openModal, close }] = useDisclosure(false);
+  const [cardModalOpened, { open: openCardModal, close: closeCardModal }] =
+    useDisclosure(false);
   const [selectedModalCard, setSelectedModalCard] =
     useState<ScryfallCard.Scheme | null>(null);
 
   const displayCardInModal = (card: ScryfallCard.Scheme) => {
     setSelectedModalCard(card);
-    openModal();
+    openCardModal();
   };
 
   return (
     <Grid>
       {/* TODO: make this a common component */}
+      <DeckSelectorModal open={deckModalOpened} onClose={closeDeckModal} />
       <Modal
-        opened={opened}
-        onClose={close}
+        opened={cardModalOpened}
+        onClose={closeCardModal}
         title={selectedModalCard?.name || "Card"}
         size="lg"
       >
