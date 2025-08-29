@@ -9,7 +9,8 @@
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "prepare": "husky",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "ts": "tsc --noEmit --incremental --preserveWatchOutput --pretty"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
