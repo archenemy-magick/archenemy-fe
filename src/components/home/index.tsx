@@ -15,6 +15,7 @@ import type { RootState } from "~/store";
 import type { AppDispatch } from "~/store/configureStore";
 import { ScryfallCard } from "@scryfall/api-types";
 import DeckSelectorModal from "~/components/DeckSelectorModal";
+import CardSlot from "../common/CardSlot";
 
 const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -78,32 +79,49 @@ const Home = () => {
       >
         {selectedModalCard && <CardCard card={selectedModalCard} />}
       </Modal>
-      <Grid.Col span={4}>
-        {currentCard && (
-          <CardCard onOpenModal={displayCardInModal} card={currentCard} />
-        )}
-        <Button mt="md" onClick={() => dispatch(chooseSingleCard())}>
-          Play {previousCards.length > 0 || currentCard ? "New" : "A"} Scheme
-        </Button>
+      <Grid.Col span={4} mt="md">
+        <Box>
+          <Title order={3} ml="md">
+            Current Scheme
+          </Title>
+
+          <Center>
+            <Stack gap="xs">
+              <CardSlot card={currentCard} emptyMessage="Play a Scheme!" />
+              <Button mt="md" onClick={() => dispatch(chooseSingleCard())}>
+                Play {previousCards.length > 0 || currentCard ? "New" : "A"}{" "}
+                Scheme
+              </Button>
+            </Stack>
+          </Center>
+        </Box>
       </Grid.Col>
-      <Grid.Col span={8}>
+      <Grid.Col span={8} mt="md">
         <Stack>
           <Box>
             {/* TODO: make this a repeatable component */}
             <Title order={3}>Ongoing Schemes</Title>
-            <Carousel
-              slideSize="200px"
-              slideGap="md"
-              controlsOffset="sm"
-              controlSize={26}
-              withControls
-              withIndicators={false}
-              orientation="horizontal"
-              emblaOptions={{ dragFree: true }}
-              mih={200}
-            >
-              {ongoingCards.length > 0 ? (
-                ongoingCards.map((card, index) => (
+            {ongoingCards.length === 0 ? (
+              <Box
+                style={{
+                  minHeight: 200,
+                }}
+              >
+                <Center>No ongoing schemes</Center>
+              </Box>
+            ) : (
+              <Carousel
+                slideSize="200px"
+                slideGap="md"
+                controlsOffset="sm"
+                controlSize={26}
+                withControls
+                withIndicators={false}
+                orientation="horizontal"
+                emblaOptions={{ dragFree: true }}
+                mih={200}
+              >
+                {ongoingCards.map((card, index) => (
                   <Carousel.Slide key={card.id}>
                     <CardCard
                       buttonText="Abandon Scheme"
@@ -112,13 +130,9 @@ const Home = () => {
                       card={card}
                     />
                   </Carousel.Slide>
-                ))
-              ) : (
-                <Box style={{ width: "100%", height: "100%" }}>
-                  <Center>No ongoing schemes</Center>
-                </Box>
-              )}
-            </Carousel>
+                ))}
+              </Carousel>
+            )}
           </Box>
           <Box>
             <div>

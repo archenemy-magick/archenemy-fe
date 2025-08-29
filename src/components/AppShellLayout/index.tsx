@@ -34,7 +34,7 @@ const AppShellLayout = ({ children }: { children: React.ReactNode }) => {
       }}
       padding={0}
     >
-      <AppShell.Header bd="red">
+      <AppShell.Header bd="red" withBorder>
         <Header
           opened={opened}
           toggleMobileMenuOpen={toggleMobileMenuOpen}
