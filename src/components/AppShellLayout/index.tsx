@@ -11,18 +11,23 @@ import Header from "../Header";
 import { useDisclosure } from "@mantine/hooks";
 import classes from "./MobileNavbar.module.css";
 import LinkButton from "../common/LinkButton";
+import { useEffect, useState } from "react";
 
 const AppShellLayout = ({ children }: { children: React.ReactNode }) => {
   const [opened, { toggle: toggleMobileMenuOpen }] = useDisclosure();
   const { setColorScheme } = useMantineColorScheme({ keepTransitions: true });
   const computedColorScheme = useComputedColorScheme("light");
+  const [backgroundColor, setBackgroundColor] = useState("#171717");
+
+  console.log("computedColorScheme", computedColorScheme);
 
   const handleToggleColorScheme = () => {
     setColorScheme(computedColorScheme === "dark" ? "light" : "dark");
   };
 
-  const backgroundColor =
-    computedColorScheme === "dark" ? "#171717" : "#ffffff";
+  useEffect(() => {
+    setBackgroundColor(computedColorScheme === "dark" ? "#171717" : "#ffffff");
+  }, [computedColorScheme]);
 
   return (
     <AppShell
