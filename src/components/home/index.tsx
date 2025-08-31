@@ -88,7 +88,11 @@ const Home = () => {
           <Center>
             <Stack gap="xs">
               <CardSlot card={currentCard} emptyMessage="Play a Scheme!" />
-              <Button mt="md" onClick={() => dispatch(chooseSingleCard())}>
+              <Button
+                mt="md"
+                onClick={() => dispatch(chooseSingleCard())}
+                color="blue"
+              >
                 Play {previousCards.length > 0 || currentCard ? "New" : "A"}{" "}
                 Scheme
               </Button>
@@ -99,16 +103,35 @@ const Home = () => {
       <Grid.Col span={8} mt="md">
         <Stack>
           <Box>
-            {/* TODO: make this a repeatable component */}
+            <Title order={3}>Previous Schemes</Title>
+            {previousCards.length === 0 ? (
+              <Center style={{ minHeight: 630 }}>No previous schemes</Center>
+            ) : (
+              <Carousel
+                slideSize="200px"
+                mih={200}
+                slideGap="md"
+                controlsOffset="sm"
+                controlSize={26}
+                withControls
+                withIndicators={false}
+                orientation="horizontal"
+                emblaOptions={{ dragFree: true }}
+              >
+                {previousCards.map((card) => (
+                  <Carousel.Slide key={card.id}>
+                    <CardCard card={card} onOpenModal={displayCardInModal} />
+                    {/* <Image src={card.image_uris?.small} /> */}
+                  </Carousel.Slide>
+                ))}
+              </Carousel>
+            )}
+          </Box>
+          <Box>
+            {/* TODO: make this a reusable component */}
             <Title order={3}>Ongoing Schemes</Title>
             {ongoingCards.length === 0 ? (
-              <Box
-                style={{
-                  minHeight: 200,
-                }}
-              >
-                <Center>No ongoing schemes</Center>
-              </Box>
+              <Center style={{ minHeight: 520 }}>No ongoing schemes</Center>
             ) : (
               <Carousel
                 slideSize="200px"
@@ -120,6 +143,7 @@ const Home = () => {
                 orientation="horizontal"
                 emblaOptions={{ dragFree: true }}
                 mih={200}
+                mt="md"
               >
                 {ongoingCards.map((card, index) => (
                   <Carousel.Slide key={card.id}>
@@ -133,35 +157,6 @@ const Home = () => {
                 ))}
               </Carousel>
             )}
-          </Box>
-          <Box>
-            <div>
-              <Title order={3}>Previous Schemes</Title>
-              <Carousel
-                slideSize="200px"
-                mih={200}
-                slideGap="md"
-                controlsOffset="sm"
-                controlSize={26}
-                withControls
-                withIndicators={false}
-                orientation="horizontal"
-                emblaOptions={{ dragFree: true }}
-              >
-                {previousCards.length > 0 ? (
-                  previousCards.map((card) => (
-                    <Carousel.Slide key={card.id}>
-                      <CardCard card={card} onOpenModal={displayCardInModal} />
-                      {/* <Image src={card.image_uris?.small} /> */}
-                    </Carousel.Slide>
-                  ))
-                ) : (
-                  <Box style={{ width: "100%", height: "100%" }}>
-                    <Center>No previous schemes</Center>
-                  </Box>
-                )}
-              </Carousel>
-            </div>
           </Box>
         </Stack>
       </Grid.Col>

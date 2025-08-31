@@ -20,13 +20,18 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
   }
   const { name, image_uris } = card;
   return (
-    <Card style={{ width: 360, minHeight: 300 }}>
+    <Card style={{ width: 300, minHeight: 300 }}>
       <Card.Section
         onClick={() => onOpenModal && onOpenModal(card)}
         style={{ cursor: onOpenModal ? "pointer" : "default" }}
       >
         {image_uris ? (
-          <Image src={image_uris?.normal} alt={name} style={{ height: 520 }} />
+          <Image
+            src={image_uris?.normal}
+            alt={name}
+            style={{ height: 400 }}
+            fit="contain"
+          />
         ) : (
           <Box
             style={{
@@ -42,7 +47,13 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
         )}
       </Card.Section>
       {buttonText && onButtonClick && (
-        <Button size="small" mt="md" fullWidth onClick={onButtonClick}>
+        <Button
+          size="small"
+          mt="md"
+          variant="outline"
+          fullWidth
+          onClick={onButtonClick}
+        >
           {buttonText}
         </Button>
       )}
