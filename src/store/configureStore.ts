@@ -1,4 +1,9 @@
-import { cardsSlice } from "./reducers";
+import {
+  cardsSlice,
+  gameSlice,
+  InitialCardsState,
+  InitialGameState,
+} from "./reducers";
 
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import type { ScryfallCard } from "@scryfall/api-types";
@@ -25,18 +30,37 @@ const storage =
     ? createWebStorage("local")
     : createNoopStorage();
 
-const persistConfig = {
+const persistRootConfig = {
+  key: "root",
+  storage,
+};
+
+const persistCardsConfig = {
   key: "cards",
   storage,
 };
 
-const persistedCardReducer = persistReducer(persistConfig, cardsSlice.reducer);
+const persistGameConfig = {
+  key: "game",
+  storage,
+};
+
+const persistedCardReducer = persistReducer(
+  persistCardsConfig,
+  cardsSlice.reducer
+);
+
+const persistedGameReducer = persistReducer(
+  persistGameConfig,
+  gameSlice.reducer
+);
 
 const reducers = combineReducers({
   cards: persistedCardReducer,
+  game: persistedGameReducer,
 });
 
-const persistedReducer = persistReducer(persistConfig, reducers);
+const persistedReducer = persistReducer(persistRootConfig, reducers);
 
 export const store = configureStore({
   reducer: persistedReducer,
@@ -52,10 +76,7 @@ export const store = configureStore({
 export const persistor = persistStore(store);
 
 export type RootState = {
-  cards: {
-    currentCard: ScryfallCard.Scheme | null;
-    previousCards: ScryfallCard.Scheme[];
-    ongoingCards: ScryfallCard.Scheme[];
-  };
+  cards: InitialCardsState;
+  game: InitialGameState;
 };
 export type AppDispatch = typeof store.dispatch;

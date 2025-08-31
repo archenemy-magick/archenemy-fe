@@ -2,13 +2,25 @@
 // TODO: figure out absolute imports
 import { useDisclosure } from "@mantine/hooks";
 import CardCard from "../common/SchemeCard";
-import { Box, Button, Grid, Title, Stack, Center, Modal } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Grid,
+  Title,
+  Stack,
+  Center,
+  Modal,
+  Group,
+} from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllArchenemyCards,
   chooseSingleCard,
   abandonScheme,
+  startGame,
+  selectDeck,
+  endGame,
 } from "src/store/reducers";
 import { Carousel } from "@mantine/carousel";
 import type { RootState } from "~/store";
@@ -20,38 +32,29 @@ import CardSlot from "../common/CardSlot";
 const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
 
-  // TODO: use this boolean to enable the 'start game' button when there are options for more than one deck
-  const [hasSelectedDeck, setHasSelectedDeck] = useState(false);
-  const [hasStartedGame, setHasStartedGame] = useState(false);
-
   const onSelectDeck = () => {
-    setHasSelectedDeck(true);
-    setHasStartedGame(true);
+    // TODO: this will be where we select the deck, save and start the game, fetch cards, etc.
+    dispatch(selectDeck());
+    dispatch(startGame());
+    closeDeckModal();
   };
 
   const [deckModalOpened, { open: openDeckModal, close: closeDeckModal }] =
     useDisclosure(true);
 
-  const onStartGame = () => {
-    setHasStartedGame(true);
-  };
-
-  const currentCard = useSelector(
-    (state: RootState) => state.cards.currentCard
+  const { currentCard, previousCards, ongoingCards } = useSelector(
+    (state: RootState) => state.cards
   );
-  const previousCards = useSelector(
-    (state: RootState) => state.cards.previousCards
-  );
-  const ongoingCards = useSelector(
-    (state: RootState) => state.cards.ongoingCards
+  const { gameStarted, deckSelected, gameEnded } = useSelector(
+    (state: RootState) => state.game
   );
 
   useEffect(() => {
-    if (hasStartedGame) {
+    if (gameStarted) {
       // TODO: in the future, unless they choose the default deck, we can display only their deck
       dispatch(fetchAllArchenemyCards());
     }
-  }, [dispatch, hasStartedGame]);
+  }, [dispatch, gameStarted]);
 
   const [cardModalOpened, { open: openCardModal, close: closeCardModal }] =
     useDisclosure(false);
@@ -67,7 +70,7 @@ const Home = () => {
     <Grid>
       {/* TODO: make this a common component */}
       <DeckSelectorModal
-        open={deckModalOpened && !hasStartedGame}
+        open={!gameStarted}
         onClose={closeDeckModal}
         onSelectDeck={onSelectDeck}
       />
@@ -80,32 +83,39 @@ const Home = () => {
         {selectedModalCard && <CardCard card={selectedModalCard} />}
       </Modal>
       <Grid.Col span={4} mt="md">
-        <Box>
-          <Title order={3} ml="md">
-            Current Scheme
-          </Title>
+        <Group justify="" style={{ height: "100vh" }}>
+          <Box>
+            <Title order={3} ml="md">
+              Current Scheme
+            </Title>
 
-          <Center>
-            <Stack gap="xs">
-              <CardSlot card={currentCard} emptyMessage="Play a Scheme!" />
-              <Button
-                mt="md"
-                onClick={() => dispatch(chooseSingleCard())}
-                color="blue"
-              >
-                Play {previousCards.length > 0 || currentCard ? "New" : "A"}{" "}
-                Scheme
-              </Button>
-            </Stack>
-          </Center>
-        </Box>
+            <Center>
+              <Stack gap="xs">
+                <CardSlot card={currentCard} emptyMessage="Play a Scheme!" />
+                <Button
+                  mt="md"
+                  onClick={() => dispatch(chooseSingleCard())}
+                  color="blue"
+                >
+                  Play {previousCards.length > 0 || currentCard ? "New" : "A"}{" "}
+                  Scheme
+                </Button>
+              </Stack>
+            </Center>
+          </Box>
+          <Box>
+            <Button color="green" onClick={() => dispatch(endGame())}>
+              End Game
+            </Button>
+          </Box>
+        </Group>
       </Grid.Col>
       <Grid.Col span={8} mt="md">
         <Stack>
           <Box>
             <Title order={3}>Previous Schemes</Title>
             {previousCards.length === 0 ? (
-              <Center style={{ minHeight: 630 }}>No previous schemes</Center>
+              <Center style={{ minHeight: 380 }}>No previous schemes</Center>
             ) : (
               <Carousel
                 slideSize="200px"
@@ -117,6 +127,7 @@ const Home = () => {
                 withIndicators={false}
                 orientation="horizontal"
                 emblaOptions={{ dragFree: true }}
+                mt="md"
               >
                 {previousCards.map((card) => (
                   <Carousel.Slide key={card.id}>
