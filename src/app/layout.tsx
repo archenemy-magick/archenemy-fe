@@ -1,10 +1,11 @@
 "use client";
 import { Provider } from "react-redux";
-import store from "../store";
+import { store, persistor } from "../store";
 
 import "@mantine/core/styles.css";
 import "@mantine/carousel/styles.css";
 import CustomMantineProvider from "../components/MantineProvider";
+import { PersistGate } from "redux-persist/lib/integration/react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,7 +13,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <head></head>
       <body>
         <CustomMantineProvider>
-          <Provider store={store}>{children}</Provider>
+          <PersistGate loading={null} persistor={persistor}>
+            <Provider store={store}>{children}</Provider>
+          </PersistGate>
         </CustomMantineProvider>
       </body>
     </html>
