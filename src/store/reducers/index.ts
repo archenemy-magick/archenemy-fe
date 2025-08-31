@@ -9,7 +9,7 @@ type InitialCardsState = {
   previousCards: ScryfallCard.Scheme[];
 };
 
-const initialCardsState: InitialCardsState = {
+export const initialCardsState: InitialCardsState = {
   currentCard: null,
   cardPool: [],
   ongoingCards: [],
