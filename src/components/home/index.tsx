@@ -43,7 +43,7 @@ const Home = () => {
     useDisclosure(true);
 
   const { currentCard, previousCards, ongoingCards } = useSelector(
-    (state: RootState) => state.cards
+    (state: RootState) => state.game.cards
   );
   const { gameStarted, deckSelected, gameEnded } = useSelector(
     (state: RootState) => state.game
@@ -83,7 +83,7 @@ const Home = () => {
         {selectedModalCard && <CardCard card={selectedModalCard} />}
       </Modal>
       <Grid.Col span={4} mt="md">
-        <Group justify="" style={{ height: "100vh" }}>
+        <Stack justify="space-between" style={{ height: "90vh" }}>
           <Box>
             <Title order={3} ml="md">
               Current Scheme
@@ -108,7 +108,7 @@ const Home = () => {
               End Game
             </Button>
           </Box>
-        </Group>
+        </Stack>
       </Grid.Col>
       <Grid.Col span={8} mt="md">
         <Stack>

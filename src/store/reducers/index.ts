@@ -1,10 +1,11 @@
 export {
-  cardsSlice,
+  gameSlice,
+  endGame,
+  selectDeck,
+  startGame,
   abandonScheme,
   chooseSingleCard,
   fetchAllArchenemyCards,
-} from "./cardsReducer";
-export type { InitialCardsState } from "./cardsReducer";
-
-export { gameSlice, endGame, selectDeck, startGame } from "./gameReducer";
+} from "./gameReducer";
 export type { InitialGameState } from "./gameReducer";
+export type { InitialCardsState } from "./gameReducer";
