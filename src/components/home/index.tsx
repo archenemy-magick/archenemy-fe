@@ -11,6 +11,8 @@ import {
   Center,
   Modal,
   Group,
+  Image,
+  lighten,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -80,40 +82,78 @@ const Home = () => {
         title={selectedModalCard?.name || "Card"}
         size="lg"
       >
-        {selectedModalCard && <CardCard card={selectedModalCard} />}
+        {selectedModalCard && (
+          <Image
+            src={selectedModalCard.image_uris?.large}
+            alt={selectedModalCard.name}
+          />
+        )}
       </Modal>
-      <Grid.Col span={4} mt="md">
-        <Stack justify="space-between" style={{ height: "90vh" }}>
-          <Box>
-            <Title order={3} ml="md">
-              Current Scheme
-            </Title>
+      <Grid.Col
+        span={{
+          base: 12,
+          md: 4,
+        }}
+        mt="md"
+      >
+        <Box
+          style={{
+            border: "1px solid #eee",
+            borderRadius: "4px",
+            backgroundColor: lighten("var(--mantine-color-gray-8)", 0.1),
+          }}
+        >
+          <Stack justify="space-between" style={{ height: "100%" }} gap="xl">
+            <Box>
+              <Title order={3} m="md">
+                Current Scheme
+              </Title>
 
-            <Center>
-              <Stack gap="xs">
-                <CardSlot card={currentCard} emptyMessage="Play a Scheme!" />
-                <Button
-                  mt="md"
-                  onClick={() => dispatch(chooseSingleCard())}
-                  color="blue"
-                >
-                  Play {previousCards.length > 0 || currentCard ? "New" : "A"}{" "}
-                  Scheme
-                </Button>
-              </Stack>
-            </Center>
-          </Box>
-          <Box>
-            <Button color="green" onClick={() => dispatch(endGame())}>
-              End Game
-            </Button>
-          </Box>
-        </Stack>
+              <Center>
+                <Stack gap="xs">
+                  {/* TODO: get rid of this or at least add the card modal handler to it */}
+                  <CardSlot card={currentCard} emptyMessage="Play a Scheme!" />
+                  <Button
+                    mt="md"
+                    onClick={() => dispatch(chooseSingleCard())}
+                    color="blue"
+                  >
+                    Play {previousCards.length > 0 || currentCard ? "New" : "A"}{" "}
+                    Scheme
+                  </Button>
+                </Stack>
+              </Center>
+            </Box>
+            <Box>
+              <Button color="green" onClick={() => dispatch(endGame())}>
+                End Game
+              </Button>
+            </Box>
+          </Stack>
+        </Box>
       </Grid.Col>
-      <Grid.Col span={8} mt="md">
-        <Stack>
-          <Box>
-            <Title order={3}>Previous Schemes</Title>
+      <Grid.Col
+        span={{
+          base: 12,
+          md: 8,
+        }}
+        mt="md"
+      >
+        <Stack gap="xl">
+          <Box
+            mr={{
+              base: "none",
+              md: "md",
+            }}
+            style={{
+              border: "1px solid #eee",
+              borderRadius: "4px",
+              backgroundColor: lighten("var(--mantine-color-gray-8)", 0.1),
+            }}
+          >
+            <Title order={3} m="md">
+              Previous Schemes
+            </Title>
             {previousCards.length === 0 ? (
               <Center style={{ minHeight: 380 }}>No previous schemes</Center>
             ) : (
@@ -127,7 +167,7 @@ const Home = () => {
                 withIndicators={false}
                 orientation="horizontal"
                 emblaOptions={{ dragFree: true }}
-                mt="md"
+                m="md"
               >
                 {previousCards.map((card) => (
                   <Carousel.Slide key={card.id}>
@@ -138,9 +178,21 @@ const Home = () => {
               </Carousel>
             )}
           </Box>
-          <Box>
+          <Box
+            mr={{
+              base: "none",
+              md: "md",
+            }}
+            style={{
+              border: "1px solid #eee",
+              borderRadius: "4px",
+              backgroundColor: lighten("var(--mantine-color-gray-8)", 0.1),
+            }}
+          >
             {/* TODO: make this a reusable component */}
-            <Title order={3}>Ongoing Schemes</Title>
+            <Title order={3} m="md">
+              Ongoing Schemes
+            </Title>
             {ongoingCards.length === 0 ? (
               <Center style={{ minHeight: 520 }}>No ongoing schemes</Center>
             ) : (
@@ -154,7 +206,7 @@ const Home = () => {
                 orientation="horizontal"
                 emblaOptions={{ dragFree: true }}
                 mih={200}
-                mt="md"
+                m="md"
               >
                 {ongoingCards.map((card, index) => (
                   <Carousel.Slide key={card.id}>
