@@ -94,7 +94,6 @@ const Home = () => {
           base: 12,
           md: 4,
         }}
-        mt="md"
       >
         <Box
           style={{
@@ -137,14 +136,9 @@ const Home = () => {
           base: 12,
           md: 8,
         }}
-        mt="md"
       >
         <Stack gap="xl">
           <Box
-            mr={{
-              base: "none",
-              md: "md",
-            }}
             style={{
               border: "1px solid #eee",
               borderRadius: "4px",
@@ -179,10 +173,6 @@ const Home = () => {
             )}
           </Box>
           <Box
-            mr={{
-              base: "none",
-              md: "md",
-            }}
             style={{
               border: "1px solid #eee",
               borderRadius: "4px",

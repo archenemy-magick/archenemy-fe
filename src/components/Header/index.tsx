@@ -33,9 +33,16 @@ const Header = ({
           <LinkButton
             variant="transparent"
             className={classes.control}
-            href="/"
+            href="/game/archenemy"
           >
-            Home
+            Game
+          </LinkButton>
+          <LinkButton
+            variant="transparent"
+            className={classes.control}
+            href="/decks/builder"
+          >
+            Deck Builder
           </LinkButton>
         </Group>
       </Group>

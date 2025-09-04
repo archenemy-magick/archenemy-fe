@@ -1,5 +1,3 @@
-import HomePage from "../components/home";
-
 export default function Home() {
-  return <HomePage />;
+  return <>This will be the landing page</>;
 }

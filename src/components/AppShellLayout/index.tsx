@@ -52,15 +52,6 @@ const AppShellLayout = ({ children }: { children: React.ReactNode }) => {
           <LinkButton href="/" className={classes.control}>
             Home
           </LinkButton>
-          <LinkButton href="/portfolio" className={classes.control}>
-            Portfolio
-          </LinkButton>
-          <LinkButton href="/about-us" className={classes.control}>
-            About Us
-          </LinkButton>
-          <LinkButton href="/contact" className={classes.control}>
-            Contact
-          </LinkButton>
         </Stack>
       </AppShell.Navbar>
 
