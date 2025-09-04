@@ -1,4 +1,4 @@
-import { gameSlice, InitialGameState } from "./reducers";
+import { deckBuilderSlice, gameSlice, InitialDeckBuilderState, InitialGameState } from "./reducers";
 
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 
@@ -24,23 +24,30 @@ const storage =
     ? createWebStorage("local")
     : createNoopStorage();
 
-const persistRootConfig = {
-  key: "root",
+const createdPersistedConfig = (key: string) => ({
+  key,
   storage,
-};
+});
 
-const persistGameConfig = {
-  key: "game",
-  storage,
-};
+const persistRootConfig = createdPersistedConfig("root");
+
+const persistGameConfig = createdPersistedConfig("game");
+
+const persistedDeckBuilderConfig = createdPersistedConfig("deckBuilder");
 
 const persistedGameReducer = persistReducer(
   persistGameConfig,
   gameSlice.reducer
 );
 
+const persistedDeckBuilderReducer = persistReducer(
+  persistedDeckBuilderConfig,
+  deckBuilderSlice.reducer
+);
+
 const reducers = combineReducers({
   game: persistedGameReducer,
+  deckBuilder: persistedDeckBuilderReducer,
 });
 
 const persistedReducer = persistReducer(persistRootConfig, reducers);
@@ -60,5 +67,6 @@ export const persistor = persistStore(store);
 
 export type RootState = {
   game: InitialGameState;
+  deckBuilder: InitialDeckBuilderState;
 };
 export type AppDispatch = typeof store.dispatch;

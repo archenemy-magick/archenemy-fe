@@ -17,13 +17,13 @@ import {
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  fetchAllArchenemyCards,
   chooseSingleCard,
   abandonScheme,
   startGame,
   selectDeck,
   endGame,
 } from "src/store/reducers";
+import { fetchAllArchenemyCards } from "~/store/thunks";
 import { Carousel } from "@mantine/carousel";
 import type { RootState } from "~/store";
 import type { AppDispatch } from "~/store/configureStore";
