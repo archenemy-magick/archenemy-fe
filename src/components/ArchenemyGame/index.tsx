@@ -17,13 +17,13 @@ import {
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  fetchAllArchenemyCards,
   chooseSingleCard,
   abandonScheme,
   startGame,
   selectDeck,
   endGame,
 } from "src/store/reducers";
+import { fetchAllArchenemyCards } from "~/store/thunks";
 import { Carousel } from "@mantine/carousel";
 import type { RootState } from "~/store";
 import type { AppDispatch } from "~/store/configureStore";
@@ -94,7 +94,6 @@ const Home = () => {
           base: 12,
           md: 4,
         }}
-        mt="md"
       >
         <Box
           style={{
@@ -137,14 +136,9 @@ const Home = () => {
           base: 12,
           md: 8,
         }}
-        mt="md"
       >
         <Stack gap="xl">
           <Box
-            mr={{
-              base: "none",
-              md: "md",
-            }}
             style={{
               border: "1px solid #eee",
               borderRadius: "4px",
@@ -179,10 +173,6 @@ const Home = () => {
             )}
           </Box>
           <Box
-            mr={{
-              base: "none",
-              md: "md",
-            }}
             style={{
               border: "1px solid #eee",
               borderRadius: "4px",

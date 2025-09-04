@@ -1,6 +1,6 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import CardApi from "src/http/cards";
+import { createSlice } from "@reduxjs/toolkit";
 import { ScryfallCard } from "@scryfall/api-types";
+import { fetchAllArchenemyCards } from "src/store/thunks";
 
 export type InitialCardsState = {
   currentCard: ScryfallCard.Scheme | null;
@@ -8,20 +8,6 @@ export type InitialCardsState = {
   ongoingCards: ScryfallCard.Scheme[];
   previousCards: ScryfallCard.Scheme[];
 };
-
-export const fetchAllArchenemyCards = createAsyncThunk(
-  "cards/fetchAllArchenemyCards",
-  async () =>
-    await CardApi.fetchAllArchenemyCards()
-      .then((data) => {
-        console.log("in the action", data);
-
-        return data;
-      })
-      .catch((e) => {
-        // TODO: do something here
-      })
-);
 
 export type InitialGameState = {
   gameStarted: boolean;
@@ -95,6 +81,7 @@ export const gameSlice = createSlice({
   name: "game",
   initialState: initialGameState as InitialGameState,
   reducers: gameSliceReducer,
+  // TODO: get rid of this once you can choose decks when starting the game, even if the deck is just all 100 archenemy cards
   extraReducers: (builder) => {
     builder.addCase(fetchAllArchenemyCards.fulfilled, (state, action) => {
       // TODO: type the response and stuff
