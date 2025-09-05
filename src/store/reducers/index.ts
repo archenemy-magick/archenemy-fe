@@ -18,3 +18,5 @@ export {
   saveDeck,
 } from "./deckBuilderReducer";
 export type { InitialDeckBuilderState } from "./deckBuilderReducer";
+export { decksSlice, addDeck } from "./decksReducer";
+export type { InitialDecksScheme } from "./decksReducer";

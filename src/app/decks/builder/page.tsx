@@ -1,8 +1,20 @@
 "use client";
-import { Box } from "@mantine/core";
-import { useEffect } from "react";
+import {
+  Box,
+  Button,
+  Checkbox,
+  Flex,
+  Grid,
+  Image,
+  Input,
+  Stack,
+  Title,
+} from "@mantine/core";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import CheckableCard from "~/components/common/CheckableCard/CheckableCard";
 import type { AppDispatch, RootState } from "~/store";
+import { addCard, removeCard, saveDeck } from "~/store/reducers";
 import { fetchAllArchenemyCards } from "~/store/thunks";
 
 const DeckBuilder = () => {
@@ -15,17 +27,72 @@ const DeckBuilder = () => {
   // Save button
   // Save in local state for now, but soon save in DB
   // Display decks on deck list page
-  const { cardPool } = useSelector((state: RootState) => state.deckBuilder);
-  console.log("cardPool", cardPool);
+  const { cardPool, selectedCards } = useSelector(
+    (state: RootState) => state.deckBuilder
+  );
 
   useEffect(() => {
+    console.log("selectedCards changed", selectedCards);
+  }, [selectedCards]);
+  useEffect(() => {
     if (cardPool.length === 0) {
-      // TODO: in the future, unless they choose the default deck, we can display only their deck
       dispatch(fetchAllArchenemyCards());
     }
   }, [dispatch, cardPool.length]);
 
-  return <Box></Box>;
+  return (
+    <Stack gap="sm" m="sm">
+      <Stack>
+        <Flex align="center" justify="space-between">
+          <Flex
+            direction={{ base: "column", md: "row" }}
+            gap="sm"
+            align="center"
+          >
+            <Title order={1}>Deck Builder</Title>
+            <Input.Wrapper required>
+              <Input placeholder="Enter deck name" />
+            </Input.Wrapper>
+          </Flex>
+          <Button
+            onClick={() => {
+              dispatch(saveDeck());
+            }}
+            color="green"
+          >
+            Save Deck
+          </Button>
+        </Flex>
+      </Stack>
+
+      <Grid>
+        {cardPool.map((card) => (
+          <Grid.Col
+            span={{
+              base: 12,
+              sm: 6,
+              md: 4,
+              lg: 3,
+              xl: 2,
+            }}
+            key={card.id}
+          >
+            <Box>
+              <CheckableCard
+                card={card}
+                onClick={() =>
+                  selectedCards.some((c) => c.id === card.id)
+                    ? dispatch(removeCard(card))
+                    : dispatch(addCard(card))
+                }
+                cardSelected={selectedCards.some((c) => c.id === card.id)}
+              />
+            </Box>
+          </Grid.Col>
+        ))}
+      </Grid>
+    </Stack>
+  );
 };
 
 export default DeckBuilder;
