@@ -1,4 +1,10 @@
-import { deckBuilderSlice, gameSlice, InitialDeckBuilderState, InitialGameState } from "./reducers";
+import {
+  deckBuilderSlice,
+  decksSlice,
+  gameSlice,
+  InitialDeckBuilderState,
+  InitialGameState,
+} from "./reducers";
 
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 
@@ -35,6 +41,8 @@ const persistGameConfig = createdPersistedConfig("game");
 
 const persistedDeckBuilderConfig = createdPersistedConfig("deckBuilder");
 
+const persistedDecksConfig = createdPersistedConfig("decks");
+
 const persistedGameReducer = persistReducer(
   persistGameConfig,
   gameSlice.reducer
@@ -45,9 +53,15 @@ const persistedDeckBuilderReducer = persistReducer(
   deckBuilderSlice.reducer
 );
 
+const persistedDecksReducer = persistReducer(
+  persistedDecksConfig,
+  decksSlice.reducer
+);
+
 const reducers = combineReducers({
   game: persistedGameReducer,
   deckBuilder: persistedDeckBuilderReducer,
+  decks: persistedDecksReducer,
 });
 
 const persistedReducer = persistReducer(persistRootConfig, reducers);

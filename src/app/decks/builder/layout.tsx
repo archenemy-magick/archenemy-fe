@@ -1,4 +1,3 @@
-import { Stack, Title } from "@mantine/core";
 import { ReactNode } from "react";
 
 interface LayoutProps {
@@ -6,11 +5,5 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  return (
-    <Stack gap="sm" m="sm">
-      <Title order={1}>Deck Builder</Title>
-
-      <main>{children}</main>
-    </Stack>
-  );
+  return <main>{children}</main>;
 }

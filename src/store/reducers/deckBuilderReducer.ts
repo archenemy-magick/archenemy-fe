@@ -1,7 +1,5 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import CardApi from "src/http/cards";
+import { createSlice } from "@reduxjs/toolkit";
 import { ScryfallCard } from "@scryfall/api-types";
-import { clear } from "console";
 import { fetchAllArchenemyCards } from "src/store/thunks";
 
 export type InitialDeckBuilderState = {
@@ -28,7 +26,10 @@ const deckBuilderSliceReducer = {
     state: InitialDeckBuilderState,
     action: { payload: ScryfallCard.Scheme }
   ) {
+    console.log("action.payload", action.payload);
+
     state.selectedCards.push(action.payload);
+    console.log("selectedCards", state.selectedCards);
   },
   removeCard(
     state: InitialDeckBuilderState,
@@ -46,6 +47,9 @@ const deckBuilderSliceReducer = {
   },
   saveDeck(state: InitialDeckBuilderState) {
     state.deckSaved = true;
+    console.log("dingus");
+
+    // TODO: actually save the deck somewhere
   },
 };
 
