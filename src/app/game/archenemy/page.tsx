@@ -1,5 +1,5 @@
-import HomePage from "../../../components/ArchenemyGame";
+import ArchenemyPage from "../../../components/ArchenemyGame";
 
-export default function Home() {
-  return <HomePage />;
+export default function Archenemy() {
+  return <ArchenemyPage />;
 }
