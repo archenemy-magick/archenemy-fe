@@ -2,14 +2,15 @@ import { Checkbox, Image } from "@mantine/core";
 import { ScryfallCard } from "@scryfall/api-types";
 import { useState } from "react";
 import classes from "./checkableCard.module.css";
+import { CustomArchenemyCard } from "../../../types";
 
 const CheckableCard = ({
   card,
   onClick,
   cardSelected,
 }: {
-  card: ScryfallCard.Scheme;
-  onClick: (card: ScryfallCard.Scheme) => void;
+  card: CustomArchenemyCard;
+  onClick: (card: CustomArchenemyCard) => void;
   cardSelected: boolean;
 }) => {
   const [checked, setChecked] = useState(cardSelected);
@@ -25,7 +26,7 @@ const CheckableCard = ({
       checked={checked}
       onClick={handleOnSelect}
     >
-      <Image src={card.image_uris?.normal} alt={card.name} />
+      <Image src={card.normalImage} alt={card.name} />
     </Checkbox.Card>
   );
 };

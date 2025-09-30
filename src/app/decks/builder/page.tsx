@@ -12,10 +12,13 @@ import {
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import CheckableCard from "~/components/common/CheckableCard/CheckableCard";
-import type { AppDispatch, RootState } from "~/store";
-import { addCard, removeCard, saveDeck } from "~/store/reducers";
-import { fetchAllArchenemyCards } from "~/store/thunks";
+import CheckableCard from "../../../components/common/CheckableCard/CheckableCard";
+import type { AppDispatch, RootState } from "../../../store";
+import { addCard, removeCard, saveDeck } from "../../../store/reducers";
+import { fetchAllArchenemyCards } from "../../../store/thunks";
+import { useDisclosure } from "@mantine/hooks";
+import SaveDeckModal from "../../../components/SaveDeckModal";
+import { CustomArchenemyCard } from "~/types";
 
 const DeckBuilder = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -34,14 +37,38 @@ const DeckBuilder = () => {
   useEffect(() => {
     console.log("selectedCards changed", selectedCards);
   }, [selectedCards]);
+
   useEffect(() => {
-    if (cardPool.length === 0) {
+    if (!cardPool || cardPool.length === 0) {
       dispatch(fetchAllArchenemyCards());
     }
-  }, [dispatch, cardPool.length]);
+  }, [dispatch, cardPool]);
+
+  const [
+    saveDeckModalOpened,
+    { open: openSaveDeckModal, close: closeSaveDeckModal },
+  ] = useDisclosure(false);
+
+  const handleSaveDeck = ({
+    deckName,
+    cards,
+  }: {
+    deckName: string;
+    cards: CustomArchenemyCard[];
+  }) => {
+    dispatch(saveDeck());
+    closeSaveDeckModal();
+    // TODO: show some kind of success message or something
+  };
 
   return (
     <Stack gap="sm" m="sm">
+      <SaveDeckModal
+        open={saveDeckModalOpened}
+        onClose={closeSaveDeckModal}
+        onSaveDeck={handleSaveDeck}
+        cards={selectedCards}
+      />
       <Stack>
         <Flex align="center" justify="space-between">
           <Flex
@@ -56,7 +83,7 @@ const DeckBuilder = () => {
           </Flex>
           <Button
             onClick={() => {
-              dispatch(saveDeck());
+              openSaveDeckModal();
             }}
             color="green"
           >
@@ -66,7 +93,7 @@ const DeckBuilder = () => {
       </Stack>
 
       <Grid>
-        {cardPool.map((card) => (
+        {cardPool?.map((card) => (
           <Grid.Col
             span={{
               base: 12,
