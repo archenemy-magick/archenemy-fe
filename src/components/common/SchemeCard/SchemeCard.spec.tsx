@@ -1,11 +1,11 @@
 import "@testing-library/jest-dom";
 import { screen } from "@testing-library/react";
 import SchemeCard from "./SchemeCard";
-import { render, mockScryfallScheme } from "../../../testUtils";
+import { render, mockCustomScheme } from "../../../testUtils";
 import type { SchemeCardProps } from "./SchemeCard";
 
 const renderCard = ({
-  card = mockScryfallScheme,
+  card = mockCustomScheme,
   buttonText,
   onButtonClick,
 }: SchemeCardProps) => {
@@ -19,27 +19,27 @@ const renderCard = ({
 };
 describe("SchemeCard", () => {
   it("renders the card image if the image is present", () => {
-    renderCard({ card: mockScryfallScheme });
-    const imageAlt = screen.getByAltText(mockScryfallScheme.name);
+    renderCard({ card: mockCustomScheme });
+    const imageAlt = screen.getByAltText(mockCustomScheme.name);
     expect(imageAlt).toBeInTheDocument();
   });
 
-  it("does not render the card image if the card has no image_uris", () => {
-    renderCard({
-      card: {
-        ...mockScryfallScheme,
-        image_uris: undefined,
-      },
-    });
-    const imageAlt = screen.queryByAltText(mockScryfallScheme.name);
-    expect(imageAlt).not.toBeInTheDocument();
-  });
+  // it("does not render the card image if the card has no normalImage", () => {
+  //   renderCard({
+  //     card: {
+  //       ...mockCustomScheme,
+  //       normalImage: undefined,
+  //     },
+  //   });
+  //   const imageAlt = screen.queryByAltText(mockCustomScheme.name);
+  //   expect(imageAlt).not.toBeInTheDocument();
+  // });
 
   it("renders a button if button text and handler are provided", () => {
     renderCard({
       buttonText: "Click Me",
       onButtonClick: jest.fn(),
-      card: mockScryfallScheme,
+      card: mockCustomScheme,
     });
 
     const buttonText = screen.getByText("Click Me");

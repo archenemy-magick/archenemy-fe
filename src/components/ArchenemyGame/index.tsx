@@ -23,20 +23,20 @@ import {
   selectDeck,
   endGame,
 } from "src/store/reducers";
-import { fetchAllArchenemyCards } from "~/store/thunks";
 import { Carousel } from "@mantine/carousel";
 import type { RootState } from "~/store";
 import type { AppDispatch } from "~/store/configureStore";
-import { ScryfallCard } from "@scryfall/api-types";
 import DeckSelectorModal from "~/components/DeckSelectorModal";
 import CardSlot from "../common/CardSlot";
+import fetchAllArchenemyDecks from "~/store/thunks/fetchAllDecks";
+import { CustomArchenemyCard } from "~/types";
 
 const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
 
-  const onSelectDeck = () => {
+  const handleSelectDeck = (deckId: string) => {
     // TODO: this will be where we select the deck, save and start the game, fetch cards, etc.
-    dispatch(selectDeck());
+    dispatch(selectDeck({ deckId }));
     dispatch(startGame());
     closeDeckModal();
   };
@@ -47,23 +47,27 @@ const Home = () => {
   const { currentCard, previousCards, ongoingCards } = useSelector(
     (state: RootState) => state.game.cards
   );
-  const { gameStarted, deckSelected, gameEnded } = useSelector(
+
+  const { gameStarted, deckSelected, gameEnded, decks } = useSelector(
     (state: RootState) => state.game
   );
 
   useEffect(() => {
-    if (gameStarted) {
+    if (!gameStarted && !deckSelected && !gameEnded && decks.length === 0) {
+      // TODO: remove this once we have user IDs, user login, etc.
+      dispatch(fetchAllArchenemyDecks());
+    } else if (gameStarted && deckSelected) {
       // TODO: in the future, unless they choose the default deck, we can display only their deck
-      dispatch(fetchAllArchenemyCards());
+      // dispatch(fetchAllArchenemyDecks());
     }
-  }, [dispatch, gameStarted]);
+  }, [dispatch, gameStarted, deckSelected, decks]);
 
   const [cardModalOpened, { open: openCardModal, close: closeCardModal }] =
     useDisclosure(false);
   const [selectedModalCard, setSelectedModalCard] =
-    useState<ScryfallCard.Scheme | null>(null);
+    useState<CustomArchenemyCard | null>(null);
 
-  const displayCardInModal = (card: ScryfallCard.Scheme) => {
+  const displayCardInModal = (card: CustomArchenemyCard) => {
     setSelectedModalCard(card);
     openCardModal();
   };
@@ -71,11 +75,14 @@ const Home = () => {
   return (
     <Grid>
       {/* TODO: make this a common component */}
-      <DeckSelectorModal
-        open={!gameStarted}
-        onClose={closeDeckModal}
-        onSelectDeck={onSelectDeck}
-      />
+      {decks?.length > 0 && (
+        <DeckSelectorModal
+          open={!gameStarted && !deckSelected}
+          onClose={closeDeckModal}
+          onSelectDeck={handleSelectDeck}
+          decks={decks}
+        />
+      )}
       <Modal
         opened={cardModalOpened}
         onClose={closeCardModal}
@@ -84,7 +91,7 @@ const Home = () => {
       >
         {selectedModalCard && (
           <Image
-            src={selectedModalCard.image_uris?.large}
+            src={selectedModalCard.normalImage}
             alt={selectedModalCard.name}
           />
         )}

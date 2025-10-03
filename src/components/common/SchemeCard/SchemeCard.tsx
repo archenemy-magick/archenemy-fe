@@ -1,12 +1,12 @@
 import React from "react";
 import { Card, Image, Button, Box } from "@mantine/core";
-import { ScryfallCard } from "@scryfall/api-types";
+import { CustomArchenemyCard } from "~/types";
 
 export interface SchemeCardProps {
   buttonText?: string;
   onButtonClick?: () => void;
-  onOpenModal?: (card: ScryfallCard.Scheme) => void;
-  card: ScryfallCard.Scheme;
+  onOpenModal?: (card: CustomArchenemyCard) => void;
+  card: CustomArchenemyCard;
 }
 
 const SchemeCard: React.FC<SchemeCardProps> = ({
@@ -18,16 +18,16 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
   if (!card) {
     return null;
   }
-  const { name, image_uris } = card;
+  const { name, normalImage } = card;
   return (
     <Card style={{ width: 300, minHeight: 300 }}>
       <Card.Section
         onClick={() => onOpenModal && onOpenModal(card)}
         style={{ cursor: onOpenModal ? "pointer" : "default" }}
       >
-        {image_uris ? (
+        {normalImage ? (
           <Image
-            src={image_uris?.normal}
+            src={normalImage}
             alt={name}
             style={{ height: 400 }}
             fit="contain"

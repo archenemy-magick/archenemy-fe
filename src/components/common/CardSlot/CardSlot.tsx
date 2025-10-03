@@ -1,13 +1,13 @@
 import { Box, Center, Text } from "@mantine/core";
-import { ScryfallCard } from "@scryfall/api-types";
 import { ReactNode } from "react";
 import SchemeCard from "../SchemeCard";
+import { CustomArchenemyCard } from "~/types";
 
 const CardSlot = ({
   card,
   emptyMessage,
 }: {
-  card?: ScryfallCard.Scheme | null;
+  card?: CustomArchenemyCard | null;
   emptyMessage?: ReactNode;
 }) => {
   return (
