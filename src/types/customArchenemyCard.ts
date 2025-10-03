@@ -3,7 +3,6 @@ export interface CustomArchenemyCard {
   name: string;
   lang: string;
   releasedAt: string;
-  uri: string;
   normalImage: string;
   largeImage: string;
   borderCropImage: string;

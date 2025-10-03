@@ -1,2 +1,2 @@
-export { mockScryfallScheme } from "./mocks";
+export { mockCustomScheme } from "./mocks";
 export { render } from "./render";
