@@ -7,6 +7,7 @@ const SaveDeckModal = ({
   onClose,
   onSaveDeck,
   cards,
+  deckIsSaving,
 }: {
   open: boolean;
   onClose: () => void;
@@ -18,6 +19,7 @@ const SaveDeckModal = ({
     cards: CustomArchenemyCard[];
   }) => void;
   cards: CustomArchenemyCard[];
+  deckIsSaving: boolean;
 }) => {
   const [deckName, setDeckName] = useState("");
 
@@ -71,7 +73,13 @@ const SaveDeckModal = ({
               </Box>
             ))}
           </Stack>
-          <Button mt="md" color="green" onClick={() => handleSaveDeck()}>
+          <Button
+            mt="md"
+            color="green"
+            onClick={() => handleSaveDeck()}
+            disabled={!deckName || cards.length === 0}
+            loading={deckIsSaving}
+          >
             Save Deck
           </Button>
         </Grid.Col>

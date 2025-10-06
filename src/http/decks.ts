@@ -14,7 +14,9 @@ export default class DeckApi {
     await instance
       .get("/decks/all")
       .then(({ data }) => data)
-      .catch((e) => console.log("e", e));
+      .catch((e) => {
+        throw new Error(e);
+      });
 
   static saveArchenemyDeck = async (
     deck: { name: string; cardIds: string[] },
@@ -23,5 +25,7 @@ export default class DeckApi {
     await instance
       .post("/decks/create", { deck, userId })
       .then(({ data }) => data)
-      .catch((e) => console.log("e", e));
+      .catch((e) => {
+        throw new Error(e);
+      });
 }
