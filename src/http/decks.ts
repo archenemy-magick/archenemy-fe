@@ -1,8 +1,6 @@
 import axios from "axios";
-
 const instance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_CARDS_API,
-  // baseURL: "https://api.scryfall.com",
   headers: {
     // "User-Agent": "ArchenemySelector/0.1",
     Accept: "*/*",
@@ -15,6 +13,15 @@ export default class DeckApi {
   static fetchAllArchenemyDecks = async () =>
     await instance
       .get("/decks/all")
+      .then(({ data }) => data)
+      .catch((e) => console.log("e", e));
+
+  static saveArchenemyDeck = async (
+    deck: { name: string; cardIds: string[] },
+    userId: string
+  ) =>
+    await instance
+      .post("/decks/create", { deck, userId })
       .then(({ data }) => data)
       .catch((e) => console.log("e", e));
 }

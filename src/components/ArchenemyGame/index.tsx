@@ -53,7 +53,7 @@ const Home = () => {
   );
 
   useEffect(() => {
-    if (!gameStarted && !deckSelected && !gameEnded && decks.length === 0) {
+    if (!gameStarted && !deckSelected && !gameEnded && decks?.length === 0) {
       // TODO: remove this once we have user IDs, user login, etc.
       dispatch(fetchAllArchenemyDecks());
     } else if (gameStarted && deckSelected) {

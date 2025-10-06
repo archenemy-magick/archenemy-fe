@@ -1,5 +1,4 @@
 import { Checkbox, Image } from "@mantine/core";
-import { ScryfallCard } from "@scryfall/api-types";
 import { useState } from "react";
 import classes from "./checkableCard.module.css";
 import { CustomArchenemyCard } from "../../../types";
