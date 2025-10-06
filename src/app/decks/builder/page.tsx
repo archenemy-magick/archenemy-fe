@@ -14,8 +14,11 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import CheckableCard from "../../../components/common/CheckableCard/CheckableCard";
 import type { AppDispatch, RootState } from "../../../store";
-import { addCard, removeCard, saveDeck } from "../../../store/reducers";
-import { fetchAllArchenemyCards } from "../../../store/thunks";
+import { addCard, removeCard } from "../../../store/reducers";
+import {
+  fetchAllArchenemyCards,
+  saveArchenemyDeck,
+} from "../../../store/thunks";
 import { useDisclosure } from "@mantine/hooks";
 import SaveDeckModal from "../../../components/SaveDeckModal";
 import { CustomArchenemyCard } from "~/types";
@@ -33,6 +36,8 @@ const DeckBuilder = () => {
   const { cardPool, selectedCards } = useSelector(
     (state: RootState) => state.deckBuilder
   );
+
+  const { id: userId } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
     console.log("selectedCards changed", selectedCards);
@@ -56,8 +61,9 @@ const DeckBuilder = () => {
     deckName: string;
     cards: CustomArchenemyCard[];
   }) => {
-    dispatch(saveDeck());
-    closeSaveDeckModal();
+    const deck = { cardIds: cards.map((card) => card.id), name: deckName };
+    dispatch(saveArchenemyDeck({ deck, userId }));
+    // closeSaveDeckModal();
     // TODO: show some kind of success message or something
   };
 

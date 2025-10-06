@@ -44,12 +44,6 @@ const deckBuilderSliceReducer = {
   setDeckName(state: InitialDeckBuilderState, action: { payload: string }) {
     state.deckName = action.payload;
   },
-  saveDeck(state: InitialDeckBuilderState) {
-    state.deckSaved = true;
-    console.log("dingus");
-
-    // TODO: actually save the deck somewhere
-  },
 };
 
 export const deckBuilderSlice = createSlice({
@@ -64,10 +58,5 @@ export const deckBuilderSlice = createSlice({
   },
 });
 
-export const {
-  addCard,
-  removeCard,
-  clearSelectedCards,
-  setDeckName,
-  saveDeck,
-} = deckBuilderSlice.actions;
+export const { addCard, removeCard, clearSelectedCards, setDeckName } =
+  deckBuilderSlice.actions;

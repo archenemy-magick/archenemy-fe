@@ -1,9 +1,10 @@
 import {
   deckBuilderSlice,
-  decksSlice,
   gameSlice,
   InitialDeckBuilderState,
   InitialGameState,
+  InitialUserState,
+  userSlice,
 } from "./reducers";
 
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
@@ -41,7 +42,7 @@ const persistGameConfig = createdPersistedConfig("game");
 
 const persistedDeckBuilderConfig = createdPersistedConfig("deckBuilder");
 
-const persistedDecksConfig = createdPersistedConfig("decks");
+const persistedUserConfig = createdPersistedConfig("user");
 
 const persistedGameReducer = persistReducer(
   persistGameConfig,
@@ -53,15 +54,15 @@ const persistedDeckBuilderReducer = persistReducer(
   deckBuilderSlice.reducer
 );
 
-const persistedDecksReducer = persistReducer(
-  persistedDecksConfig,
-  decksSlice.reducer
+const persistedUserReducer = persistReducer(
+  persistedUserConfig,
+  userSlice.reducer
 );
 
 const reducers = combineReducers({
   game: persistedGameReducer,
   deckBuilder: persistedDeckBuilderReducer,
-  decks: persistedDecksReducer,
+  user: persistedUserReducer,
 });
 
 const persistedReducer = persistReducer(persistRootConfig, reducers);
@@ -82,5 +83,6 @@ export const persistor = persistStore(store);
 export type RootState = {
   game: InitialGameState;
   deckBuilder: InitialDeckBuilderState;
+  user: InitialUserState;
 };
 export type AppDispatch = typeof store.dispatch;

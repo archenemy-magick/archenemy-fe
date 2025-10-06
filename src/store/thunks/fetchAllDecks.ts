@@ -3,7 +3,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import DeckApi from "src/http/decks";
 
 const fetchAllArchenemyDecks = createAsyncThunk(
-  "cards/fetchAllArchenemyDecks",
+  "decks/fetchAllArchenemyDecks",
   async () =>
     await DeckApi.fetchAllArchenemyDecks()
       .then((data) => {

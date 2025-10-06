@@ -15,8 +15,8 @@ export {
   removeCard,
   clearSelectedCards,
   setDeckName,
-  saveDeck,
 } from "./deckBuilderReducer";
 export type { InitialDeckBuilderState } from "./deckBuilderReducer";
-export { decksSlice, addDeck } from "./decksReducer";
-export type { InitialDecksScheme } from "./decksReducer";
+
+export { userSlice, login, logout } from "./userReducer";
+export type { InitialUserState } from "./userReducer";
