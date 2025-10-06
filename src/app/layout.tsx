@@ -4,6 +4,8 @@ import { store, persistor } from "../store";
 
 import "@mantine/core/styles.css";
 import "@mantine/carousel/styles.css";
+import "@mantine/notifications/styles.css";
+
 import CustomMantineProvider from "../components/MantineProvider";
 import { PersistGate } from "redux-persist/lib/integration/react";
 

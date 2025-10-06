@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchAllArchenemyCards } from "src/store/thunks";
+import { fetchAllArchenemyCards, saveArchenemyDeck } from "src/store/thunks";
 import { CustomArchenemyCard } from "src/types";
 
 export type InitialDeckBuilderState = {
@@ -8,8 +8,8 @@ export type InitialDeckBuilderState = {
   // TODO: update this with our newly created scheme
   cardPool: CustomArchenemyCard[];
   selectedCards: CustomArchenemyCard[];
-  deckSaved: boolean;
   deckName: string | null;
+  deckSavingError?: string;
   // TODO: this can be defined later, using things like Set, ongoing, etc.
   // selectedFilters: {}
 };
@@ -18,8 +18,8 @@ export const initialDeckBuilderState: InitialDeckBuilderState = {
   currentCard: null,
   cardPool: [],
   selectedCards: [],
-  deckSaved: false,
   deckName: null,
+  deckSavingError: undefined,
 };
 
 const deckBuilderSliceReducer = {
@@ -54,6 +54,17 @@ export const deckBuilderSlice = createSlice({
     builder.addCase(fetchAllArchenemyCards.fulfilled, (state, action) => {
       // TODO: type the response and stuff
       state.cardPool = action.payload;
+    });
+    builder.addCase(saveArchenemyDeck.fulfilled, (state) => {
+      state.selectedCards = [];
+      state.deckName = null;
+      state.deckSavingError = undefined;
+    });
+    builder.addCase(saveArchenemyDeck.rejected, (state, action) => {
+      console.log("action.error", action.error);
+
+      state.deckSavingError = action.error.message;
+      throw new Error(action.error.message || "Error saving deck");
     });
   },
 });

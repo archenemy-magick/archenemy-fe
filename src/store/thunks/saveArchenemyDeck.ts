@@ -1,4 +1,3 @@
-// TODO: delete this once we can fetch decks by user
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import DeckApi from "src/http/decks";
 
@@ -13,14 +12,13 @@ const saveArchenemyDeck = createAsyncThunk(
   }) => {
     console.log("deck to save", deck, userId);
 
+    // Remove .then/.catch - let the thunk handle success/failure
     return await DeckApi.saveArchenemyDeck(deck, userId)
-      .then((data) => {
-        console.log("in the action", data);
-
-        return data;
+      .then((response) => {
+        return response;
       })
-      .catch((e) => {
-        // TODO: do something here
+      .catch((error) => {
+        throw error; // Rethrow the error to be handled by the thunk
       });
   }
 );

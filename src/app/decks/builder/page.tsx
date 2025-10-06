@@ -22,6 +22,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import SaveDeckModal from "../../../components/SaveDeckModal";
 import { CustomArchenemyCard } from "~/types";
+import { notifications } from "@mantine/notifications";
 
 const DeckBuilder = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -38,6 +39,7 @@ const DeckBuilder = () => {
   );
 
   const { id: userId } = useSelector((state: RootState) => state.user);
+  const [deckIsSaving, setDeckIsSaving] = useState(false);
 
   useEffect(() => {
     console.log("selectedCards changed", selectedCards);
@@ -61,8 +63,27 @@ const DeckBuilder = () => {
     deckName: string;
     cards: CustomArchenemyCard[];
   }) => {
+    setDeckIsSaving(true);
     const deck = { cardIds: cards.map((card) => card.id), name: deckName };
-    dispatch(saveArchenemyDeck({ deck, userId }));
+    dispatch(saveArchenemyDeck({ deck, userId }))
+      .then(() => {
+        notifications.show({
+          title: "Deck Saved",
+          message: "Your deck has been saved successfully!",
+          color: "green",
+        });
+        closeSaveDeckModal();
+      })
+      .catch(() => {
+        console.log("error saving deck");
+
+        notifications.show({
+          title: "Error",
+          message: "There was an error saving your deck. Please try again.",
+          color: "red",
+        });
+      });
+    setDeckIsSaving(false);
     // closeSaveDeckModal();
     // TODO: show some kind of success message or something
   };
@@ -74,6 +95,7 @@ const DeckBuilder = () => {
         onClose={closeSaveDeckModal}
         onSaveDeck={handleSaveDeck}
         cards={selectedCards}
+        deckIsSaving={deckIsSaving}
       />
       <Stack>
         <Flex align="center" justify="space-between">
@@ -92,6 +114,7 @@ const DeckBuilder = () => {
               openSaveDeckModal();
             }}
             color="green"
+            disabled={selectedCards.length === 0}
           >
             Save Deck
           </Button>
