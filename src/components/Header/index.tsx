@@ -4,6 +4,7 @@ import classes from "./MobileNavbar.module.css";
 import Link from "next/link";
 import { LinkButton } from "../common";
 import clsx from "clsx";
+import { UserMenu } from "~/components/UserMenu";
 
 const Header = ({
   opened,
@@ -23,6 +24,7 @@ const Header = ({
         size="sm"
         data-testid="mobile-burger"
       />
+      <UserMenu />
       <Group
         justify="space-between"
         style={{ flex: 1 }}
@@ -43,6 +45,13 @@ const Header = ({
             href="/decks/builder"
           >
             Deck Builder
+          </LinkButton>
+          <LinkButton
+            variant="transparent"
+            className={classes.control}
+            href="/decks"
+          >
+            My Decks
           </LinkButton>
         </Group>
       </Group>

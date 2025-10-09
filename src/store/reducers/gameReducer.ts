@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchAllArchenemyCards } from "src/store/thunks";
+import { fetchAllArchenemyCards, deleteArchenemyDeck } from "src/store/thunks";
 import fetchAllArchenemyDecks from "../thunks/fetchAllDecks";
 import { CustomArchenemyCard, CustomArchenemyDeck } from "~/types";
 
@@ -56,9 +56,11 @@ const gameSliceReducer = {
       (deck) => deck.id === action.payload.deckId
     );
 
+    console.log("selectedDeck", selectedDeck);
+
     state.cards = {
       currentCard: null,
-      cardPool: selectedDeck ? selectedDeck.deckCards : [],
+      cardPool: selectedDeck ? selectedDeck.deck_cards : [],
       ongoingCards: [],
       previousCards: [],
     };
@@ -71,7 +73,7 @@ const gameSliceReducer = {
     );
 
     if (
-      cards.currentCard?.typeLine?.toLowerCase() === "ongoing scheme" &&
+      cards.currentCard?.type_line?.toLowerCase() === "ongoing scheme" &&
       cards.currentCard
     ) {
       cards.ongoingCards.push(cards.currentCard);
@@ -103,17 +105,11 @@ export const gameSlice = createSlice({
   reducers: gameSliceReducer,
   // TODO: get rid of this once you can choose decks when starting the game, even if the deck is just all 100 archenemy cards
   extraReducers: (builder) => {
-    builder.addCase(fetchAllArchenemyCards.fulfilled, (state, action) => {
-      // TODO: type the response and stuff
-      state.cards.cardPool = action.payload.data;
-
-      // state.currentCard =
-      //   action.payload.data[
-      //     Math.floor(Math.random() * action.payload.data.length)
-      //   ];
-    });
     builder.addCase(fetchAllArchenemyDecks.fulfilled, (state, action) => {
       state.decks = action.payload;
+    });
+    builder.addCase(deleteArchenemyDeck.fulfilled, (state, action) => {
+      state.decks = state.decks.filter((deck) => deck.id !== action.payload);
     });
   },
 });

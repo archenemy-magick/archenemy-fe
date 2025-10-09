@@ -24,11 +24,11 @@ describe("SchemeCard", () => {
     expect(imageAlt).toBeInTheDocument();
   });
 
-  // it("does not render the card image if the card has no normalImage", () => {
+  // it("does not render the card image if the card has no normal_image", () => {
   //   renderCard({
   //     card: {
   //       ...mockCustomScheme,
-  //       normalImage: undefined,
+  //       normal_image: undefined,
   //     },
   //   });
   //   const imageAlt = screen.queryByAltText(mockCustomScheme.name);

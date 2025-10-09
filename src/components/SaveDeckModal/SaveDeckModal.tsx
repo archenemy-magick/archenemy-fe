@@ -1,6 +1,15 @@
-import { Box, Button, Grid, Input, Modal, Stack, Title } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Grid,
+  Input,
+  Modal,
+  Stack,
+  Title,
+  Textarea,
+} from "@mantine/core";
 import { CustomArchenemyCard } from "../../types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const SaveDeckModal = ({
   open,
@@ -8,29 +17,49 @@ const SaveDeckModal = ({
   onSaveDeck,
   cards,
   deckIsSaving,
+  initialName,
+  initialDescription,
+  isEditing,
 }: {
   open: boolean;
   onClose: () => void;
   onSaveDeck: ({
     deckName,
+    description,
     cards,
   }: {
     deckName: string;
+    description?: string;
     cards: CustomArchenemyCard[];
   }) => void;
   cards: CustomArchenemyCard[];
   deckIsSaving: boolean;
+  initialName?: string;
+  initialDescription?: string;
+  isEditing?: boolean;
 }) => {
   const [deckName, setDeckName] = useState("");
+  const [description, setDescription] = useState("");
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!open) {
+      setDeckName("");
+      setDescription("");
+    }
+  }, [open]);
+
+  // Load initial values when editing
+  useEffect(() => {
+    if (open && initialName) {
+      setDeckName(initialName);
+      setDescription(initialDescription || "");
+    }
+  }, [open, initialName, initialDescription]);
 
   const handleSaveDeck = () => {
-    console.log("deckName", deckName);
-
     if (deckName) {
-      console.log("Saving deck:", deckName, cards);
-
-      // TODO: should this be awaited?
-      onSaveDeck({ deckName, cards });
+      onSaveDeck({ deckName, description, cards });
     }
   };
 
@@ -44,16 +73,27 @@ const SaveDeckModal = ({
       <Grid>
         <Grid.Col span={12}>
           <Title order={2} mb="md">
-            Save Deck
+            {isEditing ? "Update Deck" : "Save Deck"}
           </Title>
           <Input.Wrapper required label="Deck Name" mb="md">
             <Input
               placeholder="Enter deck name"
+              value={deckName}
               onChange={(e) => setDeckName(e.currentTarget.value)}
             />
           </Input.Wrapper>
+          <Textarea
+            label="Description (optional)"
+            placeholder="Add a description for your deck"
+            value={description}
+            onChange={(e) => setDescription(e.currentTarget.value)}
+            mb="md"
+            rows={3}
+          />
           <Title order={3} mb="md">
-            You&apos;re about to save a deck with the following cards:
+            {isEditing
+              ? "Deck cards:"
+              : "You're about to save a deck with the following cards:"}
           </Title>
           <Stack align="flex-start">
             {cards.map((card) => (
@@ -80,7 +120,7 @@ const SaveDeckModal = ({
             disabled={!deckName || cards.length === 0}
             loading={deckIsSaving}
           >
-            Save Deck
+            {isEditing ? "Update Deck" : "Save Deck"}
           </Button>
         </Grid.Col>
       </Grid>

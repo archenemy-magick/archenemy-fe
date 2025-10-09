@@ -10,6 +10,10 @@ export type InitialDeckBuilderState = {
   selectedCards: CustomArchenemyCard[];
   deckName: string | null;
   deckSavingError?: string;
+  editingDeckId?: string;
+  editingDeckName?: string;
+  editingDeckDescription?: string;
+
   // TODO: this can be defined later, using things like Set, ongoing, etc.
   // selectedFilters: {}
 };
@@ -20,6 +24,9 @@ export const initialDeckBuilderState: InitialDeckBuilderState = {
   selectedCards: [],
   deckName: null,
   deckSavingError: undefined,
+  editingDeckId: undefined,
+  editingDeckName: undefined,
+  editingDeckDescription: undefined,
 };
 
 const deckBuilderSliceReducer = {
@@ -38,11 +45,33 @@ const deckBuilderSliceReducer = {
       (card) => card.id !== action.payload.id
     );
   },
-  clearSelectedCards(state: InitialDeckBuilderState) {
+  clearSelectedCards: (state: InitialDeckBuilderState) => {
     state.selectedCards = [];
   },
   setDeckName(state: InitialDeckBuilderState, action: { payload: string }) {
     state.deckName = action.payload;
+  },
+  loadDeckForEditing: (
+    state: InitialDeckBuilderState,
+    action: {
+      payload: {
+        deckId: string;
+        deckName: string;
+        deckDescription?: string;
+        cards: CustomArchenemyCard[];
+      };
+    }
+  ) => {
+    state.editingDeckId = action.payload.deckId;
+    state.editingDeckName = action.payload.deckName;
+    state.editingDeckDescription = action.payload.deckDescription;
+    state.selectedCards = action.payload.cards;
+  },
+  clearEditingDeck: (state: InitialDeckBuilderState) => {
+    state.editingDeckId = undefined;
+    state.editingDeckName = undefined;
+    state.editingDeckDescription = undefined;
+    state.selectedCards = [];
   },
 };
 
@@ -69,5 +98,11 @@ export const deckBuilderSlice = createSlice({
   },
 });
 
-export const { addCard, removeCard, clearSelectedCards, setDeckName } =
-  deckBuilderSlice.actions;
+export const {
+  addCard,
+  removeCard,
+  clearSelectedCards,
+  setDeckName,
+  loadDeckForEditing,
+  clearEditingDeck,
+} = deckBuilderSlice.actions;
