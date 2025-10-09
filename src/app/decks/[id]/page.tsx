@@ -64,7 +64,7 @@ const DeckDetailPage = () => {
   };
 
   const handleEditDeck = () => {
-    router.push(`/deck-builder?edit=${deckId}`);
+    router.push(`/decks/builder?edit=${deckId}`);
   };
 
   if (loading) {

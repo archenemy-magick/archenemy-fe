@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { fetchAllArchenemyCards, saveArchenemyDeck } from "src/store/thunks";
 import { CustomArchenemyCard } from "src/types";
 
@@ -45,6 +45,17 @@ const deckBuilderSliceReducer = {
       (card) => card.id !== action.payload.id
     );
   },
+  addCards: (
+    state: InitialDeckBuilderState,
+    action: PayloadAction<CustomArchenemyCard[]>
+  ) => {
+    const newCards = action.payload.filter(
+      (card) => !state.selectedCards.some((sc) => sc.id === card.id)
+    );
+    state.selectedCards = [...state.selectedCards, ...newCards];
+  },
+
+  // Clear all selected cards
   clearSelectedCards: (state: InitialDeckBuilderState) => {
     state.selectedCards = [];
   },
@@ -100,6 +111,7 @@ export const deckBuilderSlice = createSlice({
 
 export const {
   addCard,
+  addCards,
   removeCard,
   clearSelectedCards,
   setDeckName,
