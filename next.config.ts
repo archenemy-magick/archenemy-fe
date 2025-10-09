@@ -1,8 +1,16 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Remove output: "export" if it's still there
 
-const nextConfig: NextConfig = {
-  // output: "export", // Outputs a Single-Page Application (SPA)
-  distDir: "build", // Changes the build output directory to `build`
+  // Add these optimizations
+  experimental: {
+    optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
+  },
+
+  // Increase memory limit for build
+  env: {
+    NODE_OPTIONS: "--max-old-space-size=4096",
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
