@@ -9,3 +9,4 @@ export { default as SaveDeckModal } from "./SaveDeckModal";
 export { SignUpForm } from "./SignUpForm";
 export { SignInForm } from "./SignInForm";
 export { UserMenu } from "./UserMenu";
+export { Providers } from "./Providers";
