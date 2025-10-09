@@ -4,12 +4,12 @@ export interface CustomArchenemyDeck {
   id: string;
   name: string;
   lang: string;
-  // normalImage: string;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
-  deckCards: CustomArchenemyCard[];
+  // normal_image: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  deck_cards: CustomArchenemyCard[];
   description: string;
-  isArchived: boolean;
-  isPublic: boolean;
+  is_archived: boolean;
+  is_public: boolean;
 }

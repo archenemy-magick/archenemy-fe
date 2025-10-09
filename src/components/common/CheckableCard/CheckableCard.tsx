@@ -25,7 +25,7 @@ const CheckableCard = ({
       checked={checked}
       onClick={handleOnSelect}
     >
-      <Image src={card.normalImage} alt={card.name} />
+      <Image src={card.normal_image} alt={card.name} />
     </Checkbox.Card>
   );
 };

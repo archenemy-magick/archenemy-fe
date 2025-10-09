@@ -1,26 +1,26 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import DeckApi from "src/http/decks";
+import { createDeck, addCardToDeck } from "~/lib/api/decks";
+import { CustomArchenemyCard } from "~/types";
 
-const saveArchenemyDeck = createAsyncThunk(
-  "deckBuilder/saveArchenemyDeck",
+export const saveArchenemyDeck = createAsyncThunk(
+  "deck/save",
   async ({
-    deck,
-    userId,
+    deckName,
+    description,
+    selectedCards,
   }: {
-    deck: { cardIds: string[]; name: string };
-    userId: string;
+    deckName: string;
+    description?: string;
+    selectedCards: CustomArchenemyCard[];
   }) => {
-    console.log("deck to save", deck, userId);
+    // Create the deck
+    const deck = await createDeck(deckName, description);
 
-    // Remove .then/.catch - let the thunk handle success/failure
-    return await DeckApi.saveArchenemyDeck(deck, userId)
-      .then((response) => {
-        return response;
-      })
-      .catch((error) => {
-        throw error; // Rethrow the error to be handled by the thunk
-      });
+    // Add all cards to the deck
+    for (const card of selectedCards) {
+      await addCardToDeck(deck.id, card.id);
+    }
+
+    return deck;
   }
 );
-
-export default saveArchenemyDeck;

@@ -31,7 +31,7 @@ import CardSlot from "../common/CardSlot";
 import fetchAllArchenemyDecks from "~/store/thunks/fetchAllDecks";
 import { CustomArchenemyCard } from "~/types";
 
-const Home = () => {
+const ArchenemyGame = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   const handleSelectDeck = (deckId: string) => {
@@ -91,7 +91,7 @@ const Home = () => {
       >
         {selectedModalCard && (
           <Image
-            src={selectedModalCard.normalImage}
+            src={selectedModalCard.normal_image}
             alt={selectedModalCard.name}
           />
         )}
@@ -224,4 +224,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default ArchenemyGame;

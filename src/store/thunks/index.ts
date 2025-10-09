@@ -1,2 +1,5 @@
 export { default as fetchAllArchenemyCards } from "./fetchAllArchenemyCards";
-export { default as saveArchenemyDeck } from "./saveArchenemyDeck";
+export { saveArchenemyDeck } from "./saveArchenemyDeck";
+export { default as fetchAllArchenemyDecks } from "./fetchAllDecks";
+export { deleteArchenemyDeck } from "./deleteArchenemyDeck";
+export { updateArchenemyDeck } from "./updateArchenemyDeck";

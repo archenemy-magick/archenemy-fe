@@ -7,10 +7,16 @@ const DeckCard = ({
   selectDeck: () => void;
   deck: CustomArchenemyDeck;
 }) => {
+  console.log("deck in DeckCard", deck);
+
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
       <Card.Section>
-        <Image src={deck.deckCards[0]?.normalImage} height={160} alt="Norway" />
+        <Image
+          src={deck.deck_cards[0]?.normal_image}
+          height={160}
+          alt="Norway"
+        />
       </Card.Section>
 
       <Group justify="space-between" mt="md" mb="xs">

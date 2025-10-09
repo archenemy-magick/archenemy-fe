@@ -18,5 +18,13 @@ export {
 } from "./deckBuilderReducer";
 export type { InitialDeckBuilderState } from "./deckBuilderReducer";
 
-export { userSlice, login, logout } from "./userReducer";
+export {
+  userSlice,
+  setUser,
+  clearError,
+  signUp,
+  signIn,
+  signOut,
+  checkAuth,
+} from "./userReducer";
 export type { InitialUserState } from "./userReducer";

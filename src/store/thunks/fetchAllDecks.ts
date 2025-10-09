@@ -1,19 +1,9 @@
-// TODO: delete this once we can fetch decks by user
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import DeckApi from "src/http/decks";
+import { getUserDecks } from "~/lib/api/decks";
 
-const fetchAllArchenemyDecks = createAsyncThunk(
-  "decks/fetchAllArchenemyDecks",
-  async () =>
-    await DeckApi.fetchAllArchenemyDecks()
-      .then((data) => {
-        console.log("in the action", data);
-
-        return data;
-      })
-      .catch((e) => {
-        // TODO: do something here
-      })
-);
+const fetchAllArchenemyDecks = createAsyncThunk("decks/fetchAll", async () => {
+  const decks = await getUserDecks();
+  return decks;
+});
 
 export default fetchAllArchenemyDecks;
