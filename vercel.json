@@ -1,0 +1,11 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "functions": {
+    "app/**/*.tsx": {
+      "memory": 3008,
+      "maxDuration": 120
+    }
+  }
+}
