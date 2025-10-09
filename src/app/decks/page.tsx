@@ -144,7 +144,7 @@ const DecksPage = () => {
           </Button>
         </Flex>
 
-        {decks.length === 0 ? (
+        {!decks || decks.length === 0 ? (
           <Card shadow="sm" padding="xl" radius="md" withBorder>
             <Stack align="center" gap="md">
               <Text size="lg" c="dimmed">
@@ -157,80 +157,81 @@ const DecksPage = () => {
           </Card>
         ) : (
           <Stack gap="md">
-            {decks.map((deck) => (
-              <Card
-                key={deck.id}
-                shadow="sm"
-                padding="lg"
-                radius="md"
-                withBorder
-                style={{ cursor: "pointer" }}
-              >
-                <Flex justify="space-between" align="flex-start">
-                  <Box
-                    style={{ flex: 1 }}
-                    onClick={() => handleViewDeck(deck.id)}
-                  >
-                    <Group gap="sm" mb="xs">
-                      <Title order={3}>{deck.name}</Title>
-                      {deck.is_public ? (
-                        <Badge color="green" variant="light">
-                          Public
-                        </Badge>
-                      ) : (
-                        <Badge color="gray" variant="light">
-                          Private
-                        </Badge>
+            {decks &&
+              decks.map((deck) => (
+                <Card
+                  key={deck.id}
+                  shadow="sm"
+                  padding="lg"
+                  radius="md"
+                  withBorder
+                  style={{ cursor: "pointer" }}
+                >
+                  <Flex justify="space-between" align="flex-start">
+                    <Box
+                      style={{ flex: 1 }}
+                      onClick={() => handleViewDeck(deck.id)}
+                    >
+                      <Group gap="sm" mb="xs">
+                        <Title order={3}>{deck.name}</Title>
+                        {deck.is_public ? (
+                          <Badge color="green" variant="light">
+                            Public
+                          </Badge>
+                        ) : (
+                          <Badge color="gray" variant="light">
+                            Private
+                          </Badge>
+                        )}
+                        {deck.is_archived && (
+                          <Badge color="red" variant="light">
+                            Archived
+                          </Badge>
+                        )}
+                      </Group>
+                      {deck.description && (
+                        <Text size="sm" c="dimmed" mb="xs">
+                          {deck.description}
+                        </Text>
                       )}
-                      {deck.is_archived && (
-                        <Badge color="red" variant="light">
-                          Archived
-                        </Badge>
-                      )}
-                    </Group>
-                    {deck.description && (
-                      <Text size="sm" c="dimmed" mb="xs">
-                        {deck.description}
+                      <Text size="sm" c="dimmed">
+                        {deck.deck_cards?.length || 0} cards
                       </Text>
-                    )}
-                    <Text size="sm" c="dimmed">
-                      {deck.deck_cards?.length || 0} cards
-                    </Text>
-                  </Box>
+                    </Box>
 
-                  <Menu shadow="md" width={200}>
-                    <Menu.Target>
-                      <ActionIcon variant="subtle" color="gray">
-                        <IconDots size={16} />
-                      </ActionIcon>
-                    </Menu.Target>
+                    <Menu shadow="md" width={200}>
+                      <Menu.Target>
+                        <ActionIcon variant="subtle" color="gray">
+                          <IconDots size={16} />
+                        </ActionIcon>
+                      </Menu.Target>
 
-                    <Menu.Dropdown>
-                      <Menu.Item
-                        leftSection={<IconEye size={14} />}
-                        onClick={() => handleViewDeck(deck.id)}
-                      >
-                        View
-                      </Menu.Item>
-                      <Menu.Item
-                        leftSection={<IconEdit size={14} />}
-                        onClick={() => handleEditDeck(deck.id)}
-                      >
-                        Edit
-                      </Menu.Item>
-                      <Menu.Divider />
-                      <Menu.Item
-                        leftSection={<IconTrash size={14} />}
-                        color="red"
-                        onClick={() => openDeleteModal(deck.id, deck.name)}
-                      >
-                        Delete
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </Flex>
-              </Card>
-            ))}
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          leftSection={<IconEye size={14} />}
+                          onClick={() => handleViewDeck(deck.id)}
+                        >
+                          View
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconEdit size={14} />}
+                          onClick={() => handleEditDeck(deck.id)}
+                        >
+                          Edit
+                        </Menu.Item>
+                        <Menu.Divider />
+                        <Menu.Item
+                          leftSection={<IconTrash size={14} />}
+                          color="red"
+                          onClick={() => openDeleteModal(deck.id, deck.name)}
+                        >
+                          Delete
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  </Flex>
+                </Card>
+              ))}
           </Stack>
         )}
       </Stack>
