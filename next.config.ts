@@ -8,9 +8,6 @@ const nextConfig = {
   },
 
   // Increase memory limit for build
-  env: {
-    NODE_OPTIONS: "--max-old-space-size=4096",
-  },
 };
 
 module.exports = nextConfig;
