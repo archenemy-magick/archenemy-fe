@@ -7,9 +7,10 @@ type DeckCardRelation = {
   card: CustomArchenemyCard;
 };
 
+const supabase = createClient();
+
 // Get all user's decks
 export async function getUserDecks() {
-  const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -43,8 +44,6 @@ export async function getUserDecks() {
 
 // Get single deck by ID
 export async function getDeckById(deckId: string) {
-  const supabase = createClient();
-
   const { data, error } = await supabase
     .from("archenemy_decks")
     .select(
@@ -77,7 +76,6 @@ export async function createDeck(
   description?: string,
   isPublic = true
 ) {
-  const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -109,8 +107,6 @@ export async function updateDeck(
     is_archived?: boolean;
   }
 ) {
-  const supabase = createClient();
-
   const { data, error } = await supabase
     .from("archenemy_decks")
     .update(updates)
@@ -124,8 +120,6 @@ export async function updateDeck(
 
 // Delete deck
 export async function deleteDeck(deckId: string) {
-  const supabase = createClient();
-
   const { error } = await supabase
     .from("archenemy_decks")
     .delete()
@@ -136,8 +130,6 @@ export async function deleteDeck(deckId: string) {
 
 // Add card to deck
 export async function addCardToDeck(deckId: string, cardId: string) {
-  const supabase = createClient();
-
   const { data, error } = await supabase
     .from("archenemy_deck_cards")
     .insert({
@@ -158,8 +150,6 @@ export async function addCardToDeck(deckId: string, cardId: string) {
 
 // Remove card from deck
 export async function removeCardFromDeck(deckId: string, cardId: string) {
-  const supabase = createClient();
-
   const { error } = await supabase
     .from("archenemy_deck_cards")
     .delete()
@@ -171,8 +161,6 @@ export async function removeCardFromDeck(deckId: string, cardId: string) {
 
 // Get deck statistics
 export async function getDeckStats(deckId: string) {
-  const supabase = createClient();
-
   const { data, error } = await supabase.rpc("get_deck_stats", {
     deck_uuid: deckId,
   });
@@ -183,8 +171,6 @@ export async function getDeckStats(deckId: string) {
 
 // Get cards in a deck
 export async function getDeckCards(deckId: string) {
-  const supabase = createClient();
-
   const { data, error } = await supabase
     .from("archenemy_deck_cards")
     .select(
@@ -200,4 +186,147 @@ export async function getDeckCards(deckId: string) {
   return (data as unknown as { card: CustomArchenemyCard }[]).map(
     (dc) => dc.card
   );
+}
+
+// Replace the getPublicDecks function in src/lib/api/decks.ts with this:
+
+export async function getPublicDecks() {
+  const { data, error } = await supabase
+    .from("archenemy_decks")
+    .select(
+      `
+      *,
+      profiles:user_id (
+        username
+      ),
+      deck_cards:archenemy_deck_cards (
+        archenemy_cards (
+          id,
+          name,
+          type_line,
+          oracle_text,
+          normal_image
+        )
+      )
+    `
+    )
+    .eq("is_public", true)
+    .eq("is_archived", false)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching public decks:", error);
+    throw error;
+  }
+
+  // Type for the nested structure from Supabase
+  type DeckCardWithCard = {
+    archenemy_cards: CustomArchenemyCard | null;
+  };
+
+  // Transform the nested data structure
+  const transformedData = data.map((deck) => ({
+    ...deck,
+    deck_cards:
+      (deck.deck_cards as unknown as DeckCardWithCard[])
+        ?.map((dc) => dc.archenemy_cards)
+        .filter((card): card is CustomArchenemyCard => card !== null) || [],
+  }));
+
+  return transformedData;
+}
+
+// Replace the cloneDeck function with this fixed version:
+
+export async function cloneDeck(deckId: string) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("You must be logged in to clone a deck");
+  }
+
+  // Fetch the original deck with its cards
+  const { data: originalDeck, error: fetchError } = await supabase
+    .from("archenemy_decks")
+    .select(
+      `
+      *,
+      deck_cards:archenemy_deck_cards (
+        card_id
+      )
+    `
+    )
+    .eq("id", deckId)
+    .single();
+
+  if (fetchError) {
+    console.error("Error fetching deck to clone:", fetchError);
+    throw fetchError;
+  }
+
+  if (!originalDeck.is_public) {
+    throw new Error("This deck is not public");
+  }
+
+  // Create the cloned deck
+  const { data: newDeck, error: createError } = await supabase
+    .from("archenemy_decks")
+    .insert({
+      name: `${originalDeck.name} (Copy)`,
+      description: originalDeck.description,
+      is_public: false, // Cloned decks are private by default
+      is_archived: false,
+      user_id: user.id,
+    })
+    .select()
+    .single();
+
+  if (createError) {
+    console.error("Error creating cloned deck:", createError);
+    throw createError;
+  }
+
+  // Type for the deck_cards structure
+  type DeckCardRelation = {
+    card_id: string;
+  };
+
+  // Copy all the cards to the new deck
+  const cardAssociations = (
+    originalDeck.deck_cards as unknown as DeckCardRelation[]
+  ).map((dc) => ({
+    deck_id: newDeck.id,
+    card_id: dc.card_id,
+  }));
+
+  const { error: cardsError } = await supabase
+    .from("archenemy_deck_cards")
+    .insert(cardAssociations);
+
+  if (cardsError) {
+    // If card insertion fails, clean up the deck we created
+    await supabase.from("archenemy_decks").delete().eq("id", newDeck.id);
+    console.error("Error copying cards to cloned deck:", cardsError);
+    throw cardsError;
+  }
+
+  return newDeck;
+}
+
+/**
+ * Increment view count for a deck (optional - for tracking popularity)
+ */
+export async function incrementDeckViews(deckId: string) {
+  // This assumes you have a 'view_count' column in your archenemy_decks table
+  // If you don't have this column yet, you can add it or skip this feature for now
+  const { error } = await supabase.rpc("increment_deck_views", {
+    deck_id: deckId,
+  });
+
+  if (error) {
+    console.error("Error incrementing deck views:", error);
+    // Don't throw - view count is not critical
+  }
 }
