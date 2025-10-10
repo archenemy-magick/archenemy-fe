@@ -5,6 +5,11 @@ export {
   startGame,
   abandonScheme,
   chooseSingleCard,
+  clearSavedGame,
+  loadGameState,
+  saveGameState,
+  shuffleCardPool,
+  undoLastCard,
 } from "./gameReducer";
 export type { InitialGameState } from "./gameReducer";
 export type { InitialCardsState } from "./gameReducer";
