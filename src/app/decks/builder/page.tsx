@@ -8,10 +8,24 @@ import {
   Title,
   Text,
   Divider,
+  TextInput,
+  SegmentedControl,
+  Group,
+  Badge,
+  Select,
+  Menu,
+  ActionIcon,
 } from "@mantine/core";
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+  IconSearch,
+  IconX,
+  IconSortAscending,
+  IconWand,
+  IconChevronDown,
+} from "@tabler/icons-react";
 import CheckableCard from "../../../components/common/CheckableCard/CheckableCard";
 import type { AppDispatch, RootState } from "../../../store";
 import {
@@ -19,6 +33,8 @@ import {
   removeCard,
   loadDeckForEditing,
   clearEditingDeck,
+  addCards,
+  clearSelectedCards,
 } from "../../../store/reducers/deckBuilderReducer";
 import {
   fetchAllArchenemyCards,
@@ -48,14 +64,96 @@ const DeckBuilder = () => {
   const [deckIsSaving, setDeckIsSaving] = useState(false);
   const [isLoadingDeck, setIsLoadingDeck] = useState(false);
 
-  // Separate selected and unselected cards
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+
+  // Sort state
+  const [sortOption, setSortOption] = useState<string>("name-asc");
+  const [selectedCardsSortOption, setSelectedCardsSortOption] =
+    useState<string>("name-asc");
+
+  // Get unique card types from the card pool
+  const cardTypes = useMemo(() => {
+    const types = new Set<string>();
+    cardPool.forEach((card) => {
+      // Extract type from type_line (e.g., "Ongoing Scheme" or "Scheme")
+      if (card.type_line) {
+        types.add(card.type_line);
+      }
+    });
+    return Array.from(types).sort();
+  }, [cardPool]);
+
+  // Filter cards based on search query and type filter
+  const filteredCardPool = useMemo(() => {
+    let filtered = cardPool;
+
+    // Apply type filter
+    if (typeFilter !== "all") {
+      filtered = filtered.filter((card) => card.type_line === typeFilter);
+    }
+
+    // Apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((card: CustomArchenemyCard) => {
+        const nameMatch = card.name.toLowerCase().includes(query);
+        const oracleTextMatch = card.oracle_text?.toLowerCase().includes(query);
+        return nameMatch || oracleTextMatch;
+      });
+    }
+
+    return filtered;
+  }, [cardPool, searchQuery, typeFilter]);
+
+  // Sort function
+  const sortCards = (
+    cards: CustomArchenemyCard[],
+    sortBy: string
+  ): CustomArchenemyCard[] => {
+    const sorted = [...cards];
+
+    switch (sortBy) {
+      case "name-asc":
+        return sorted.sort((a, b) =>
+          (a.name || "").localeCompare(b.name || "")
+        );
+      case "name-desc":
+        return sorted.sort((a, b) =>
+          (b.name || "").localeCompare(a.name || "")
+        );
+      case "type-asc":
+        return sorted.sort((a, b) => {
+          const typeA = a.type_line || "";
+          const typeB = b.type_line || "";
+          const typeCompare = typeA.localeCompare(typeB);
+          return typeCompare !== 0
+            ? typeCompare
+            : (a.name || "").localeCompare(b.name || "");
+        });
+      case "type-desc":
+        return sorted.sort((a, b) => {
+          const typeA = a.type_line || "";
+          const typeB = b.type_line || "";
+          const typeCompare = typeB.localeCompare(typeA);
+          return typeCompare !== 0
+            ? typeCompare
+            : (a.name || "").localeCompare(b.name || "");
+        });
+      default:
+        return sorted;
+    }
+  };
+
+  // Separate selected and unselected cards from filtered results, then sort them
   const { selectedCardsList, unselectedCardsList } = useMemo(() => {
     const selectedIds = new Set(selectedCards.map((card) => card.id));
 
     const selected: CustomArchenemyCard[] = [];
     const unselected: CustomArchenemyCard[] = [];
 
-    cardPool.forEach((card) => {
+    filteredCardPool.forEach((card) => {
       if (selectedIds.has(card.id)) {
         selected.push(card);
       } else {
@@ -63,11 +161,15 @@ const DeckBuilder = () => {
       }
     });
 
+    // Sort both lists
+    const sortedSelected = sortCards(selected, selectedCardsSortOption);
+    const sortedUnselected = sortCards(unselected, sortOption);
+
     return {
-      selectedCardsList: selected,
-      unselectedCardsList: unselected,
+      selectedCardsList: sortedSelected,
+      unselectedCardsList: sortedUnselected,
     };
-  }, [cardPool, selectedCards]);
+  }, [filteredCardPool, selectedCards, sortOption, selectedCardsSortOption]);
 
   // Load deck for editing if edit param exists
   useEffect(() => {
@@ -179,6 +281,67 @@ const DeckBuilder = () => {
     router.push("/decks");
   };
 
+  const clearFilters = () => {
+    setSearchQuery("");
+    setTypeFilter("all");
+  };
+
+  // Sort options for the select dropdowns
+  const sortOptions = [
+    { value: "name-asc", label: "Name (A-Z)" },
+    { value: "name-desc", label: "Name (Z-A)" },
+    { value: "type-asc", label: "Type (A-Z)" },
+    { value: "type-desc", label: "Type (Z-A)" },
+  ];
+
+  // Bulk operation handlers
+  const handleSelectAllOfType = (type: string) => {
+    const cardsToAdd = filteredCardPool.filter(
+      (card) =>
+        card.type_line === type &&
+        !selectedCards.some((sc) => sc.id === card.id)
+    );
+    dispatch(addCards(cardsToAdd));
+    notifications.show({
+      title: "Cards Added",
+      message: `Added ${cardsToAdd.length} ${type} cards to your deck`,
+      color: "blue",
+    });
+  };
+
+  const handleSelectAllFiltered = () => {
+    const cardsToAdd = unselectedCardsList;
+    dispatch(addCards(cardsToAdd));
+    notifications.show({
+      title: "Cards Added",
+      message: `Added ${cardsToAdd.length} cards to your deck`,
+      color: "blue",
+    });
+  };
+
+  const handleSelectRandom = (count: number) => {
+    const availableCards = unselectedCardsList;
+    const cardsToAdd = [...availableCards]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, Math.min(count, availableCards.length));
+
+    dispatch(addCards(cardsToAdd));
+    notifications.show({
+      title: "Random Cards Added",
+      message: `Added ${cardsToAdd.length} random cards to your deck`,
+      color: "blue",
+    });
+  };
+
+  const handleClearAll = () => {
+    dispatch(clearSelectedCards());
+    notifications.show({
+      title: "Selection Cleared",
+      message: "All cards have been removed from your deck",
+      color: "orange",
+    });
+  };
+
   if (isLoadingDeck) {
     return (
       <Stack gap="sm" m="sm" align="center">
@@ -199,6 +362,8 @@ const DeckBuilder = () => {
         initialDescription={editingDeckDescription}
         isEditing={!!editingDeckId}
       />
+
+      {/* Header Section */}
       <Stack>
         <Flex align="center" justify="space-between">
           <Flex
@@ -234,14 +399,157 @@ const DeckBuilder = () => {
         </Flex>
       </Stack>
 
+      {/* Search and Filter Section */}
+      <Stack gap="md">
+        <Group gap="md" align="flex-end" wrap="wrap">
+          <TextInput
+            placeholder="Search by name or text..."
+            leftSection={<IconSearch size={16} />}
+            rightSection={
+              searchQuery && (
+                <IconX
+                  size={16}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setSearchQuery("")}
+                />
+              )
+            }
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.currentTarget.value)}
+            style={{ flex: 1, minWidth: 200, maxWidth: 400 }}
+          />
+
+          <SegmentedControl
+            value={typeFilter}
+            onChange={setTypeFilter}
+            data={[
+              { label: "All Types", value: "all" },
+              ...cardTypes.map((type) => ({
+                label: type,
+                value: type,
+              })),
+            ]}
+          />
+
+          <Select
+            placeholder="Sort by..."
+            leftSection={<IconSortAscending size={16} />}
+            value={sortOption}
+            onChange={(value) => setSortOption(value || "name-asc")}
+            data={sortOptions}
+            style={{ minWidth: 160 }}
+          />
+
+          <Menu shadow="md" width={220}>
+            <Menu.Target>
+              <Button
+                leftSection={<IconWand size={16} />}
+                rightSection={<IconChevronDown size={14} />}
+                variant="light"
+              >
+                Bulk Actions
+              </Button>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Label>Select Cards</Menu.Label>
+              <Menu.Item onClick={handleSelectAllFiltered}>
+                Add All Filtered ({unselectedCardsList.length})
+              </Menu.Item>
+              {cardTypes.map((type) => {
+                const count = filteredCardPool.filter(
+                  (card) =>
+                    card.type_line === type &&
+                    !selectedCards.some((sc) => sc.id === card.id)
+                ).length;
+                return (
+                  <Menu.Item
+                    key={type}
+                    onClick={() => handleSelectAllOfType(type)}
+                    disabled={count === 0}
+                  >
+                    Add All {type} ({count})
+                  </Menu.Item>
+                );
+              })}
+
+              <Menu.Divider />
+
+              <Menu.Label>Random Selection</Menu.Label>
+              <Menu.Item
+                onClick={() => handleSelectRandom(10)}
+                disabled={unselectedCardsList.length === 0}
+              >
+                Add 10 Random Cards
+              </Menu.Item>
+              <Menu.Item
+                onClick={() => handleSelectRandom(20)}
+                disabled={unselectedCardsList.length === 0}
+              >
+                Add 20 Random Cards
+              </Menu.Item>
+
+              <Menu.Divider />
+
+              <Menu.Item
+                color="red"
+                onClick={handleClearAll}
+                disabled={selectedCards.length === 0}
+              >
+                Clear All Selections
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+
+          {(searchQuery || typeFilter !== "all") && (
+            <Button
+              variant="subtle"
+              color="gray"
+              onClick={clearFilters}
+              leftSection={<IconX size={16} />}
+            >
+              Clear Filters
+            </Button>
+          )}
+        </Group>
+
+        {/* Filter Results Summary */}
+        <Group gap="xs">
+          <Badge variant="light" size="lg">
+            {selectedCards.length} selected
+          </Badge>
+          <Badge variant="light" color="gray" size="lg">
+            {filteredCardPool.length} cards shown
+          </Badge>
+          {(searchQuery || typeFilter !== "all") && (
+            <Badge variant="light" color="blue" size="lg">
+              {cardPool.length} total cards
+            </Badge>
+          )}
+        </Group>
+      </Stack>
+
       {/* Selected Cards Section */}
       {selectedCardsList.length > 0 && (
         <Stack gap="md">
           <Divider
             label={
-              <Title order={2}>
-                Selected Cards ({selectedCardsList.length})
-              </Title>
+              <Group gap="md">
+                <Title order={2}>
+                  Selected Cards ({selectedCardsList.length})
+                </Title>
+                <Select
+                  placeholder="Sort by..."
+                  leftSection={<IconSortAscending size={16} />}
+                  value={selectedCardsSortOption}
+                  onChange={(value) =>
+                    setSelectedCardsSortOption(value || "name-asc")
+                  }
+                  data={sortOptions}
+                  size="xs"
+                  style={{ minWidth: 140 }}
+                />
+              </Group>
             }
             labelPosition="left"
           />
@@ -276,32 +584,44 @@ const DeckBuilder = () => {
           label={
             <Title order={2}>
               {selectedCardsList.length > 0 ? "Available Cards" : "All Cards"}
+              {unselectedCardsList.length === 0 &&
+                filteredCardPool.length === 0 && (
+                  <Text size="sm" c="dimmed" ml="md" component="span">
+                    No cards match your filters
+                  </Text>
+                )}
             </Title>
           }
           labelPosition="left"
         />
-        <Grid>
-          {unselectedCardsList.map((card) => (
-            <Grid.Col
-              span={{
-                base: 12,
-                sm: 6,
-                md: 4,
-                lg: 3,
-                xl: 2,
-              }}
-              key={card.id}
-            >
-              <Box>
-                <CheckableCard
-                  card={card}
-                  onClick={() => dispatch(addCard(card))}
-                  cardSelected={false}
-                />
-              </Box>
-            </Grid.Col>
-          ))}
-        </Grid>
+        {unselectedCardsList.length === 0 && filteredCardPool.length === 0 ? (
+          <Text c="dimmed" ta="center" py="xl">
+            Try adjusting your search or filters
+          </Text>
+        ) : (
+          <Grid>
+            {unselectedCardsList.map((card) => (
+              <Grid.Col
+                span={{
+                  base: 12,
+                  sm: 6,
+                  md: 4,
+                  lg: 3,
+                  xl: 2,
+                }}
+                key={card.id}
+              >
+                <Box>
+                  <CheckableCard
+                    card={card}
+                    onClick={() => dispatch(addCard(card))}
+                    cardSelected={false}
+                  />
+                </Box>
+              </Grid.Col>
+            ))}
+          </Grid>
+        )}
       </Stack>
     </Stack>
   );
