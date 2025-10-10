@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchAllArchenemyCards, deleteArchenemyDeck } from "src/store/thunks";
+import { fetchAllArchenemyCards, deleteArchenemyDeck } from "../thunks";
 import fetchAllArchenemyDecks from "../thunks/fetchAllDecks";
 import { CustomArchenemyCard, CustomArchenemyDeck } from "~/types";
 
@@ -17,6 +17,12 @@ export type InitialGameState = {
   cards: InitialCardsState;
   decks: CustomArchenemyDeck[];
   selectedDeckId?: string;
+  // New fields for enhanced features
+  gameHistory: {
+    cardId: string;
+    action: "played" | "abandoned" | "undone";
+    timestamp: number;
+  }[];
 };
 
 export const initialGameState: InitialGameState = {
@@ -30,16 +36,26 @@ export const initialGameState: InitialGameState = {
     previousCards: [],
   },
   decks: [],
+  gameHistory: [],
+};
+
+// Helper function to shuffle array
+const shuffleArray = <T>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 };
 
 const gameSliceReducer = {
   startGame(state: InitialGameState) {
     state.gameStarted = true;
+    state.gameHistory = [];
   },
   endGame(state: InitialGameState) {
     state.gameEnded = true;
-    // TODO: change these later, when we want to allow a player to look
-    // back at the game without starting a new one
     state.gameStarted = false;
     state.deckSelected = false;
     state.selectedDeckId = undefined;
@@ -47,6 +63,7 @@ const gameSliceReducer = {
     state.cards.currentCard = null;
     state.cards.ongoingCards = [];
     state.cards.previousCards = [];
+    state.gameHistory = [];
   },
   selectDeck(state: InitialGameState, action: { payload: { deckId: string } }) {
     state.deckSelected = true;
@@ -60,7 +77,7 @@ const gameSliceReducer = {
 
     state.cards = {
       currentCard: null,
-      cardPool: selectedDeck ? selectedDeck.deck_cards : [],
+      cardPool: selectedDeck ? [...selectedDeck.deck_cards] : [],
       ongoingCards: [],
       previousCards: [],
     };
@@ -84,6 +101,15 @@ const gameSliceReducer = {
     }
 
     cards.currentCard = randomCard[0];
+
+    // Add to history
+    if (randomCard[0]) {
+      state.gameHistory.push({
+        cardId: randomCard[0].id,
+        action: "played",
+        timestamp: Date.now(),
+      });
+    }
   },
   abandonScheme(
     state: InitialGameState,
@@ -96,6 +122,82 @@ const gameSliceReducer = {
 
     cards.previousCards.push(card);
     cards.ongoingCards.splice(index, 1);
+
+    // Add to history
+    state.gameHistory.push({
+      cardId: card.id,
+      action: "abandoned",
+      timestamp: Date.now(),
+    });
+  },
+
+  undoLastCard(state: InitialGameState) {
+    const { cards } = state;
+
+    if (!cards.currentCard) return;
+
+    // Put current card back in pool
+    cards.cardPool.push(cards.currentCard);
+
+    // Check if there was a previous card
+    if (cards.previousCards.length > 0) {
+      // Get the last previous card
+      const lastCard = cards.previousCards.pop();
+      cards.currentCard = lastCard || null;
+    } else if (cards.ongoingCards.length > 0) {
+      // If no previous cards, check ongoing cards
+      const lastOngoing = cards.ongoingCards.pop();
+      cards.currentCard = lastOngoing || null;
+    } else {
+      // No cards to undo to
+      cards.currentCard = null;
+    }
+
+    // Add to history
+    state.gameHistory.push({
+      cardId: cards.currentCard?.id || "",
+      action: "undone",
+      timestamp: Date.now(),
+    });
+  },
+
+  shuffleCardPool(state: InitialGameState) {
+    state.cards.cardPool = shuffleArray(state.cards.cardPool);
+  },
+
+  saveGameState(state: InitialGameState) {
+    const gameState = {
+      gameStarted: state.gameStarted,
+      deckSelected: state.deckSelected,
+      selectedDeckId: state.selectedDeckId,
+      cards: state.cards,
+      gameHistory: state.gameHistory,
+      savedAt: Date.now(),
+    };
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("archenemyGameState", JSON.stringify(gameState));
+    }
+  },
+
+  loadGameState(state: InitialGameState) {
+    if (typeof window !== "undefined") {
+      const savedState = localStorage.getItem("archenemyGameState");
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+        state.gameStarted = parsed.gameStarted;
+        state.deckSelected = parsed.deckSelected;
+        state.selectedDeckId = parsed.selectedDeckId;
+        state.cards = parsed.cards;
+        state.gameHistory = parsed.gameHistory || [];
+      }
+    }
+  },
+
+  clearSavedGame() {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("archenemyGameState");
+    }
   },
 };
 
@@ -103,13 +205,14 @@ export const gameSlice = createSlice({
   name: "game",
   initialState: initialGameState as InitialGameState,
   reducers: gameSliceReducer,
-  // TODO: get rid of this once you can choose decks when starting the game, even if the deck is just all 100 archenemy cards
   extraReducers: (builder) => {
     builder.addCase(fetchAllArchenemyDecks.fulfilled, (state, action) => {
       state.decks = action.payload;
     });
     builder.addCase(deleteArchenemyDeck.fulfilled, (state, action) => {
-      state.decks = state.decks.filter((deck) => deck.id !== action.payload);
+      state.decks = state.decks.filter(
+        (deck: CustomArchenemyDeck) => deck.id !== action.payload
+      );
     });
   },
 });
@@ -120,4 +223,9 @@ export const {
   selectDeck,
   abandonScheme,
   chooseSingleCard,
+  undoLastCard,
+  shuffleCardPool,
+  saveGameState,
+  loadGameState,
+  clearSavedGame,
 } = gameSlice.actions;
