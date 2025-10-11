@@ -42,6 +42,13 @@ const Header = ({
           <LinkButton
             variant="transparent"
             className={classes.control}
+            href="/popular-cards"
+          >
+            Popular Cards
+          </LinkButton>
+          <LinkButton
+            variant="transparent"
+            className={classes.control}
             href="/decks/builder"
           >
             Deck Builder
