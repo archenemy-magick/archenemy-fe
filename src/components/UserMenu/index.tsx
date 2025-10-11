@@ -6,6 +6,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "~/store/configureStore";
 import { signOut } from "~/store/reducers";
 import { useRouter } from "next/navigation";
+import { IconDownload } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 
 export function UserMenu() {
   const dispatch = useDispatch<AppDispatch>();
@@ -13,6 +15,47 @@ export function UserMenu() {
   const { username, email, isAuthenticated } = useSelector(
     (state: RootState) => state.user
   );
+
+  const [canInstall, setCanInstall] = useState(false);
+
+  useEffect(() => {
+    // Check if install prompt is available
+    const checkInstallable = () => {
+      const prompt = window.__pwaInstallPrompt;
+      setCanInstall(!!prompt);
+    };
+
+    checkInstallable();
+
+    // Listen for the prompt event
+    const handler = () => checkInstallable();
+    window.addEventListener("beforeinstallprompt", handler);
+
+    // Also check periodically in case prompt becomes available
+    const interval = setInterval(checkInstallable, 1000);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    const prompt = window.__pwaInstallPrompt as BeforeInstallPromptEvent;
+    if (!prompt) return;
+
+    try {
+      await prompt.prompt();
+      const { outcome } = await prompt.userChoice;
+
+      if (outcome === "accepted") {
+        setCanInstall(false);
+        delete window.__pwaInstallPrompt;
+      }
+    } catch (error) {
+      console.error("Install prompt error:", error);
+    }
+  };
 
   const handleSignOut = async () => {
     await dispatch(signOut());
@@ -65,6 +108,18 @@ export function UserMenu() {
         </Menu.Item>
 
         <Menu.Divider />
+
+        {canInstall && (
+          <>
+            <Menu.Item
+              leftSection={<IconDownload size={14} />}
+              onClick={handleInstallClick}
+            >
+              Install App
+            </Menu.Item>
+            <Menu.Divider />
+          </>
+        )}
 
         <Menu.Item
           color="red"
