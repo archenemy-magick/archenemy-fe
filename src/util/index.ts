@@ -1,0 +1,1 @@
+export { flattenDeck } from "./flattenDeck";

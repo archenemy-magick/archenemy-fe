@@ -1,5 +1,10 @@
-import { CustomArchenemyCard } from "~/types";
+import {
+  CustomArchenemyCard,
+  CustomArchenemyDeck,
+  SupabaseDeckResponse,
+} from "~/types";
 import { createClient } from "../supabase/client";
+import { flattenDeck } from "~/util";
 
 // Type for the nested deck_cards structure from Supabase
 type DeckCardRelation = {
@@ -33,13 +38,19 @@ export async function getUserDecks() {
 
   if (error) throw error;
 
-  const slightlyFlattenedDeck = data.map((deck) => ({
+  // Map the old structure to new structure for this endpoint
+  type OldStructure = Omit<SupabaseDeckResponse, "deck_cards"> & {
+    deck_cards: {
+      id: string;
+      card: CustomArchenemyCard;
+    }[];
+  };
+
+  return (data as unknown as OldStructure[]).map((deck) => ({
     ...deck,
-    deck_cards: (deck.deck_cards as unknown as DeckCardRelation[]).map(
-      (dc) => dc.card
-    ),
+    lang: deck.lang || "en",
+    deck_cards: deck.deck_cards.map((dc) => dc.card),
   }));
-  return slightlyFlattenedDeck;
 }
 
 // Get single deck by ID
@@ -60,14 +71,20 @@ export async function getDeckById(deckId: string) {
 
   if (error) throw error;
 
-  const slightlyFlattenedDeck = {
-    ...data,
-    deck_cards: (data.deck_cards as unknown as DeckCardRelation[]).map(
-      (dc) => dc.card
-    ),
+  type OldStructure = Omit<SupabaseDeckResponse, "deck_cards"> & {
+    deck_cards: {
+      id: string;
+      card: CustomArchenemyCard;
+    }[];
   };
 
-  return slightlyFlattenedDeck;
+  const deck = data as unknown as OldStructure;
+
+  return {
+    ...deck,
+    lang: deck.lang || "en",
+    deck_cards: deck.deck_cards.map((dc) => dc.card),
+  };
 }
 
 // Create new deck
@@ -188,8 +205,6 @@ export async function getDeckCards(deckId: string) {
   );
 }
 
-// Replace the getPublicDecks function in src/lib/api/decks.ts with this:
-
 export async function getPublicDecks() {
   const { data, error } = await supabase
     .from("archenemy_decks")
@@ -219,24 +234,8 @@ export async function getPublicDecks() {
     throw error;
   }
 
-  // Type for the nested structure from Supabase
-  type DeckCardWithCard = {
-    archenemy_cards: CustomArchenemyCard | null;
-  };
-
-  // Transform the nested data structure
-  const transformedData = data.map((deck) => ({
-    ...deck,
-    deck_cards:
-      (deck.deck_cards as unknown as DeckCardWithCard[])
-        ?.map((dc) => dc.archenemy_cards)
-        .filter((card): card is CustomArchenemyCard => card !== null) || [],
-  }));
-
-  return transformedData;
+  return (data as unknown as SupabaseDeckResponse[]).map(flattenDeck);
 }
-
-// Replace the cloneDeck function with this fixed version:
 
 export async function cloneDeck(deckId: string) {
   const {
@@ -276,7 +275,7 @@ export async function cloneDeck(deckId: string) {
     .insert({
       name: `${originalDeck.name} (Copy)`,
       description: originalDeck.description,
-      is_public: false, // Cloned decks are private by default
+      is_public: false,
       is_archived: false,
       user_id: user.id,
     })
@@ -288,12 +287,10 @@ export async function cloneDeck(deckId: string) {
     throw createError;
   }
 
-  // Type for the deck_cards structure
   type DeckCardRelation = {
     card_id: string;
   };
 
-  // Copy all the cards to the new deck
   const cardAssociations = (
     originalDeck.deck_cards as unknown as DeckCardRelation[]
   ).map((dc) => ({
@@ -306,7 +303,6 @@ export async function cloneDeck(deckId: string) {
     .insert(cardAssociations);
 
   if (cardsError) {
-    // If card insertion fails, clean up the deck we created
     await supabase.from("archenemy_decks").delete().eq("id", newDeck.id);
     console.error("Error copying cards to cloned deck:", cardsError);
     throw cardsError;
@@ -328,5 +324,171 @@ export async function incrementDeckViews(deckId: string) {
   if (error) {
     console.error("Error incrementing deck views:", error);
     // Don't throw - view count is not critical
+  }
+}
+
+export async function likeDeck(deckId: string) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("You must be logged in to like a deck");
+
+  const { data, error } = await supabase
+    .from("deck_likes")
+    .insert({
+      deck_id: deckId,
+      user_id: user.id,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Unlike a deck
+ */
+export async function unlikeDeck(deckId: string) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("You must be logged in to unlike a deck");
+
+  const { error } = await supabase
+    .from("deck_likes")
+    .delete()
+    .eq("deck_id", deckId)
+    .eq("user_id", user.id);
+
+  if (error) throw error;
+}
+
+/**
+ * Check if current user has liked a deck
+ */
+export async function hasUserLikedDeck(deckId: string): Promise<boolean> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return false;
+
+  const { data, error } = await supabase
+    .from("deck_likes")
+    .select("id")
+    .eq("deck_id", deckId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return !!data;
+}
+
+/**
+ * Get likes for multiple decks (efficient batch check)
+ */
+export async function getUserLikesForDecks(deckIds: string[]) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return new Set<string>();
+
+  const { data, error } = await supabase
+    .from("deck_likes")
+    .select("deck_id")
+    .eq("user_id", user.id)
+    .in("deck_id", deckIds);
+
+  if (error) throw error;
+
+  return new Set(data.map((like) => like.deck_id));
+}
+
+export async function getUserLikedDecks() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Not authenticated");
+
+  const { data, error } = await supabase
+    .from("deck_likes")
+    .select(
+      `
+      created_at,
+      deck:archenemy_decks (
+        *,
+        profiles:user_id (
+          username
+        ),
+        deck_cards:archenemy_deck_cards (
+          archenemy_cards (
+            id,
+            name,
+            type_line,
+            oracle_text,
+            normal_image
+          )
+        )
+      )
+    `
+    )
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  type LikeResponse = {
+    created_at: string;
+    deck: SupabaseDeckResponse;
+  };
+
+  return (data as unknown as LikeResponse[]).map((like) => ({
+    ...flattenDeck(like.deck),
+    liked_at: like.created_at,
+  }));
+}
+
+/**
+ * Get most popular cards
+ */
+export async function getPopularCards(limit: number = 20) {
+  const { data, error } = await supabase
+    .from("card_popularity")
+    .select("*")
+    .order("deck_count", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Get card statistics
+ */
+export async function getCardStats(cardId: string) {
+  const { data, error } = await supabase
+    .from("card_popularity")
+    .select("*")
+    .eq("id", cardId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Refresh card popularity stats (call this periodically or after deck changes)
+ */
+export async function refreshCardPopularity() {
+  const { error } = await supabase.rpc("refresh_card_popularity");
+
+  if (error) {
+    console.error("Error refreshing card popularity:", error);
+    // Don't throw - this is not critical
   }
 }
