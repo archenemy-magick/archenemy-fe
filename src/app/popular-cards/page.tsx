@@ -178,9 +178,7 @@ const PopularCardsPage = () => {
           {selectedCards.length > 0 && (
             <Paper p="md" withBorder>
               <Stack gap="xs">
-                <Badge size="lg" variant="light">
-                  {selectedCards.length} cards selected
-                </Badge>
+                <Badge size="lg">{selectedCards.length} cards selected</Badge>
                 <Group gap="xs">
                   <Button
                     size="sm"
@@ -210,8 +208,8 @@ const PopularCardsPage = () => {
             withBorder
             style={{
               background: isCardSelected(topCard.id)
-                ? "linear-gradient(135deg, var(--mantine-color-blue-1), var(--mantine-color-cyan-1))"
-                : "linear-gradient(135deg, var(--mantine-color-yellow-1), var(--mantine-color-orange-1))",
+                ? "linear-gradient(135deg, var(--mantine-color-violet-9), var(--mantine-color-grape-9))"
+                : "linear-gradient(135deg, var(--mantine-color-orange-9), var(--mantine-color-yellow-9))",
               cursor: "pointer",
               transition: "all 0.2s",
             }}
@@ -229,7 +227,7 @@ const PopularCardsPage = () => {
                   <Badge
                     size="lg"
                     variant="filled"
-                    color="blue"
+                    color="violet"
                     style={{
                       position: "absolute",
                       top: 8,
@@ -243,46 +241,48 @@ const PopularCardsPage = () => {
               <Stack gap="sm" style={{ flex: 1 }}>
                 <Group justify="space-between">
                   <div>
-                    <Badge size="lg" variant="filled" color="yellow" mb="xs">
+                    <Badge size="lg" variant="filled" color="orange" mb="xs">
                       🏆 #1 Most Popular
                     </Badge>
-                    <Title order={2}>{topCard.name}</Title>
-                    <Badge variant="light" mt="xs">
+                    <Title order={2} c="white">
+                      {topCard.name}
+                    </Title>
+                    <Badge variant="light" mt="xs" color="gray.0" c="dark">
                       {topCard.type_line}
                     </Badge>
                   </div>
                 </Group>
 
-                <Text size="sm" style={{ fontStyle: "italic" }}>
+                <Text size="sm" style={{ fontStyle: "italic" }} c="gray.1">
                   {topCard.oracle_text}
                 </Text>
 
                 <Group gap="xl" mt="md">
                   <div>
                     <Group gap="xs">
-                      <IconCards size={20} />
-                      <Text size="xl" fw={700}>
+                      <IconCards size={20} color="white" />
+                      <Text size="xl" fw={700} c="white">
                         {topCard.deck_count}
                       </Text>
                     </Group>
-                    <Text size="xs" c="dimmed">
+                    <Text size="xs" c="gray.2">
                       Decks
                     </Text>
                   </div>
                   <div>
                     <Group gap="xs">
-                      <IconUsers size={20} />
-                      <Text size="xl" fw={700}>
+                      <IconUsers size={20} color="white" />
+                      <Text size="xl" fw={700} c="white">
                         {topCard.unique_users}
                       </Text>
                     </Group>
-                    <Text size="xs" c="dimmed">
+                    <Text size="xs" c="gray.2">
                       Users
                     </Text>
                   </div>
                 </Group>
 
-                <Text size="sm" c="dimmed" mt="xs">
+                <Text size="sm" c="gray.2" mt="xs">
                   {isCardSelected(topCard.id)
                     ? "Click to deselect"
                     : "Click to add to your deck"}
@@ -331,7 +331,6 @@ const PopularCardsPage = () => {
                     bottom: 8,
                     left: 8,
                     right: 8,
-                    backgroundColor: "rgba(255, 255, 255, 0.95)",
                   }}
                 >
                   <Group gap="xs" justify="space-between">

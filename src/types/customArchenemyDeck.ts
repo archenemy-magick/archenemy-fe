@@ -12,4 +12,5 @@ export interface CustomArchenemyDeck {
   description: string;
   is_archived: boolean;
   is_public: boolean;
+  like_count?: number;
 }

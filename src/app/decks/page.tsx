@@ -14,6 +14,8 @@ import {
   ActionIcon,
   Menu,
   Modal,
+  Grid,
+  Image,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,7 +27,11 @@ import {
   IconEye,
   IconEdit,
   IconTrash,
+  IconPlayerPlay,
+  IconEditCircle,
   IconPlus,
+  IconDotsVertical,
+  IconCards,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 
@@ -48,6 +54,7 @@ const DecksPage = () => {
     }
   }, [dispatch, isAuthenticated]);
 
+  // TODO: why are these unused?
   const handleViewDeck = (deckId: string) => {
     router.push(`/decks/${deckId}`);
   };
@@ -156,83 +163,130 @@ const DecksPage = () => {
             </Stack>
           </Card>
         ) : (
-          <Stack gap="md">
-            {decks &&
-              decks.map((deck) => (
+          <Grid>
+            {decks.map((deck) => (
+              <Grid.Col key={deck.id} span={{ base: 12, sm: 6, lg: 4 }}>
                 <Card
-                  key={deck.id}
                   shadow="sm"
                   padding="lg"
-                  radius="md"
                   withBorder
-                  style={{ cursor: "pointer" }}
+                  style={{
+                    height: "100%",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  onClick={() => router.push(`/decks/${deck.id}`)}
+                  className="card-hover"
                 >
-                  <Flex justify="space-between" align="flex-start">
-                    <Box
-                      style={{ flex: 1 }}
-                      onClick={() => handleViewDeck(deck.id)}
-                    >
-                      <Group gap="sm" mb="xs">
-                        <Title order={3}>{deck.name}</Title>
-                        {deck.is_public ? (
-                          <Badge color="green" variant="light">
-                            Public
-                          </Badge>
-                        ) : (
-                          <Badge color="gray" variant="light">
-                            Private
-                          </Badge>
-                        )}
-                        {deck.is_archived && (
-                          <Badge color="red" variant="light">
-                            Archived
+                  {/* Card Preview Strip */}
+                  {deck.deck_cards && deck.deck_cards.length > 0 && (
+                    <Card.Section mb="md">
+                      <Group
+                        gap={0}
+                        wrap="nowrap"
+                        style={{ overflow: "hidden", height: 120 }}
+                      >
+                        {deck.deck_cards.slice(0, 5).map((card, index) => (
+                          <Box
+                            key={card.id}
+                            style={{
+                              flex: 1,
+                              height: 120,
+                              minWidth: 0,
+                            }}
+                          >
+                            <Image
+                              src={card.normal_image}
+                              alt={card.name}
+                              fit="cover"
+                              h={120}
+                              style={{
+                                filter: "brightness(0.9)",
+                              }}
+                            />
+                          </Box>
+                        ))}
+                      </Group>
+                    </Card.Section>
+                  )}
+
+                  <Stack justify="space-between" style={{ minHeight: 140 }}>
+                    <div>
+                      <Group justify="space-between" mb="xs">
+                        <Text fw={600} size="lg" lineClamp={1}>
+                          {deck.name}
+                        </Text>
+                        {deck.is_public && (
+                          <Badge color="green" variant="light" size="sm">
+                            PUBLIC
                           </Badge>
                         )}
                       </Group>
+
                       {deck.description && (
-                        <Text size="sm" c="dimmed" mb="xs">
+                        <Text size="sm" c="dimmed" lineClamp={2} mb="md">
                           {deck.description}
                         </Text>
                       )}
-                      <Text size="sm" c="dimmed">
-                        {deck.deck_cards?.length || 0} cards
-                      </Text>
-                    </Box>
 
-                    <Menu shadow="md" width={200}>
-                      <Menu.Target>
-                        <ActionIcon variant="subtle" color="gray">
-                          <IconDots size={16} />
-                        </ActionIcon>
-                      </Menu.Target>
+                      <Group gap="xs">
+                        <Badge
+                          variant="light"
+                          leftSection={<IconCards size={12} />}
+                        >
+                          {deck.deck_cards?.length || 0} cards
+                        </Badge>
+                        {deck.like_count !== undefined &&
+                          deck.like_count > 0 && (
+                            <Badge variant="light" color="pink">
+                              {deck.like_count} ❤️
+                            </Badge>
+                          )}
+                      </Group>
+                    </div>
 
-                      <Menu.Dropdown>
-                        <Menu.Item
-                          leftSection={<IconEye size={14} />}
-                          onClick={() => handleViewDeck(deck.id)}
-                        >
-                          View
-                        </Menu.Item>
-                        <Menu.Item
-                          leftSection={<IconEdit size={14} />}
-                          onClick={() => handleEditDeck(deck.id)}
-                        >
-                          Edit
-                        </Menu.Item>
-                        <Menu.Divider />
-                        <Menu.Item
-                          leftSection={<IconTrash size={14} />}
-                          color="red"
-                          onClick={() => openDeleteModal(deck.id, deck.name)}
-                        >
-                          Delete
-                        </Menu.Item>
-                      </Menu.Dropdown>
-                    </Menu>
-                  </Flex>
+                    <Group gap="xs" mt="md">
+                      <Button
+                        variant="light"
+                        color="green"
+                        leftSection={<IconPlayerPlay size={16} />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/game/archenemy?deck=${deck.id}`);
+                        }}
+                        style={{ flex: 1 }}
+                      >
+                        Play
+                      </Button>
+                      <Button
+                        variant="light"
+                        color="violet"
+                        leftSection={<IconEdit size={16} />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/decks/builder?edit=${deck.id}`);
+                        }}
+                        style={{ flex: 1 }}
+                      >
+                        Edit
+                      </Button>
+                      <ActionIcon
+                        variant="light"
+                        color="gray"
+                        size="lg"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Open menu
+                        }}
+                      >
+                        <IconDotsVertical size={18} />
+                      </ActionIcon>
+                    </Group>
+                  </Stack>
                 </Card>
-              ))}
-          </Stack>
+              </Grid.Col>
+            ))}
+          </Grid>
         )}
       </Stack>
     </Container>
