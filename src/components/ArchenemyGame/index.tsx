@@ -19,6 +19,9 @@ import {
   ActionIcon,
   Tooltip,
   ScrollArea,
+  Progress,
+  SimpleGrid,
+  Paper,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -152,7 +155,13 @@ const ArchenemyGame = () => {
   const totalCards = cardPool.length + totalCardsPlayed;
 
   return (
-    <Grid>
+    <Stack
+      gap="md"
+      p="md"
+      style={{
+        minHeight: "100vh",
+      }}
+    >
       {decks?.length > 0 && (
         <DeckSelectorModal
           open={!gameStarted && !deckSelected}
@@ -161,8 +170,6 @@ const ArchenemyGame = () => {
           decks={decks}
         />
       )}
-
-      {/* Card Detail Modal */}
       <Modal
         opened={cardModalOpened}
         onClose={closeCardModal}
@@ -176,8 +183,6 @@ const ArchenemyGame = () => {
           />
         )}
       </Modal>
-
-      {/* Game History Modal */}
       <Modal
         opened={historyOpened}
         onClose={closeHistory}
@@ -228,207 +233,295 @@ const ArchenemyGame = () => {
           </Stack>
         </ScrollArea>
       </Modal>
-
-      <Grid.Col
-        span={{
-          base: 12,
-          md: 4,
-        }}
-      >
-        <Box
-          style={{
-            border: "1px solid #eee",
-            borderRadius: "4px",
-            backgroundColor: lighten("var(--mantine-color-gray-8)", 0.1),
-          }}
-        >
-          <Stack justify="space-between" style={{ height: "100%" }} gap="md">
-            {/* Card Counter */}
-            <Box p="md">
-              <Group justify="space-between" mb="sm">
-                <Badge
-                  size="lg"
-                  variant="light"
-                  leftSection={<IconCards size={14} />}
-                >
-                  {cardPool.length} remaining
-                </Badge>
-                <Badge size="lg" variant="light" color="green">
-                  {totalCardsPlayed} played
-                </Badge>
+      <Grid gutter="md">
+        {/* LEFT COLUMN - Current Scheme & Controls */}
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <Stack gap="md">
+            {/* Stats Card */}
+            <Paper p="md" withBorder>
+              <Group justify="space-between" mb="md">
+                <div>
+                  <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                    Remaining
+                  </Text>
+                  <Group gap="xs">
+                    <IconCards size={20} color="var(--mantine-color-blue-4)" />
+                    <Text size="xl" fw={700}>
+                      {cardPool.length}
+                    </Text>
+                  </Group>
+                </div>
+                <div>
+                  <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                    Played
+                  </Text>
+                  <Group gap="xs">
+                    <Text size="xl" fw={700}>
+                      {totalCardsPlayed}
+                    </Text>
+                  </Group>
+                </div>
               </Group>
-              <Divider mb="md" />
+              <Progress
+                value={(totalCardsPlayed / totalCards) * 100}
+                color="violet"
+                size="sm"
+                radius="xl"
+              />
+            </Paper>
 
-              <Title order={3} mb="md">
+            {/* Current Scheme Card */}
+            <Paper p="lg" withBorder>
+              <Title order={3} mb="md" c="violet.4">
                 Current Scheme
               </Title>
 
               <Center>
-                <Stack gap="xs">
-                  <CardSlot card={currentCard} emptyMessage="Play a Scheme!" />
+                <Stack gap="md" style={{ width: "100%", maxWidth: 300 }}>
+                  {currentCard ? (
+                    <Box
+                      style={{
+                        borderRadius: "var(--mantine-radius-md)",
+                        overflow: "hidden",
+                        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
+                      }}
+                    >
+                      <Image
+                        src={currentCard.normal_image}
+                        alt={currentCard.name}
+                        onClick={() => displayCardInModal(currentCard)}
+                        style={{ cursor: "pointer" }}
+                      />
+                    </Box>
+                  ) : (
+                    <Box
+                      p="xl"
+                      style={{
+                        border: "2px dashed var(--mantine-color-dark-4)",
+                        borderRadius: "var(--mantine-radius-md)",
+                        textAlign: "center",
+                      }}
+                    >
+                      <IconCards
+                        size={48}
+                        color="var(--mantine-color-dark-4)"
+                      />
+                      <Text c="dimmed" mt="md">
+                        No scheme played yet
+                      </Text>
+                    </Box>
+                  )}
+
                   <Button
-                    mt="md"
                     onClick={() => dispatch(chooseSingleCard())}
-                    color="blue"
                     disabled={cardPool.length === 0}
+                    size="lg"
                     fullWidth
+                    gradient={{ from: "violet", to: "grape", deg: 135 }}
+                    variant="gradient"
                   >
                     Play {previousCards.length > 0 || currentCard ? "New" : "A"}{" "}
                     Scheme
                   </Button>
                 </Stack>
               </Center>
-            </Box>
+            </Paper>
 
             {/* Game Controls */}
-            <Box p="md">
-              <Stack gap="xs">
-                <Text size="sm" fw={500} mb="xs">
-                  Game Controls
-                </Text>
+            <Paper p="md" withBorder>
+              <Text size="sm" fw={600} mb="md" c="dimmed" tt="uppercase">
+                Game Controls
+              </Text>
 
-                <Group gap="xs">
-                  <Tooltip label="Undo last card">
-                    <ActionIcon
-                      size="lg"
-                      variant="light"
-                      onClick={handleUndo}
-                      disabled={
-                        !currentCard &&
-                        previousCards.length === 0 &&
-                        ongoingCards.length === 0
-                      }
-                    >
-                      <IconArrowBack size={18} />
-                    </ActionIcon>
-                  </Tooltip>
+              <SimpleGrid cols={2} spacing="xs" mb="md">
+                <Tooltip label="Undo last card">
+                  <Button
+                    variant="light"
+                    color="blue"
+                    onClick={handleUndo}
+                    disabled={!currentCard && previousCards.length === 0}
+                    leftSection={<IconArrowBack size={18} />}
+                  >
+                    Undo
+                  </Button>
+                </Tooltip>
 
-                  <Tooltip label="Shuffle remaining cards">
-                    <ActionIcon
-                      size="lg"
-                      variant="light"
-                      onClick={handleShuffle}
-                      disabled={cardPool.length === 0}
-                    >
-                      <IconArrowsShuffle size={18} />
-                    </ActionIcon>
-                  </Tooltip>
+                <Tooltip label="Shuffle deck">
+                  <Button
+                    variant="light"
+                    color="grape"
+                    onClick={handleShuffle}
+                    disabled={cardPool.length === 0}
+                    leftSection={<IconArrowsShuffle size={18} />}
+                  >
+                    Shuffle
+                  </Button>
+                </Tooltip>
 
-                  <Tooltip label="Save game">
-                    <ActionIcon
-                      size="lg"
-                      variant="light"
-                      color="green"
-                      onClick={handleSaveGame}
-                    >
-                      <IconDeviceFloppy size={18} />
-                    </ActionIcon>
-                  </Tooltip>
+                <Tooltip label="Save game">
+                  <Button
+                    variant="light"
+                    color="green"
+                    onClick={handleSaveGame}
+                    leftSection={<IconDeviceFloppy size={18} />}
+                  >
+                    Save
+                  </Button>
+                </Tooltip>
 
-                  <Tooltip label="View history">
-                    <ActionIcon
-                      size="lg"
-                      variant="light"
-                      color="blue"
-                      onClick={openHistory}
-                    >
-                      <IconHistory size={18} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
+                <Tooltip label="View history">
+                  <Button
+                    variant="light"
+                    color="cyan"
+                    onClick={openHistory}
+                    leftSection={<IconHistory size={18} />}
+                  >
+                    History
+                  </Button>
+                </Tooltip>
+              </SimpleGrid>
 
-                <Button color="red" onClick={handleEndGame} fullWidth mt="md">
-                  End Game
-                </Button>
-              </Stack>
-            </Box>
+              <Button
+                color="red"
+                onClick={handleEndGame}
+                fullWidth
+                variant="light"
+              >
+                End Game
+              </Button>
+            </Paper>
           </Stack>
-        </Box>
-      </Grid.Col>
+        </Grid.Col>
 
-      <Grid.Col
-        span={{
-          base: 12,
-          md: 8,
-        }}
-      >
-        <Stack gap="xl">
-          <Box
-            style={{
-              border: "1px solid #eee",
-              borderRadius: "4px",
-              backgroundColor: lighten("var(--mantine-color-gray-8)", 0.1),
-            }}
-          >
-            <Title order={3} m="md">
-              Previous Schemes
-            </Title>
-            {previousCards.length === 0 ? (
-              <Center style={{ minHeight: 380 }}>No previous schemes</Center>
-            ) : (
-              <Carousel
-                slideSize="200px"
-                mih={200}
-                slideGap="md"
-                controlsOffset="sm"
-                controlSize={26}
-                withControls
-                withIndicators={false}
-                orientation="horizontal"
-                emblaOptions={{ dragFree: true }}
-                m="md"
-              >
-                {previousCards.map((card: CustomArchenemyCard) => (
-                  <Carousel.Slide key={card.id}>
-                    <CardCard card={card} onOpenModal={displayCardInModal} />
-                  </Carousel.Slide>
-                ))}
-              </Carousel>
-            )}
-          </Box>
-          <Box
-            style={{
-              border: "1px solid #eee",
-              borderRadius: "4px",
-              backgroundColor: lighten("var(--mantine-color-gray-8)", 0.1),
-            }}
-          >
-            <Title order={3} m="md">
-              Ongoing Schemes
-            </Title>
-            {ongoingCards.length === 0 ? (
-              <Center style={{ minHeight: 520 }}>No ongoing schemes</Center>
-            ) : (
-              <Carousel
-                slideSize="200px"
-                slideGap="md"
-                controlsOffset="sm"
-                controlSize={26}
-                withControls
-                withIndicators={false}
-                orientation="horizontal"
-                emblaOptions={{ dragFree: true }}
-                mih={200}
-                m="md"
-              >
-                {ongoingCards.map(
-                  (card: CustomArchenemyCard, index: number) => (
+        {/* RIGHT COLUMN - Previous & Ongoing Schemes */}
+        <Grid.Col span={{ base: 12, md: 8 }}>
+          <Stack gap="md">
+            {/* Previous Schemes */}
+            <Paper p="lg" withBorder>
+              <Group justify="space-between" mb="md">
+                <Title order={3} c="blue.4">
+                  Previous Schemes
+                </Title>
+                <Badge variant="light" size="lg">
+                  {previousCards.length} cards
+                </Badge>
+              </Group>
+
+              {previousCards.length === 0 ? (
+                <Center py="xl">
+                  <Stack align="center" gap="xs">
+                    <IconCards size={48} color="var(--mantine-color-dark-4)" />
+                    <Text c="dimmed">No previous schemes yet</Text>
+                  </Stack>
+                </Center>
+              ) : (
+                <Carousel
+                  slideSize="220px"
+                  slideGap="md"
+                  controlsOffset="sm"
+                  controlSize={40}
+                  withControls
+                  styles={{
+                    control: {
+                      background: "var(--mantine-color-dark-6)",
+                      border: "none",
+                      color: "white",
+                      "&:hover": {
+                        background: "var(--mantine-color-violet-6)",
+                      },
+                    },
+                  }}
+                >
+                  {previousCards.map((card) => (
                     <Carousel.Slide key={card.id}>
-                      <CardCard
-                        buttonText="Abandon Scheme"
-                        onButtonClick={() => dispatch(abandonScheme({ index }))}
-                        onOpenModal={displayCardInModal}
-                        card={card}
-                      />
+                      <Box
+                        onClick={() => displayCardInModal(card)}
+                        style={{
+                          borderRadius: "var(--mantine-radius-md)",
+                          overflow: "hidden",
+                          cursor: "pointer",
+                          transition:
+                            "transform 0.2s ease, box-shadow 0.2s ease",
+                        }}
+                        className="card-hover"
+                      >
+                        <Image src={card.normal_image} alt={card.name} />
+                      </Box>
                     </Carousel.Slide>
-                  )
-                )}
-              </Carousel>
-            )}
-          </Box>
-        </Stack>
-      </Grid.Col>
-    </Grid>
+                  ))}
+                </Carousel>
+              )}
+            </Paper>
+
+            {/* Ongoing Schemes */}
+            <Paper p="lg" withBorder>
+              <Group justify="space-between" mb="md">
+                <Title order={3} c="grape.4">
+                  Ongoing Schemes
+                </Title>
+                <Badge variant="light" size="lg" color="grape">
+                  {ongoingCards.length} active
+                </Badge>
+              </Group>
+
+              {ongoingCards.length === 0 ? (
+                <Center py="xl">
+                  <Stack align="center" gap="xs">
+                    <IconCards size={48} color="var(--mantine-color-dark-4)" />
+                    <Text c="dimmed">No ongoing schemes</Text>
+                  </Stack>
+                </Center>
+              ) : (
+                <Carousel
+                  slideSize="220px"
+                  slideGap="md"
+                  controlsOffset="sm"
+                  controlSize={40}
+                  withControls
+                  styles={{
+                    control: {
+                      background: "var(--mantine-color-dark-6)",
+                      border: "none",
+                      color: "white",
+                      "&:hover": {
+                        background: "var(--mantine-color-grape-6)",
+                      },
+                    },
+                  }}
+                >
+                  {ongoingCards.map((card, index) => (
+                    <Carousel.Slide key={card.id}>
+                      <Stack gap="xs">
+                        <Box
+                          onClick={() => displayCardInModal(card)}
+                          style={{
+                            borderRadius: "var(--mantine-radius-md)",
+                            overflow: "hidden",
+                            cursor: "pointer",
+                          }}
+                          className="card-hover"
+                        >
+                          <Image src={card.normal_image} alt={card.name} />
+                        </Box>
+                        <Button
+                          onClick={() => dispatch(abandonScheme({ index }))}
+                          color="red"
+                          variant="light"
+                          size="sm"
+                          fullWidth
+                        >
+                          Abandon
+                        </Button>
+                      </Stack>
+                    </Carousel.Slide>
+                  ))}
+                </Carousel>
+              )}
+            </Paper>
+          </Stack>
+        </Grid.Col>
+      </Grid>
+    </Stack>
   );
 };
 

@@ -1,15 +1,39 @@
+// ============================================
+// Improved SaveDeckModal - Show actual card images
+// src/components/SaveDeckModal/index.tsx
+// ============================================
+
 import {
-  Box,
-  Button,
-  Grid,
-  Input,
   Modal,
-  Stack,
-  Title,
+  TextInput,
   Textarea,
+  Button,
+  Stack,
+  Group,
+  Text,
+  ScrollArea,
+  Grid,
+  Image,
+  Badge,
+  Box,
 } from "@mantine/core";
-import { CustomArchenemyCard } from "../../types";
 import { useState, useEffect } from "react";
+import { CustomArchenemyCard } from "~/types";
+
+interface SaveDeckModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSaveDeck: (data: {
+    deckName: string;
+    description?: string;
+    cards: CustomArchenemyCard[];
+  }) => void;
+  cards: CustomArchenemyCard[];
+  deckIsSaving: boolean;
+  initialName?: string;
+  initialDescription?: string;
+  isEditing?: boolean;
+}
 
 const SaveDeckModal = ({
   open,
@@ -20,110 +44,146 @@ const SaveDeckModal = ({
   initialName,
   initialDescription,
   isEditing,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onSaveDeck: ({
-    deckName,
-    description,
-    cards,
-  }: {
-    deckName: string;
-    description?: string;
-    cards: CustomArchenemyCard[];
-  }) => void;
-  cards: CustomArchenemyCard[];
-  deckIsSaving: boolean;
-  initialName?: string;
-  initialDescription?: string;
-  isEditing?: boolean;
-}) => {
-  const [deckName, setDeckName] = useState("");
-  const [description, setDescription] = useState("");
+}: SaveDeckModalProps) => {
+  const [deckName, setDeckName] = useState(initialName || "");
+  const [description, setDescription] = useState(initialDescription || "");
 
-  // Reset form when modal closes
   useEffect(() => {
-    if (!open) {
-      setDeckName("");
-      setDescription("");
-    }
-  }, [open]);
-
-  // Load initial values when editing
-  useEffect(() => {
-    if (open && initialName) {
-      setDeckName(initialName);
+    if (open) {
+      setDeckName(initialName || "");
       setDescription(initialDescription || "");
     }
   }, [open, initialName, initialDescription]);
 
-  const handleSaveDeck = () => {
-    if (deckName) {
-      onSaveDeck({ deckName, description, cards });
-    }
+  const handleSave = () => {
+    if (!deckName.trim()) return;
+    onSaveDeck({
+      deckName: deckName.trim(),
+      description: description.trim() || undefined,
+      cards,
+    });
   };
+
+  // Group cards by type
+  const cardsByType = cards.reduce((acc, card) => {
+    const type = card.type_line || "Other";
+    if (!acc[type]) acc[type] = [];
+    acc[type].push(card);
+    return acc;
+  }, {} as Record<string, CustomArchenemyCard[]>);
 
   return (
     <Modal
       opened={open}
       onClose={onClose}
-      fullScreen
-      closeButtonProps={{ hidden: true }}
+      title={
+        <Text size="xl" fw={700}>
+          {isEditing ? "Update Deck" : "Save Deck"}
+        </Text>
+      }
+      size="xl"
+      styles={{
+        title: {
+          width: "100%",
+        },
+      }}
     >
-      <Grid>
-        <Grid.Col span={12}>
-          <Title order={2} mb="md">
-            {isEditing ? "Update Deck" : "Save Deck"}
-          </Title>
-          <Input.Wrapper required label="Deck Name" mb="md">
-            <Input
-              placeholder="Enter deck name"
-              value={deckName}
-              onChange={(e) => setDeckName(e.currentTarget.value)}
-            />
-          </Input.Wrapper>
-          <Textarea
-            label="Description (optional)"
-            placeholder="Add a description for your deck"
-            value={description}
-            onChange={(e) => setDescription(e.currentTarget.value)}
-            mb="md"
-            rows={3}
-          />
-          <Title order={3} mb="md">
-            {isEditing
-              ? "Deck cards:"
-              : "You're about to save a deck with the following cards:"}
-          </Title>
-          <Stack align="flex-start">
-            {cards.map((card) => (
-              <Box
-                key={card.id}
-                style={{
-                  border: "1px solid lightgray",
-                  width: "500px",
-                  borderRadius: 8,
-                }}
-              >
-                <Stack p="xs" align="flex-start" justify="center">
-                  <Title key={card.id} order={4} mb="md" mr="md">
-                    {card.name}
-                  </Title>
-                </Stack>
-              </Box>
-            ))}
-          </Stack>
+      <Stack gap="md">
+        {/* Deck Info */}
+        <TextInput
+          label="Deck Name"
+          placeholder="Enter deck name"
+          value={deckName}
+          onChange={(e) => setDeckName(e.currentTarget.value)}
+          required
+          size="md"
+        />
+
+        <Textarea
+          label="Description (optional)"
+          placeholder="Add a description for your deck"
+          value={description}
+          onChange={(e) => setDescription(e.currentTarget.value)}
+          minRows={3}
+          size="md"
+        />
+
+        {/* Cards Preview */}
+        <div>
+          <Group justify="space-between" mb="md">
+            <Text fw={600} size="lg">
+              Cards in this Deck
+            </Text>
+            <Badge size="lg" variant="light">
+              {cards.length} cards
+            </Badge>
+          </Group>
+
+          <ScrollArea h={400} type="auto">
+            <Stack gap="lg">
+              {Object.entries(cardsByType).map(([type, typeCards]) => (
+                <div key={type}>
+                  <Group mb="sm">
+                    <Text size="sm" fw={600} c="dimmed" tt="uppercase">
+                      {type}
+                    </Text>
+                    <Badge size="sm" variant="light">
+                      {typeCards.length}
+                    </Badge>
+                  </Group>
+
+                  <Grid gutter="xs">
+                    {typeCards.map((card) => (
+                      <Grid.Col key={card.id} span={{ base: 4, sm: 3, md: 2 }}>
+                        <Box
+                          style={{
+                            position: "relative",
+                            borderRadius: "var(--mantine-radius-sm)",
+                            overflow: "hidden",
+                            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                          }}
+                        >
+                          <Image
+                            src={card.normal_image}
+                            alt={card.name}
+                            style={{
+                              width: "100%",
+                              height: "auto",
+                              display: "block",
+                            }}
+                          />
+                        </Box>
+                      </Grid.Col>
+                    ))}
+                  </Grid>
+                </div>
+              ))}
+            </Stack>
+          </ScrollArea>
+        </div>
+
+        {/* Actions */}
+        <Group justify="flex-end" mt="md">
           <Button
-            mt="md"
-            color="green"
-            onClick={() => handleSaveDeck()}
-            disabled={!deckName || cards.length === 0}
+            variant="subtle"
+            color="gray"
+            onClick={onClose}
+            disabled={deckIsSaving}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
             loading={deckIsSaving}
+            disabled={!deckName.trim() || cards.length === 0}
+            gradient={{ from: "violet", to: "grape", deg: 135 }}
+            variant="gradient"
+            size="md"
           >
             {isEditing ? "Update Deck" : "Save Deck"}
           </Button>
-        </Grid.Col>
-      </Grid>
+        </Group>
+      </Stack>
     </Modal>
   );
 };
