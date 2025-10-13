@@ -99,6 +99,12 @@ export function UserMenu() {
         >
           My Decks
         </Menu.Item>
+        <Menu.Item
+          leftSection={<IconCards size={14} />}
+          onClick={() => router.push("/")}
+        >
+          Home
+        </Menu.Item>
 
         <Menu.Item
           leftSection={<IconUser size={14} />}

@@ -1,4 +1,4 @@
-import { Group, Burger, ActionIcon } from "@mantine/core";
+import { Group, Burger, ActionIcon, Box } from "@mantine/core";
 import { IconBrandMantine, IconMoon, IconSun } from "@tabler/icons-react";
 import classes from "./MobileNavbar.module.css";
 import Link from "next/link";
@@ -24,13 +24,14 @@ const Header = ({
         size="sm"
         data-testid="mobile-burger"
       />
-      <UserMenu />
       <Group
         justify="space-between"
         style={{ flex: 1 }}
         data-testid="desktop-header-group"
       >
-        <IconBrandMantine size={30} />
+        <Box visibleFrom="sm">
+          <UserMenu />
+        </Box>
         <Group ml="xl" visibleFrom="sm" gap={0}>
           <LinkButton
             variant="transparent"

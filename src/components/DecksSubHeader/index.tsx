@@ -30,11 +30,10 @@ const DecksSubHeader = ({ title, subtitle }: DecksSubHeaderProps) => {
   return (
     <div
       style={{
-        borderBottom: "1px solid var(--mantine-color-gray-3)",
         backgroundColor: "var(--mantine-color-body)",
       }}
     >
-      <Container size="xl" py="sm">
+      <Container size="xl" pt="sm">
         {(title || subtitle) && (
           <Group mb="sm">
             {title && <Title order={2}>{title}</Title>}
