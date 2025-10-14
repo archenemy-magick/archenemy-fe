@@ -13,33 +13,72 @@ export default function CustomMantineProvider({
   return (
     <MantineProvider
       theme={{
-        primaryColor: "violet",
+        primaryColor: "magenta",
         colors: {
-          // Custom violet shades for Archenemy theme
+          // Vibrant Magenta - Primary brand color
+          magenta: [
+            "#ffe0f7", // Lightest
+            "#ffb3e6",
+            "#ff80d5",
+            "#ff4dc4",
+            "#ff1ab3",
+            "#e91e8c", // Primary magenta
+            "#d11a7d",
+            "#b8166e",
+            "#9e135e",
+            "#85104f", // Darkest
+          ],
+          // Deep Violet - Secondary/complementary
           violet: [
             "#f3f0ff",
             "#e5dbff",
             "#d0bfff",
             "#b197fc",
             "#9775fa",
-            "#845ef7", // Primary
+            "#845ef7", // Secondary violet
             "#7950f2",
             "#7048e8",
             "#6741d9",
             "#5f3dc4",
           ],
-          // Custom dark grays
+          // Rich Gold - Accent color
+          gold: [
+            "#fff8e1",
+            "#ffecb3",
+            "#ffe082",
+            "#ffd54f",
+            "#ffca28",
+            "#ffc107", // Primary gold
+            "#ffb300",
+            "#ffa000",
+            "#ff8f00",
+            "#ff6f00",
+          ],
+          // Deep Red - For warnings/danger states
+          crimson: [
+            "#ffe9e9",
+            "#ffd1d1",
+            "#ffb3b3",
+            "#ff8a8a",
+            "#ff6b6b",
+            "#e63946", // Danger/warning red
+            "#d62839",
+            "#c1121f",
+            "#a4161a",
+            "#780000",
+          ],
+          // Enhanced dark grays with slight purple tint
           dark: [
-            "#C9C9C9",
-            "#b8b8b8",
-            "#828282",
-            "#696969",
-            "#424242",
-            "#3b3b3b", // Card backgrounds
-            "#2e2e2e",
-            "#242424",
-            "#1f1f1f",
-            "#141414", // Darkest background
+            "#d4d4d8",
+            "#b8b8c0",
+            "#8a8a95",
+            "#6b6b75",
+            "#4a4a52",
+            "#3d3d45", // Card backgrounds
+            "#2f2f37",
+            "#26262e", // Slightly purple-tinted dark
+            "#1c1c22",
+            "#0f0f14", // Darkest background
           ],
         },
         defaultRadius: "md",
@@ -52,17 +91,17 @@ export default function CustomMantineProvider({
             h1: {
               fontSize: "2.025rem",
               lineHeight: "1.3",
-              fontWeight: "400",
+              fontWeight: "700",
             },
             h2: {
               fontSize: "1.625rem",
               lineHeight: "1.35",
-              fontWeight: "500",
+              fontWeight: "600",
             },
             h3: {
               fontSize: "1.375rem",
               lineHeight: "1.4",
-              fontWeight: "400",
+              fontWeight: "500",
             },
             h4: {
               fontSize: "1.125rem",
@@ -72,12 +111,12 @@ export default function CustomMantineProvider({
             h5: {
               fontSize: "1rem",
               lineHeight: "1.5",
-              fontWeight: "400",
+              fontWeight: "500",
             },
             h6: {
               fontSize: "0.875rem",
               lineHeight: "1.5",
-              fontWeight: "400",
+              fontWeight: "500",
             },
           },
         },
@@ -92,6 +131,7 @@ export default function CustomMantineProvider({
                 transition: "all 0.2s ease",
                 "&:hover": {
                   transform: "translateY(-1px)",
+                  boxShadow: "0 4px 16px rgba(233, 30, 140, 0.4)",
                 },
               },
             },
@@ -100,6 +140,17 @@ export default function CustomMantineProvider({
             defaultProps: {
               radius: "lg",
               shadow: "sm",
+            },
+            styles: {
+              root: {
+                borderLeft: "3px solid transparent",
+                transition: "all 0.2s ease",
+                background: "linear-gradient(145deg, #3d3d45 0%, #2f2f37 100%)",
+                "&:hover": {
+                  borderLeftColor: "#e91e8c",
+                  boxShadow: "0 8px 24px rgba(233, 30, 140, 0.15)",
+                },
+              },
             },
           },
           Paper: {
@@ -114,12 +165,51 @@ export default function CustomMantineProvider({
                 blur: 3,
               },
             },
+            styles: {
+              header: {
+                background: "linear-gradient(90deg, #e91e8c 0%, #845ef7 100%)",
+                paddingBottom: "1rem",
+                marginBottom: "1rem",
+              },
+              title: {
+                color: "#fff",
+                fontWeight: 700,
+              },
+            },
+          },
+          Badge: {
+            styles: {
+              root: {
+                textTransform: "uppercase",
+                fontWeight: 700,
+                letterSpacing: "0.5px",
+              },
+            },
+          },
+          ActionIcon: {
+            styles: {
+              root: {
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  transform: "scale(1.1)",
+                },
+              },
+            },
+          },
+        },
+        other: {
+          // Custom gradient utilities you can use in your components
+          gradients: {
+            primary: "linear-gradient(135deg, #e91e8c 0%, #845ef7 100%)",
+            secondary: "linear-gradient(135deg, #845ef7 0%, #ffc107 100%)",
+            danger: "linear-gradient(135deg, #e63946 0%, #e91e8c 100%)",
+            gold: "linear-gradient(135deg, #ffc107 0%, #ff8f00 100%)",
           },
         },
       }}
       defaultColorScheme="dark"
     >
-      <Notifications />
+      <Notifications position="top-right" />
 
       <AppShellLayout>{children}</AppShellLayout>
     </MantineProvider>
