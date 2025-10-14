@@ -26,6 +26,8 @@ import {
   IconPlayerPlay,
 } from "@tabler/icons-react";
 import Header from "../Header";
+import Footer from "~/components/Footer";
+
 import { useDisclosure } from "@mantine/hooks";
 import { useRouter, usePathname } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
@@ -206,6 +208,8 @@ const AppShellLayout = ({ children }: { children: React.ReactNode }) => {
       >
         {children}
       </AppShell.Main>
+
+      <Footer />
     </AppShell>
   );
 };
