@@ -5,7 +5,7 @@ const createJestConfig = nextJest({
 });
 
 const customJestConfig = {
-  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.mjs"], // Changed extension
   testEnvironment: "jest-environment-jsdom",
   moduleNameMapper: {
     "^~/(.*)$": "<rootDir>/src/$1",
@@ -27,7 +27,7 @@ const customJestConfig = {
   },
   testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
   transformIgnorePatterns: ["node_modules/(?!(.*\\.mjs$))"],
-  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "mjs"],
 };
 
 export default createJestConfig(customJestConfig);

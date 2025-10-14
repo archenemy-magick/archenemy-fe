@@ -1,6 +1,14 @@
-import("@testing-library/jest-dom");
+import "@testing-library/jest-dom";
+import { createAsyncThunk } from "@reduxjs/toolkit";
 
-// Mock Supabase client FIRST (before other mocks)
+// Mock Supabase client FIRST
+global.jest = {
+  ...global.jest,
+  mock: (moduleName, factory) => {
+    return jest.mock(moduleName, factory);
+  },
+};
+
 jest.mock("@supabase/supabase-js", () => ({
   createClient: jest.fn(() => ({
     auth: {
@@ -38,6 +46,22 @@ jest.mock("@supabase/ssr", () => ({
     })),
   })),
   createServerClient: jest.fn(),
+}));
+
+// Mock ALL thunk files with proper async thunk structure
+jest.mock("~/store/thunks/fetchAllDecks", () => ({
+  __esModule: true,
+  default: createAsyncThunk("decks/fetchAll", async () => []),
+}));
+
+jest.mock("~/store/thunks/deleteArchenemyDeck", () => ({
+  __esModule: true,
+  default: createAsyncThunk("decks/delete", async () => ({})),
+}));
+
+jest.mock("~/store/thunks/saveArchenemyDeck", () => ({
+  __esModule: true,
+  default: createAsyncThunk("decks/save", async () => ({})),
 }));
 
 // Mock Next.js router
@@ -94,6 +118,13 @@ global.IntersectionObserver = class IntersectionObserver {
   takeRecords() {
     return [];
   }
+  unobserve() {}
+};
+
+global.ResizeObserver = class ResizeObserver {
+  constructor() {}
+  disconnect() {}
+  observe() {}
   unobserve() {}
 };
 
