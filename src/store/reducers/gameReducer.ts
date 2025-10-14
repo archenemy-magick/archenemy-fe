@@ -66,14 +66,12 @@ const gameSliceReducer = {
     state.gameHistory = [];
   },
   selectDeck(state: InitialGameState, action: { payload: { deckId: string } }) {
-    state.deckSelected = true;
-    state.selectedDeckId = action.payload.deckId;
-
     const selectedDeck = state.decks.find(
       (deck) => deck.id === action.payload.deckId
     );
 
-    console.log("selectedDeck", selectedDeck);
+    state.deckSelected = selectedDeck ? true : false;
+    state.selectedDeckId = action.payload.deckId || undefined;
 
     state.cards = {
       currentCard: null,

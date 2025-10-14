@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { fetchAllArchenemyCards, saveArchenemyDeck } from "src/store/thunks";
-import { CustomArchenemyCard } from "src/types";
+import { fetchAllArchenemyCards, saveArchenemyDeck } from "~/store/thunks";
+import { CustomArchenemyCard } from "~/types";
 
 export type InitialDeckBuilderState = {
   // TODO: do we need this? Maybe for expanding the card in a modal or something?
@@ -35,7 +35,6 @@ const deckBuilderSliceReducer = {
     action: { payload: CustomArchenemyCard }
   ) {
     state.selectedCards.push(action.payload);
-    console.log("selectedCards", state.selectedCards);
   },
   removeCard(
     state: InitialDeckBuilderState,

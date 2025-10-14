@@ -178,10 +178,13 @@ const PopularCardsPage = () => {
           {selectedCards.length > 0 && (
             <Paper p="md" withBorder>
               <Stack gap="xs">
-                <Badge size="lg">{selectedCards.length} cards selected</Badge>
+                <Badge size="lg" color="magenta">
+                  {selectedCards.length} cards selected
+                </Badge>
                 <Group gap="xs">
                   <Button
                     size="sm"
+                    color="magenta"
                     leftSection={<IconPlus size={16} />}
                     onClick={openSaveDeckModal}
                   >
@@ -208,10 +211,11 @@ const PopularCardsPage = () => {
             withBorder
             style={{
               background: isCardSelected(topCard.id)
-                ? "linear-gradient(135deg, var(--mantine-color-violet-9), var(--mantine-color-grape-9))"
-                : "linear-gradient(135deg, var(--mantine-color-orange-9), var(--mantine-color-yellow-9))",
+                ? "linear-gradient(135deg, var(--mantine-color-violet-7), var(--mantine-color-magenta-6))"
+                : "linear-gradient(135deg, var(--mantine-color-magenta-6), var(--mantine-color-gold-5))",
               cursor: "pointer",
-              transition: "all 0.2s",
+              transition: "all 0.3s ease",
+              boxShadow: "0 8px 32px rgba(233, 30, 140, 0.3)",
             }}
             onClick={() => handleCardClick(topCard)}
           >
@@ -222,6 +226,9 @@ const PopularCardsPage = () => {
                   alt={topCard.name}
                   w={200}
                   radius="md"
+                  style={{
+                    boxShadow: "0 4px 16px rgba(0, 0, 0, 0.4)",
+                  }}
                 />
                 {isCardSelected(topCard.id) && (
                   <Badge
@@ -241,7 +248,16 @@ const PopularCardsPage = () => {
               <Stack gap="sm" style={{ flex: 1 }}>
                 <Group justify="space-between">
                   <div>
-                    <Badge size="lg" variant="filled" color="orange" mb="xs">
+                    <Badge
+                      size="lg"
+                      variant="gradient"
+                      gradient={{ from: "gold", to: "yellow", deg: 90 }}
+                      mb="xs"
+                      style={{
+                        color: "#000",
+                        fontWeight: 700,
+                      }}
+                    >
                       🏆 #1 Most Popular
                     </Badge>
                     <Title order={2} c="white">
@@ -312,11 +328,12 @@ const PopularCardsPage = () => {
                 <Badge
                   size="sm"
                   variant="light"
-                  color="gray"
+                  color={index < 3 ? "gold" : "gray"}
                   style={{
                     position: "absolute",
                     top: 8,
                     left: 8,
+                    fontWeight: index < 3 ? 700 : 500,
                   }}
                 >
                   #{index + 1}
@@ -331,6 +348,8 @@ const PopularCardsPage = () => {
                     bottom: 8,
                     left: 8,
                     right: 8,
+                    backgroundColor: "rgba(0, 0, 0, 0.7)",
+                    backdropFilter: "blur(8px)",
                   }}
                 >
                   <Group gap="xs" justify="space-between">
