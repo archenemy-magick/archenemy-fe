@@ -79,7 +79,7 @@ export async function middleware(request: NextRequest) {
     const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
 
     let config: RateLimitConfig = {
-      requests: 200,
+      requests: 100,
       windowMs: 60 * 1000,
     };
 
@@ -87,21 +87,21 @@ export async function middleware(request: NextRequest) {
 
     if (pathname.includes("/signin") || pathname.includes("/login")) {
       config = {
-        requests: 15,
+        requests: 10,
         windowMs: 60 * 1000,
       };
     }
 
     if (pathname.includes("/signup") || pathname.includes("/register")) {
       config = {
-        requests: 10,
+        requests: 5,
         windowMs: 60 * 60 * 1000,
       };
     }
 
     if (pathname.startsWith("/api/")) {
       config = {
-        requests: 300,
+        requests: 200,
         windowMs: 60 * 1000,
       };
       identifier = `${ip}:${pathname}`;
