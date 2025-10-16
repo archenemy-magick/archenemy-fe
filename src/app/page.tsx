@@ -303,8 +303,8 @@ const HomePage = () => {
                   }}
                 >
                   <NextImage
-                    width={3560}
-                    height={1624}
+                    width={1920}
+                    height={876}
                     src="/DeckBuilderSample.png"
                     alt="Deck Builder Screenshot"
                     style={{
