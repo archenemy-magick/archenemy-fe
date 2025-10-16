@@ -15,6 +15,8 @@ import {
   Paper,
   ThemeIcon,
   rem,
+  Skeleton,
+  Avatar,
 } from "@mantine/core";
 import {
   IconWand,
@@ -24,17 +26,42 @@ import {
   IconPlayerPlay,
   IconUsers,
   IconArrowRight,
-  IconSparkles,
   IconDeviceFloppy,
-  IconSearch,
+  IconHeart,
+  IconEye,
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "~/store";
+import { useEffect, useState } from "react";
+import { getTopPublicDecks } from "~/lib/api/decks";
+import { CustomArchenemyDeck } from "~/types";
 
 const HomePage = () => {
   const router = useRouter();
   const { isAuthenticated } = useSelector((state: RootState) => state.user);
+  const [topDecks, setTopDecks] = useState<CustomArchenemyDeck[]>([]);
+  const [loadingDecks, setLoadingDecks] = useState(true);
+
+  useEffect(() => {
+    const fetchTopDecks = async () => {
+      try {
+        console.log("[HomePage] Fetching top decks...");
+        setLoadingDecks(true);
+        const decks = await getTopPublicDecks(3);
+        console.log("[HomePage] Fetched decks:", decks);
+        console.log("[HomePage] Number of decks:", decks.length);
+        setTopDecks(decks);
+      } catch (error) {
+        console.error("[HomePage] Failed to fetch top decks:", error);
+      } finally {
+        setLoadingDecks(false);
+        console.log("[HomePage] Loading complete");
+      }
+    };
+
+    fetchTopDecks();
+  }, []);
 
   const features = [
     {
@@ -84,13 +111,6 @@ const HomePage = () => {
     },
   ];
 
-  // Add later once we have decks, etc.
-  // const stats = [
-  //   { value: "100+", label: "Scheme Cards" },
-  //   { value: "~∞", label: "Deck Combinations" },
-  //   { value: "Community", label: "Driven" },
-  // ];
-
   return (
     <Box>
       {/* Hero Section */}
@@ -104,16 +124,6 @@ const HomePage = () => {
       >
         <Container size="lg">
           <Stack gap="xl" align="center" ta="center">
-            {/* <Badge
-              size="lg"
-              variant="light"
-              color="white"
-              leftSection={<IconSparkles size={14} />}
-              style={{ color: "white" }}
-            >
-              Magic: The Gathering Tools
-            </Badge> */}
-
             <Title
               order={1}
               size={rem(48)}
@@ -182,20 +192,6 @@ const HomePage = () => {
                 </>
               )}
             </Group>
-
-            {/* Stats */}
-            {/* <SimpleGrid cols={3} spacing="xl" mt="xl">
-              {stats.map((stat) => (
-                <div key={stat.label}>
-                  <Text size="xl" fw={900} c="white">
-                    {stat.value}
-                  </Text>
-                  <Text size="sm" c="gray.3">
-                    {stat.label}
-                  </Text>
-                </div>
-              ))}
-            </SimpleGrid> */}
           </Stack>
         </Container>
       </Box>
@@ -296,7 +292,6 @@ const HomePage = () => {
                   border: "1px solid var(--mantine-color-dark-4)",
                 }}
               >
-                {/* Placeholder for screenshot - replace with actual image */}
                 <Box
                   style={{
                     aspectRatio: "16/9",
@@ -308,16 +303,10 @@ const HomePage = () => {
                   }}
                 >
                   <Stack align="center" gap="md">
-                    <IconCards
-                      size={80}
-                      color="var(--mantine-color-violet-4)"
+                    <Image
+                      src="/DeckBuilderSample.png"
+                      alt="Deck Builder Screenshot"
                     />
-                    <Text size="xl" c="dimmed">
-                      Deck Builder Preview
-                    </Text>
-                    <Text size="sm" c="dimmed">
-                      Add a screenshot here later
-                    </Text>
                   </Stack>
                 </Box>
               </Box>
@@ -335,7 +324,7 @@ const HomePage = () => {
                 Community Favorites
               </Badge>
               <Title order={2} size={rem(36)}>
-                Top Rated Public Decks
+                Top Rated Archenemy Decks
               </Title>
               <Text size="lg" c="dimmed" mt="xs">
                 Discover the most popular decks from our community
@@ -350,9 +339,151 @@ const HomePage = () => {
             </Button>
           </Group>
 
-          <Text c="dimmed" ta="center" py="xl">
-            Top decks will appear here once you have public decks with likes
-          </Text>
+          {loadingDecks ? (
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} shadow="sm" padding="lg" withBorder>
+                  <Skeleton height={200} mb="md" />
+                  <Skeleton height={20} mb="sm" />
+                  <Skeleton height={15} width="70%" />
+                </Card>
+              ))}
+            </SimpleGrid>
+          ) : (
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
+              {topDecks.map((deck) => (
+                <Card
+                  key={deck.id}
+                  shadow="sm"
+                  padding="lg"
+                  withBorder
+                  style={{
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  onClick={() => router.push(`/decks/${deck.id}`)}
+                  className="card-hover"
+                >
+                  <Stack gap="md">
+                    {/* Deck Preview - First 5 cards */}
+                    {deck.deck_cards && deck.deck_cards.length > 0 && (
+                      <Box
+                        style={{
+                          position: "relative",
+                          height: 200,
+                          borderRadius: "var(--mantine-radius-md)",
+                          overflow: "hidden",
+                          background:
+                            "linear-gradient(135deg, #1c1c22 0%, #0f0f14 100%)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Box
+                          style={{
+                            position: "relative",
+                            width: "100%",
+                            height: "180px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {deck.deck_cards.slice(0, 5).map((card, index) => {
+                            const totalCards = Math.min(
+                              deck.deck_cards.length,
+                              5
+                            );
+                            const offset = (index - (totalCards - 1) / 2) * 35; // Horizontal spacing
+                            const rotation = (index - (totalCards - 1) / 2) * 4; // Rotation angle
+
+                            return (
+                              <Box
+                                key={card.id}
+                                style={{
+                                  position: "absolute",
+                                  transform: `translateX(${offset}px) rotate(${rotation}deg)`,
+                                  zIndex: index,
+                                  transition: "transform 0.3s ease",
+                                }}
+                              >
+                                <Image
+                                  src={
+                                    card.border_crop_image || card.normal_image
+                                  }
+                                  alt={card.name}
+                                  height={160}
+                                  width={115}
+                                  fit="contain"
+                                  style={{
+                                    borderRadius: "var(--mantine-radius-sm)",
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+                                    border:
+                                      "1px solid rgba(255, 255, 255, 0.1)",
+                                  }}
+                                />
+                              </Box>
+                            );
+                          })}
+                        </Box>
+                      </Box>
+                    )}
+
+                    {/* Deck Info */}
+                    <div>
+                      <Group justify="space-between" mb="xs">
+                        <Text fw={600} size="lg" lineClamp={1}>
+                          {deck.name}
+                        </Text>
+                        <Badge size="sm" variant="light" color="violet">
+                          {deck.deck_cards?.length || 0} cards
+                        </Badge>
+                      </Group>
+
+                      {deck.description && (
+                        <Text size="sm" c="dimmed" lineClamp={2} mb="sm">
+                          {deck.description}
+                        </Text>
+                      )}
+
+                      {/* Stats */}
+                      <Group gap="md">
+                        <Group gap={4}>
+                          <IconHeart
+                            size={16}
+                            color="var(--mantine-color-red-4)"
+                          />
+                          <Text size="sm" fw={500}>
+                            {deck.like_count || 0}
+                          </Text>
+                        </Group>
+                        <Group gap={4}>
+                          <IconEye
+                            size={16}
+                            color="var(--mantine-color-blue-4)"
+                          />
+                          <Text size="sm" fw={500}>
+                            {deck.view_count || 0}
+                          </Text>
+                        </Group>
+                      </Group>
+                    </div>
+
+                    {/* Author */}
+                    {deck.user_profile && (
+                      <Group gap="xs">
+                        <Avatar size="sm" radius="xl" />
+                        <Text size="xs" c="dimmed">
+                          by {deck.user_profile.username || "Anonymous"}
+                        </Text>
+                      </Group>
+                    )}
+                  </Stack>
+                </Card>
+              ))}
+            </SimpleGrid>
+          )}
         </Stack>
       </Container>
 
@@ -369,7 +500,7 @@ const HomePage = () => {
           <Container size="sm">
             <Stack gap="xl" align="center" ta="center">
               <Title order={2} size={rem(36)} c="white">
-                Ready to Build Your Perfect Deck?
+                Ready to Build Your Archenemy Deck?
               </Title>
               <Text size="lg" c="gray.2">
                 Join our community and start creating powerful Archenemy scheme

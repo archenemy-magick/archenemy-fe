@@ -6,12 +6,6 @@ import {
 import { createClient } from "../supabase/client";
 import { flattenDeck } from "~/util";
 
-// Type for the nested deck_cards structure from Supabase
-type DeckCardRelation = {
-  id: string;
-  card: CustomArchenemyCard;
-};
-
 const supabase = createClient();
 
 // Get all user's decks
@@ -48,7 +42,7 @@ export async function getUserDecks() {
 
   return (data as unknown as OldStructure[]).map((deck) => ({
     ...deck,
-    lang: deck.lang || "en",
+    lang: deck.lang || "EN",
     deck_cards: deck.deck_cards.map((dc) => dc.card),
   }));
 }
@@ -491,4 +485,50 @@ export async function refreshCardPopularity() {
     console.error("Error refreshing card popularity:", error);
     // Don't throw - this is not critical
   }
+}
+
+interface DeckCardJunction {
+  card: CustomArchenemyCard;
+}
+
+/**
+ * Fetch top-rated public decks
+ * @param limit - Number of decks to fetch (default: 10)
+ * @returns Array of top public decks with user profiles
+ */
+export async function getTopPublicDecks(
+  limit: number = 10
+): Promise<CustomArchenemyDeck[]> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("archenemy_decks")
+    .select(
+      `
+      *,
+      deck_cards:archenemy_deck_cards(
+        card:archenemy_cards(*)
+      ),
+      user_profile:profiles(
+        username,
+        avatar_url
+      )
+    `
+    )
+    .eq("is_public", true)
+    .order("like_count", { ascending: false })
+    .order("view_count", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("Error fetching top public decks:", error);
+    throw new Error("Failed to fetch top public decks");
+  }
+
+  // Transform the data to match CustomArchenemyDeck type
+  return (data || []).map((deck) => ({
+    ...deck,
+    deck_cards:
+      deck.deck_cards?.map((junction: DeckCardJunction) => junction.card) || [],
+  }));
 }
