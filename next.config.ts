@@ -6,13 +6,14 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
   },
+  images: {
+    unoptimized: false,
+  },
 };
 
-const pwaConfig = withPWA({
+export default withPWA({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
-});
-
-export default pwaConfig(nextConfig);
+})(nextConfig);
