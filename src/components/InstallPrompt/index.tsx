@@ -112,7 +112,7 @@ export function InstallPrompt() {
       <Group justify="space-between" align="flex-start">
         <div style={{ flex: 1 }}>
           <Text fw={600} mb="xs">
-            Install Archenemy App
+            Install Archenemy App (Beta)
           </Text>
           <Text size="sm" c="dimmed" mb="md">
             Install our app for quick access and offline play!

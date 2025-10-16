@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchAllArchenemyCards, deleteArchenemyDeck } from "../thunks";
+import { deleteArchenemyDeck } from "../thunks";
 import fetchAllArchenemyDecks from "../thunks/fetchAllDecks";
 import { CustomArchenemyCard, CustomArchenemyDeck } from "~/types";
 

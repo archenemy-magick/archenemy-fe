@@ -263,9 +263,6 @@ const PopularCardsPage = () => {
                     <Title order={2} c="white">
                       {topCard.name}
                     </Title>
-                    <Badge variant="light" mt="xs" color="gray.0" c="dark">
-                      {topCard.type_line}
-                    </Badge>
                   </div>
                 </Group>
 
