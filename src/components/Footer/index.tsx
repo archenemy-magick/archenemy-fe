@@ -34,11 +34,7 @@ const Footer = () => {
       label: "Discord",
       href: "https://discord.gg/yourserver",
     },
-    {
-      icon: IconBrandGithub,
-      label: "GitHub",
-      href: "https://github.com/archenemy-magick",
-    },
+
     { icon: IconMail, label: "Email", href: "mailto:contact@archenemy.app" },
   ];
 
