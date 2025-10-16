@@ -36,6 +36,7 @@ import { RootState } from "~/store";
 import { useEffect, useState } from "react";
 import { getTopPublicDecks } from "~/lib/api/decks";
 import { CustomArchenemyDeck } from "~/types";
+import NextImage from "next/image";
 
 const HomePage = () => {
   const router = useRouter();
@@ -294,20 +295,24 @@ const HomePage = () => {
               >
                 <Box
                   style={{
-                    aspectRatio: "16/9",
-                    background:
-                      "linear-gradient(135deg, var(--mantine-color-violet-9), var(--mantine-color-dark-9))",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    borderRadius: "var(--mantine-radius-md)",
+                    overflow: "hidden",
+                    border: "1px solid var(--mantine-color-dark-4)",
+                    position: "relative",
+                    width: "100%",
                   }}
                 >
-                  <Stack align="center" gap="md">
-                    <Image
-                      src="/DeckBuilderSample.png"
-                      alt="Deck Builder Screenshot"
-                    />
-                  </Stack>
+                  <NextImage
+                    width={3560}
+                    height={1624}
+                    src="/DeckBuilderSample.png"
+                    alt="Deck Builder Screenshot"
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      display: "block",
+                    }}
+                  />
                 </Box>
               </Box>
             </Paper>
