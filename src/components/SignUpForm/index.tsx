@@ -15,6 +15,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "~/store/configureStore";
 import { signUp, clearError } from "~/store/reducers";
 import { useRouter } from "next/navigation";
+import { validateUsername } from "~/lib/validation/contentFilter";
+import { notifications } from "@mantine/notifications";
+import { IconAlertCircle } from "@tabler/icons-react";
 
 export function SignUpForm() {
   const [email, setEmail] = useState("");
@@ -23,13 +26,55 @@ export function SignUpForm() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const { loading, error } = useSelector((state: RootState) => state.user);
 
+  const handleUsernameChange = (value: string) => {
+    setUsername(value);
+
+    // Only validate if field has been touched (blurred once)
+    if (touched) {
+      if (value.trim().length === 0) {
+        setUsernameError("Username cannot be empty");
+      } else {
+        const validation = validateUsername(value);
+        setUsernameError(validation.valid ? null : validation.error || null);
+      }
+    }
+  };
+
+  const handleUsernameBlur = () => {
+    setTouched(true);
+
+    // Validate on blur
+    if (username.trim().length === 0) {
+      setUsernameError("Username cannot be empty");
+    } else {
+      const validation = validateUsername(username);
+      setUsernameError(validation.valid ? null : validation.error || null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(clearError());
+
+    // Final validation before submit
+    const usernameValidation = validateUsername(username);
+    if (!usernameValidation.valid) {
+      setUsernameError(usernameValidation.error || "Invalid username");
+      notifications.show({
+        title: "Invalid Username",
+        message: usernameValidation.error || "Please enter a valid username",
+        color: "red",
+        icon: <IconAlertCircle />,
+      });
+      return;
+    }
 
     const result = await dispatch(
       signUp({
@@ -65,7 +110,9 @@ export function SignUpForm() {
             placeholder="archenemy_master"
             required
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => handleUsernameChange(e.target.value)}
+            onBlur={handleUsernameBlur}
+            error={usernameError}
           />
 
           <TextInput
