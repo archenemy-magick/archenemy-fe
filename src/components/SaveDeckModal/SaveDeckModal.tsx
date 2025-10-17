@@ -1,8 +1,4 @@
-// ============================================
-// Improved SaveDeckModal - Show actual card images
 // src/components/SaveDeckModal/index.tsx
-// ============================================
-
 import {
   Modal,
   TextInput,
@@ -16,9 +12,16 @@ import {
   Image,
   Badge,
   Box,
+  Alert,
 } from "@mantine/core";
 import { useState, useEffect } from "react";
+import { IconAlertCircle } from "@tabler/icons-react";
 import { CustomArchenemyCard } from "~/types";
+import {
+  validateDeckName,
+  validateDescription,
+} from "~/lib/validation/contentFilter";
+import { notifications } from "@mantine/notifications";
 
 interface SaveDeckModalProps {
   open: boolean;
@@ -47,16 +50,70 @@ const SaveDeckModal = ({
 }: SaveDeckModalProps) => {
   const [deckName, setDeckName] = useState(initialName || "");
   const [description, setDescription] = useState(initialDescription || "");
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [descError, setDescError] = useState<string | null>(null);
+  const [touched, setTouched] = useState({ name: false, description: false });
 
-  useEffect(() => {
-    if (open) {
-      setDeckName(initialName || "");
-      setDescription(initialDescription || "");
+  // useEffect(() => {
+  //   if (open) {
+  //     // setDeckName(initialName || "");
+  //     // setDescription(initialDescription || "");
+  //     setTouched({ name: false, description: false });
+  //   }
+  // }, [open, deckName, description, initialName, initialDescription]);
+
+  const handleDeckNameChange = (value: string) => {
+    setDeckName(value);
+    if (value.trim().length === 0) {
+      setNameError("Deck name cannot be empty");
     }
-  }, [open, initialName, initialDescription]);
+  };
+
+  const handleDeckNameBlur = () => {
+    if (deckName.trim().length === 0) {
+      setNameError("Deck name cannot be empty");
+    } else {
+      const validation = validateDeckName(deckName);
+      setNameError(validation.valid ? null : validation.error || null);
+    }
+  };
+
+  const handleDescriptionChange = (value: string) => {
+    setDescription(value);
+  };
+
+  const handleDescriptionBlur = () => {
+    const validation = validateDescription(description);
+    setDescError(validation.valid ? null : validation.error || null);
+  };
 
   const handleSave = () => {
-    if (!deckName.trim()) return;
+    const nameValidation = validateDeckName(deckName);
+    const descValidation = validateDescription(description);
+
+    if (!nameValidation.valid) {
+      setNameError(nameValidation.error || "Invalid deck name");
+      notifications.show({
+        title: "Invalid Deck Name",
+        message: nameValidation.error || "Please enter a valid deck name",
+        color: "red",
+        icon: <IconAlertCircle />,
+      });
+      return;
+    }
+
+    if (!descValidation.valid) {
+      setDescError(descValidation.error || "Invalid description");
+      notifications.show({
+        title: "Invalid Description",
+        message: descValidation.error || "Please enter a valid description",
+        color: "red",
+        icon: <IconAlertCircle />,
+      });
+      return;
+    }
+
+    // All valid - proceed with save
     onSaveDeck({
       deckName: deckName.trim(),
       description: description.trim() || undefined,
@@ -89,12 +146,25 @@ const SaveDeckModal = ({
       }}
     >
       <Stack gap="md">
+        {/* Show validation warnings if any */}
+        {(nameError || descError) && (
+          <Alert
+            icon={<IconAlertCircle size={16} />}
+            color="red"
+            variant="light"
+          >
+            Please fix the errors below before saving
+          </Alert>
+        )}
+
         {/* Deck Info */}
         <TextInput
           label="Deck Name"
           placeholder="Enter deck name"
           value={deckName}
-          onChange={(e) => setDeckName(e.currentTarget.value)}
+          onChange={(e) => handleDeckNameChange(e.currentTarget.value)}
+          onBlur={handleDeckNameBlur}
+          error={nameError}
           required
           size="md"
         />
@@ -103,7 +173,9 @@ const SaveDeckModal = ({
           label="Description (optional)"
           placeholder="Add a description for your deck"
           value={description}
-          onChange={(e) => setDescription(e.currentTarget.value)}
+          onChange={(e) => handleDescriptionChange(e.currentTarget.value)}
+          onBlur={handleDescriptionBlur}
+          error={descError}
           minRows={3}
           maxLength={200}
           size="md"
@@ -176,7 +248,7 @@ const SaveDeckModal = ({
           <Button
             onClick={handleSave}
             loading={deckIsSaving}
-            disabled={!deckName.trim() || cards.length === 0}
+            disabled={!!nameError || !!descError || cards.length === 0}
             gradient={{ from: "violet", to: "grape", deg: 135 }}
             variant="gradient"
             size="md"
