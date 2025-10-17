@@ -178,7 +178,7 @@ const ArchenemyGame = () => {
       >
         {selectedModalCard && (
           <Image
-            src={selectedModalCard.normal_image}
+            src={selectedModalCard.border_crop_image}
             alt={selectedModalCard.name}
           />
         )}
@@ -287,7 +287,7 @@ const ArchenemyGame = () => {
                       }}
                     >
                       <Image
-                        src={currentCard.normal_image}
+                        src={currentCard.border_crop_image}
                         alt={currentCard.name}
                         onClick={() => displayCardInModal(currentCard)}
                         style={{ cursor: "pointer" }}
@@ -445,7 +445,7 @@ const ArchenemyGame = () => {
                         }}
                         className="card-hover"
                       >
-                        <Image src={card.normal_image} alt={card.name} />
+                        <Image src={card.border_crop_image} alt={card.name} />
                       </Box>
                     </Carousel.Slide>
                   ))}
@@ -501,7 +501,7 @@ const ArchenemyGame = () => {
                           }}
                           className="card-hover"
                         >
-                          <Image src={card.normal_image} alt={card.name} />
+                          <Image src={card.border_crop_image} alt={card.name} />
                         </Box>
                         <Button
                           onClick={() => dispatch(abandonScheme({ index }))}

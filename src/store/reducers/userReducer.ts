@@ -10,6 +10,7 @@ export type InitialUserState = {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  avatar_url: string | null;
 };
 
 export const initialUserState: InitialUserState = {
@@ -21,6 +22,7 @@ export const initialUserState: InitialUserState = {
   isAuthenticated: false,
   loading: true,
   error: null,
+  avatar_url: null,
 };
 
 // Async Thunks
@@ -63,6 +65,7 @@ export const signUp = createAsyncThunk(
         username: data.user?.user_metadata?.username || null,
         firstName: data.user?.user_metadata?.firstName || null,
         lastName: data.user?.user_metadata?.lastName || null,
+        avatar_url: data.user?.user_metadata?.avatar_url || null,
       };
     } catch (error: unknown) {
       return rejectWithValue((error as { message: string }).message);
@@ -84,12 +87,21 @@ export const signIn = createAsyncThunk(
       });
 
       if (error) throw error;
+
+      // Fetch full profile to get avatar from profiles table
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", data.user?.id)
+        .single();
+
       return {
         id: data.user?.id || null,
         email: data.user?.email || null,
         username: data.user?.user_metadata?.username || null,
         firstName: data.user?.user_metadata?.firstName || null,
         lastName: data.user?.user_metadata?.lastName || null,
+        avatar_url: profile?.avatar_url || null,
       };
     } catch (error: unknown) {
       return rejectWithValue((error as { message: string }).message);
@@ -118,12 +130,20 @@ export const checkAuth = createAsyncThunk("user/checkAuth", async () => {
 
   if (!user) return null;
 
+  // Fetch full profile to get avatar from profiles table
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("avatar_url")
+    .eq("id", user.id)
+    .single();
+
   return {
     id: user.id,
     email: user.email || null,
     username: user.user_metadata?.username || null,
     firstName: user.user_metadata?.firstName || null,
     lastName: user.user_metadata?.lastName || null,
+    avatar_url: profile?.avatar_url || null,
   };
 });
 
@@ -137,6 +157,7 @@ const userSliceReducer = {
         username: string | null;
         firstName: string | null;
         lastName: string | null;
+        avatar_url?: string | null;
       } | null;
     }
   ) {
@@ -146,6 +167,7 @@ const userSliceReducer = {
       state.username = action.payload.username;
       state.firstName = action.payload.firstName;
       state.lastName = action.payload.lastName;
+      state.avatar_url = action.payload.avatar_url || null;
       state.isAuthenticated = true;
     } else {
       state.id = null;
@@ -153,12 +175,19 @@ const userSliceReducer = {
       state.username = null;
       state.firstName = null;
       state.lastName = null;
+      state.avatar_url = null;
       state.isAuthenticated = false;
     }
     state.loading = false;
   },
   clearError(state: InitialUserState) {
     state.error = null;
+  },
+  updateUserAvatar: (
+    state: InitialUserState,
+    action: { payload: string | null }
+  ) => {
+    state.avatar_url = action.payload;
   },
 };
 
@@ -180,6 +209,7 @@ export const userSlice = createSlice({
         state.username = action.payload.username;
         state.firstName = action.payload.firstName;
         state.lastName = action.payload.lastName;
+        state.avatar_url = action.payload.avatar_url;
         state.isAuthenticated = true;
       }
     });
@@ -201,6 +231,7 @@ export const userSlice = createSlice({
         state.username = action.payload.username;
         state.firstName = action.payload.firstName;
         state.lastName = action.payload.lastName;
+        state.avatar_url = action.payload.avatar_url;
         state.isAuthenticated = true;
       }
     });
@@ -216,6 +247,7 @@ export const userSlice = createSlice({
       state.username = null;
       state.firstName = null;
       state.lastName = null;
+      state.avatar_url = null;
       state.isAuthenticated = false;
       state.loading = false;
     });
@@ -228,6 +260,7 @@ export const userSlice = createSlice({
         state.username = action.payload.username;
         state.firstName = action.payload.firstName;
         state.lastName = action.payload.lastName;
+        state.avatar_url = action.payload.avatar_url;
         state.isAuthenticated = true;
       } else {
         state.isAuthenticated = false;
@@ -237,4 +270,4 @@ export const userSlice = createSlice({
   },
 });
 
-export const { setUser, clearError } = userSlice.actions;
+export const { setUser, clearError, updateUserAvatar } = userSlice.actions;

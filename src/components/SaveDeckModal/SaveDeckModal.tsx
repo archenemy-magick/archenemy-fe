@@ -105,6 +105,7 @@ const SaveDeckModal = ({
           value={description}
           onChange={(e) => setDescription(e.currentTarget.value)}
           minRows={3}
+          maxLength={200}
           size="md"
         />
 

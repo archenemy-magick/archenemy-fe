@@ -31,5 +31,6 @@ export {
   signIn,
   signOut,
   checkAuth,
+  updateUserAvatar,
 } from "./userReducer";
 export type { InitialUserState } from "./userReducer";

@@ -14,12 +14,19 @@ import {
   Title,
   Badge,
   LoadingOverlay,
+  Modal,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useDisclosure } from "@mantine/hooks";
 import { getDeckById } from "~/lib/api/decks";
 import { CustomArchenemyCard } from "~/types";
-import { IconArrowLeft, IconEdit, IconPlayerPlay } from "@tabler/icons-react";
+import {
+  IconArrowLeft,
+  IconEdit,
+  IconPlayerPlay,
+  IconX,
+} from "@tabler/icons-react";
 
 interface DeckWithCards {
   id: string;
@@ -42,6 +49,13 @@ const DeckDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Card zoom modal
+  const [selectedCard, setSelectedCard] = useState<CustomArchenemyCard | null>(
+    null
+  );
+  const [modalOpened, { open: openModal, close: closeModal }] =
+    useDisclosure(false);
+
   useEffect(() => {
     const loadDeck = async () => {
       try {
@@ -59,8 +73,13 @@ const DeckDetailPage = () => {
     loadDeck();
   }, [deckId]);
 
+  const handleCardClick = (card: CustomArchenemyCard) => {
+    setSelectedCard(card);
+    openModal();
+  };
+
   const handlePlayDeck = () => {
-    router.push(`/archenemy?deck=${deckId}`);
+    router.push(`/game/archenemy?deck=${deckId}`);
   };
 
   const handleEditDeck = () => {
@@ -88,8 +107,6 @@ const DeckDetailPage = () => {
       </Container>
     );
   }
-
-  console.log("deck in DeckDetailPage", deck);
 
   return (
     <Container size="xl" py="xl">
@@ -173,8 +190,24 @@ const DeckDetailPage = () => {
                   xl: 2,
                 }}
               >
-                <Card shadow="sm" padding="xs" radius="md" withBorder>
-                  {card.normal_image ? (
+                <Card
+                  shadow="sm"
+                  padding="xs"
+                  radius="md"
+                  withBorder
+                  style={{ cursor: "pointer" }}
+                  onClick={() => handleCardClick(card)}
+                >
+                  {card.border_crop_image ? (
+                    <Card.Section>
+                      <Image
+                        src={card.border_crop_image}
+                        alt={card.name}
+                        height={300}
+                        fit="contain"
+                      />
+                    </Card.Section>
+                  ) : (
                     <Card.Section>
                       <Image
                         src={card.normal_image}
@@ -183,20 +216,6 @@ const DeckDetailPage = () => {
                         fit="contain"
                       />
                     </Card.Section>
-                  ) : (
-                    <Box
-                      h={300}
-                      bg="gray.1"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Text size="sm" c="dimmed">
-                        No image
-                      </Text>
-                    </Box>
                   )}
                   <Stack gap="xs" mt="xs">
                     <Text fw={500} size="sm">
@@ -212,6 +231,78 @@ const DeckDetailPage = () => {
           </Grid>
         )}
       </Stack>
+
+      {/* Card Zoom Modal */}
+      <Modal
+        opened={modalOpened}
+        onClose={closeModal}
+        size="auto"
+        centered
+        padding={0}
+        withCloseButton={false}
+        styles={{
+          body: { padding: 0 },
+          content: { background: "transparent" },
+        }}
+      >
+        {selectedCard && (
+          <Box
+            style={{
+              position: "relative",
+              maxWidth: "90vw",
+              maxHeight: "90vh",
+            }}
+          >
+            <Button
+              onClick={closeModal}
+              style={{
+                position: "absolute",
+                top: 10,
+                right: 10,
+                zIndex: 1000,
+              }}
+              size="sm"
+              radius="xl"
+              variant="filled"
+              color="dark"
+            >
+              <IconX size={16} />
+            </Button>
+            <Image
+              src={selectedCard.large_image || selectedCard.normal_image}
+              alt={selectedCard.name}
+              fit="contain"
+              style={{
+                maxWidth: "90vw",
+                maxHeight: "90vh",
+                borderRadius: "var(--mantine-radius-md)",
+              }}
+            />
+            <Box
+              p="md"
+              style={{
+                background: "var(--mantine-color-dark-7)",
+                borderBottomLeftRadius: "var(--mantine-radius-md)",
+                borderBottomRightRadius: "var(--mantine-radius-md)",
+              }}
+            >
+              <Text fw={600} size="lg" c="white">
+                {selectedCard.name}
+              </Text>
+              <Group gap="xs" mt="xs">
+                <Badge variant="light" size="sm">
+                  {selectedCard.type_line}
+                </Badge>
+              </Group>
+              {selectedCard.oracle_text && (
+                <Text size="sm" c="dimmed" mt="sm">
+                  {selectedCard.oracle_text}
+                </Text>
+              )}
+            </Box>
+          </Box>
+        )}
+      </Modal>
     </Container>
   );
 };

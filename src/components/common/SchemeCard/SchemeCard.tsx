@@ -18,16 +18,16 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
   if (!card) {
     return null;
   }
-  const { name, normal_image } = card;
+  const { name, border_crop_image } = card;
   return (
     <Card style={{ width: 300, minHeight: 300 }}>
       <Card.Section
         onClick={() => onOpenModal && onOpenModal(card)}
         style={{ cursor: onOpenModal ? "pointer" : "default" }}
       >
-        {normal_image ? (
+        {border_crop_image ? (
           <Image
-            src={normal_image}
+            src={border_crop_image}
             alt={name}
             style={{ height: 400 }}
             fit="contain"

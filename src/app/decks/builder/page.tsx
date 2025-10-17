@@ -351,7 +351,7 @@ const DeckBuilder = () => {
   }
 
   return (
-    <Stack gap="sm" m="sm">
+    <Stack m="md" py="md">
       <SaveDeckModal
         open={saveDeckModalOpened}
         onClose={closeSaveDeckModal}

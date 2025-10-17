@@ -23,17 +23,16 @@ import { useRouter } from "next/navigation";
 import type { AppDispatch, RootState } from "~/store";
 import { fetchAllArchenemyDecks, deleteArchenemyDeck } from "~/store/thunks";
 import {
-  IconDots,
-  IconEye,
   IconEdit,
   IconTrash,
   IconPlayerPlay,
-  IconEditCircle,
   IconPlus,
   IconDotsVertical,
   IconCards,
+  IconCopy,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import { cloneDeck } from "~/lib/api/decks";
 
 const DecksPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -47,6 +46,7 @@ const DecksPage = () => {
     name: string;
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [cloning, setCloning] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -54,7 +54,6 @@ const DecksPage = () => {
     }
   }, [dispatch, isAuthenticated]);
 
-  // TODO: why are these unused?
   const handleViewDeck = (deckId: string) => {
     router.push(`/decks/${deckId}`);
   };
@@ -63,7 +62,12 @@ const DecksPage = () => {
     router.push(`/decks/builder?edit=${deckId}`);
   };
 
-  const openDeleteModal = (deckId: string, deckName: string) => {
+  const openDeleteModal = (
+    e: React.MouseEvent,
+    deckId: string,
+    deckName: string
+  ) => {
+    e.stopPropagation();
     setDeckToDelete({ id: deckId, name: deckName });
     setDeleteModalOpen(true);
   };
@@ -92,6 +96,37 @@ const DecksPage = () => {
       });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleCloneDeck = async (
+    e: React.MouseEvent,
+    deckId: string,
+    deckName: string
+  ) => {
+    e.stopPropagation();
+    setCloning(deckId);
+
+    try {
+      await cloneDeck(deckId);
+
+      notifications.show({
+        title: "Deck Cloned!",
+        message: `A copy of "${deckName}" has been created`,
+        color: "green",
+      });
+
+      // Refresh the deck list
+      dispatch(fetchAllArchenemyDecks());
+    } catch (error) {
+      console.error("Error cloning deck:", error);
+      notifications.show({
+        title: "Error",
+        message: "Failed to clone deck. Please try again.",
+        color: "red",
+      });
+    } finally {
+      setCloning(null);
     }
   };
 
@@ -223,11 +258,18 @@ const DecksPage = () => {
                         )}
                       </Group>
 
-                      {deck.description && (
-                        <Text size="sm" c="dimmed" lineClamp={2} mb="md">
-                          {deck.description}
-                        </Text>
-                      )}
+                      <Box
+                        style={{
+                          minHeight: "2.5em",
+                          marginBottom: "var(--mantine-spacing-md)",
+                        }}
+                      >
+                        {deck.description && (
+                          <Text size="sm" c="dimmed" lineClamp={2}>
+                            {deck.description}
+                          </Text>
+                        )}
+                      </Box>
 
                       <Group gap="xs">
                         <Badge
@@ -270,17 +312,42 @@ const DecksPage = () => {
                       >
                         Edit
                       </Button>
-                      <ActionIcon
-                        variant="light"
-                        color="gray"
-                        size="lg"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Open menu
-                        }}
-                      >
-                        <IconDotsVertical size={18} />
-                      </ActionIcon>
+                      <Menu shadow="md" width={200} position="top">
+                        <Menu.Target>
+                          <ActionIcon
+                            variant="light"
+                            color="gray"
+                            size="lg"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                            loading={cloning === deck.id}
+                          >
+                            <IconDotsVertical size={18} />
+                          </ActionIcon>
+                        </Menu.Target>
+
+                        <Menu.Dropdown>
+                          <Menu.Item
+                            leftSection={<IconCopy size={16} />}
+                            onClick={(e) =>
+                              handleCloneDeck(e, deck.id, deck.name)
+                            }
+                          >
+                            Duplicate Deck
+                          </Menu.Item>
+                          <Menu.Divider />
+                          <Menu.Item
+                            color="red"
+                            leftSection={<IconTrash size={16} />}
+                            onClick={(e) =>
+                              openDeleteModal(e, deck.id, deck.name)
+                            }
+                          >
+                            Delete Deck
+                          </Menu.Item>
+                        </Menu.Dropdown>
+                      </Menu>
                     </Group>
                   </Stack>
                 </Card>
