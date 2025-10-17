@@ -1,59 +1,115 @@
 "use client";
 
 import { Menu, Avatar, Text, Button, Group } from "@mantine/core";
-import { IconLogout, IconUser, IconCards } from "@tabler/icons-react";
+import {
+  IconLogout,
+  IconUser,
+  IconCards,
+  IconDownload,
+} from "@tabler/icons-react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "~/store/configureStore";
 import { signOut } from "~/store/reducers";
 import { useRouter } from "next/navigation";
-import { IconDownload } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
+import { notifications } from "@mantine/notifications";
+
+// Extend Window interface for PWA
+declare global {
+  interface Window {
+    __pwaInstallPrompt?: BeforeInstallPromptEvent;
+  }
+
+  interface BeforeInstallPromptEvent extends Event {
+    // prompt(): Promise<void>;
+    userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+  }
+}
 
 export function UserMenu() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const { username, email, isAuthenticated } = useSelector(
+  const { username, email, isAuthenticated, avatar_url } = useSelector(
     (state: RootState) => state.user
   );
 
-  const [canInstall, setCanInstall] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    // Check if install prompt is available
-    const checkInstallable = () => {
-      const prompt = window.__pwaInstallPrompt;
-      setCanInstall(!!prompt);
-    };
-
-    checkInstallable();
+    // Check if app is already installed
+    if (window.matchMedia("(display-mode: standalone)").matches) {
+      setIsInstalled(true);
+    }
 
     // Listen for the prompt event
-    const handler = () => checkInstallable();
-    window.addEventListener("beforeinstallprompt", handler);
+    const handler = (e: Event) => {
+      e.preventDefault();
+      window.__pwaInstallPrompt = e as BeforeInstallPromptEvent;
+    };
 
-    // Also check periodically in case prompt becomes available
-    const interval = setInterval(checkInstallable, 1000);
+    window.addEventListener("beforeinstallprompt", handler);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
-      clearInterval(interval);
     };
   }, []);
 
   const handleInstallClick = async () => {
-    const prompt = window.__pwaInstallPrompt as BeforeInstallPromptEvent;
-    if (!prompt) return;
+    // Check if already installed
+    if (isInstalled) {
+      notifications.show({
+        title: "Already Installed",
+        message: "The app is already installed on your device",
+        color: "blue",
+      });
+      return;
+    }
+
+    const installPrompt = window.__pwaInstallPrompt;
+
+    if (!installPrompt) {
+      // No prompt available - provide helpful message
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+      if (isIOS) {
+        notifications.show({
+          title: "Install on iOS",
+          message: "Tap the Share button, then tap 'Add to Home Screen'",
+          color: "blue",
+          autoClose: 8000,
+        });
+      } else {
+        notifications.show({
+          title: "Installation Not Available",
+          message:
+            "App may already be installed, or your browser doesn't support installation. Try using Chrome or Edge.",
+          color: "orange",
+          autoClose: 8000,
+        });
+      }
+      return;
+    }
 
     try {
-      await prompt.prompt();
-      const { outcome } = await prompt.userChoice;
+      await installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
 
       if (outcome === "accepted") {
-        setCanInstall(false);
         delete window.__pwaInstallPrompt;
+        setIsInstalled(true);
+        notifications.show({
+          title: "Success!",
+          message: "App installed successfully",
+          color: "green",
+        });
       }
     } catch (error) {
       console.error("Install prompt error:", error);
+      notifications.show({
+        title: "Error",
+        message: "Failed to install app. Please try again.",
+        color: "red",
+      });
     }
   };
 
@@ -78,7 +134,12 @@ export function UserMenu() {
   return (
     <Menu shadow="md" width={200}>
       <Menu.Target>
-        <Avatar radius="xl" style={{ cursor: "pointer" }}>
+        <Avatar
+          src={avatar_url}
+          radius="xl"
+          style={{ cursor: "pointer" }}
+          color="violet"
+        >
           {displayName[0].toUpperCase()}
         </Avatar>
       </Menu.Target>
@@ -99,12 +160,6 @@ export function UserMenu() {
         >
           My Decks
         </Menu.Item>
-        <Menu.Item
-          leftSection={<IconCards size={14} />}
-          onClick={() => router.push("/")}
-        >
-          Home
-        </Menu.Item>
 
         <Menu.Item
           leftSection={<IconUser size={14} />}
@@ -115,17 +170,15 @@ export function UserMenu() {
 
         <Menu.Divider />
 
-        {canInstall && (
-          <>
-            <Menu.Item
-              leftSection={<IconDownload size={14} />}
-              onClick={handleInstallClick}
-            >
-              Install App
-            </Menu.Item>
-            <Menu.Divider />
-          </>
-        )}
+        <Menu.Item
+          leftSection={<IconDownload size={14} />}
+          onClick={handleInstallClick}
+          color="blue"
+        >
+          {isInstalled ? "App Installed ✓" : "Install App"}
+        </Menu.Item>
+
+        <Menu.Divider />
 
         <Menu.Item
           color="red"

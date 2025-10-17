@@ -38,6 +38,9 @@ import {
   updatePassword,
   deleteAccount,
 } from "~/lib/api/profile";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "~/store";
+import { updateUserAvatar } from "~/store/reducers";
 
 type Profile = {
   id: string;
@@ -74,6 +77,8 @@ const ProfilePage = () => {
   useEffect(() => {
     loadProfile();
   }, []);
+
+  const dispatch = useDispatch<AppDispatch>();
 
   const loadProfile = async () => {
     try {
@@ -124,7 +129,6 @@ const ProfilePage = () => {
   const handleAvatarUpload = async (file: File | null) => {
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       notifications.show({
         title: "Error",
@@ -134,7 +138,6 @@ const ProfilePage = () => {
       return;
     }
 
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       notifications.show({
         title: "Error",
@@ -147,12 +150,19 @@ const ProfilePage = () => {
     try {
       setUploading(true);
       await uploadAvatar(file);
+
+      // Reload profile to get new avatar URL
+      const updatedProfile = await getCurrentUserProfile();
+      setProfile(updatedProfile);
+
+      // Update Redux store
+      dispatch(updateUserAvatar(updatedProfile.avatar_url));
+
       notifications.show({
         title: "Success",
         message: "Avatar uploaded successfully",
         color: "green",
       });
-      await loadProfile();
     } catch (error: unknown) {
       console.error("Error uploading avatar:", error);
       notifications.show({
@@ -168,6 +178,10 @@ const ProfilePage = () => {
   const handleDeleteAvatar = async () => {
     try {
       await deleteAvatar();
+
+      // Update Redux store
+      dispatch(updateUserAvatar(null));
+
       notifications.show({
         title: "Success",
         message: "Avatar deleted successfully",

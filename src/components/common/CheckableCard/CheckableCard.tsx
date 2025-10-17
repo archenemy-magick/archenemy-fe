@@ -25,7 +25,7 @@ const CheckableCard = ({ card, onClick, cardSelected }: CheckableCardProps) => {
         transition: "all 0.2s ease",
         ...(cardSelected && {
           boxShadow:
-            "0 0 0 3px var(--mantine-color-violet-5), 0 8px 24px rgba(132, 94, 247, 0.4)",
+            "0 0 0 3px var(--mantine-color-magenta-5), 0 8px 24px rgba(132, 94, 247, 0.4)",
           transform: "translateY(-4px)",
         }),
       }}
@@ -51,7 +51,7 @@ const CheckableCard = ({ card, onClick, cardSelected }: CheckableCardProps) => {
             width: 32,
             height: 32,
             borderRadius: "50%",
-            background: "var(--mantine-color-violet-6)",
+            background: "var(--mantine-color-magenta-6)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

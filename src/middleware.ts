@@ -172,7 +172,14 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Protected routes that require authentication
-  const protectedPaths = ["/decks", "/archenemy"];
+  const protectedPaths = [
+    "/decks",
+    "/archenemy",
+    "/game",
+    "/profile",
+    "/deck-builder",
+    "/popular-cards",
+  ];
   const isProtectedPath = protectedPaths.some((path) =>
     pathname.startsWith(path)
   );

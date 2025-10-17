@@ -15,16 +15,12 @@ import {
   Tooltip,
   Modal,
   Divider,
+  HoverCard,
+  Image,
 } from "@mantine/core";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import {
-  IconSearch,
-  IconX,
-  IconCopy,
-  IconEye,
-  IconCards,
-} from "@tabler/icons-react";
+import { IconSearch, IconX, IconCopy, IconCards } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -114,10 +110,8 @@ const PublicDecksPage = () => {
         color: "green",
       });
 
-      // Navigate to user's decks after a short delay
-      setTimeout(() => {
-        router.push("/decks");
-      }, 1500);
+      // TODO: probably remove this setTimeout?
+      router.push("/decks");
     } catch (error) {
       console.error("Error cloning deck:", error);
       notifications.show({
@@ -137,7 +131,12 @@ const PublicDecksPage = () => {
   };
 
   // Handle like/unlike
-  const handleToggleLike = async (deckId: string, currentlyLiked: boolean) => {
+  const handleToggleLike = async (
+    e: React.MouseEvent,
+    deckId: string,
+    currentlyLiked: boolean
+  ) => {
+    e.stopPropagation(); // Prevent card click when clicking like button
     setLikingDeck(deckId);
 
     try {
@@ -148,7 +147,6 @@ const PublicDecksPage = () => {
           newSet.delete(deckId);
           return newSet;
         });
-        // Update like count in state
         setPublicDecks((decks) =>
           decks.map((deck) =>
             deck.id === deckId
@@ -163,7 +161,6 @@ const PublicDecksPage = () => {
       } else {
         await likeDeck(deckId);
         setLikedDecks((prev) => new Set([...prev, deckId]));
-        // Update like count in state
         setPublicDecks((decks) =>
           decks.map((deck) =>
             deck.id === deckId
@@ -197,7 +194,7 @@ const PublicDecksPage = () => {
   }
 
   return (
-    <Stack gap="md" m="sm">
+    <Stack gap="md" m="md" py="md">
       {/* Header */}
       <Group justify="space-between" align="center">
         <div>
@@ -265,7 +262,14 @@ const PublicDecksPage = () => {
         <Grid>
           {filteredDecks.map((deck) => (
             <Grid.Col key={deck.id} span={{ base: 12, sm: 6, md: 4 }}>
-              <Card shadow="sm" padding="lg" withBorder h="100%">
+              <Card
+                shadow="sm"
+                padding="lg"
+                withBorder
+                h="100%"
+                style={{ cursor: "pointer" }}
+                onClick={() => handlePreviewDeck(deck)}
+              >
                 <Stack justify="space-between" h="100%">
                   <div>
                     <Group justify="space-between" mb="xs">
@@ -312,8 +316,8 @@ const PublicDecksPage = () => {
                         variant="light"
                         size="lg"
                         color={likedDecks.has(deck.id) ? "pink" : "gray"}
-                        onClick={() =>
-                          handleToggleLike(deck.id, likedDecks.has(deck.id))
+                        onClick={(e) =>
+                          handleToggleLike(e, deck.id, likedDecks.has(deck.id))
                         }
                         loading={likingDeck === deck.id}
                       >
@@ -325,18 +329,12 @@ const PublicDecksPage = () => {
                       </ActionIcon>
                     </Tooltip>
 
-                    <Tooltip label="Preview deck">
-                      <ActionIcon
-                        variant="light"
-                        size="lg"
-                        onClick={() => handlePreviewDeck(deck)}
-                      >
-                        <IconEye size={18} />
-                      </ActionIcon>
-                    </Tooltip>
                     <Button
                       leftSection={<IconCopy size={16} />}
-                      onClick={() => handleCloneDeck(deck)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCloneDeck(deck);
+                      }}
                       loading={cloning === deck.id}
                       disabled={cloning !== null}
                       fullWidth
@@ -399,20 +397,50 @@ const PublicDecksPage = () => {
               <Text size="sm" fw={500} mb="md">
                 Cards in this Deck
               </Text>
-              <Stack gap="xs">
+              <Grid>
                 {previewDeck.deck_cards?.map(
                   (card: CustomArchenemyCard, index: number) => (
-                    <Card key={index} padding="xs" withBorder>
-                      <Group justify="space-between">
-                        <Text size="sm">{card.name}</Text>
-                        <Badge size="xs" variant="light">
-                          {card.type_line}
-                        </Badge>
-                      </Group>
-                    </Card>
+                    <Grid.Col key={index} span={{ base: 6, sm: 4, md: 3 }}>
+                      <HoverCard width={320} shadow="md" position="top">
+                        <HoverCard.Target>
+                          <Box
+                            style={{
+                              cursor: "pointer",
+                              borderRadius: "var(--mantine-radius-md)",
+                              overflow: "hidden",
+                              border: "1px solid var(--mantine-color-dark-4)",
+                            }}
+                          >
+                            <Image
+                              src={card.normal_image}
+                              alt={card.name}
+                              fit="contain"
+                              style={{
+                                aspectRatio: "5/7",
+                              }}
+                            />
+                          </Box>
+                        </HoverCard.Target>
+                        <HoverCard.Dropdown>
+                          <Stack gap="xs">
+                            <Image
+                              src={card.normal_image}
+                              alt={card.name}
+                              fit="contain"
+                              radius="md"
+                            />
+                            <div>
+                              <Text fw={600} size="sm">
+                                {card.name}
+                              </Text>
+                            </div>
+                          </Stack>
+                        </HoverCard.Dropdown>
+                      </HoverCard>
+                    </Grid.Col>
                   )
                 )}
-              </Stack>
+              </Grid>
             </div>
 
             <Button

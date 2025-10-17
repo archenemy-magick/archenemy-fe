@@ -1,6 +1,6 @@
 "use client";
 
-import { Tabs, Container, Group, Title, Text } from "@mantine/core";
+import { Tabs, Group, Title, Text, Box } from "@mantine/core";
 import { useRouter, usePathname } from "next/navigation";
 import { IconPlus, IconWorld, IconCards } from "@tabler/icons-react";
 
@@ -13,7 +13,6 @@ const DecksSubHeader = ({ title, subtitle }: DecksSubHeaderProps) => {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Determine active tab based on pathname
   const getActiveTab = () => {
     if (pathname === "/decks") return "my-decks";
     if (pathname === "/decks/public") return "public";
@@ -28,12 +27,19 @@ const DecksSubHeader = ({ title, subtitle }: DecksSubHeaderProps) => {
   };
 
   return (
-    <div
+    <Box
       style={{
         backgroundColor: "var(--mantine-color-body)",
+        position: "sticky",
+        top: 60,
+        zIndex: 100,
       }}
     >
-      <Container size="xl" pt="sm">
+      <Box
+        style={{
+          paddingTop: "var(--mantine-spacing-sm)",
+        }}
+      >
         {(title || subtitle) && (
           <Group mb="sm">
             {title && <Title order={2}>{title}</Title>}
@@ -57,8 +63,8 @@ const DecksSubHeader = ({ title, subtitle }: DecksSubHeaderProps) => {
             </Tabs.Tab>
           </Tabs.List>
         </Tabs>
-      </Container>
-    </div>
+      </Box>
+    </Box>
   );
 };
 
