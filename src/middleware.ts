@@ -87,14 +87,14 @@ export async function middleware(request: NextRequest) {
 
     if (pathname.includes("/signin") || pathname.includes("/login")) {
       config = {
-        requests: 10,
+        requests: 20,
         windowMs: 60 * 1000,
       };
     }
 
     if (pathname.includes("/signup") || pathname.includes("/register")) {
       config = {
-        requests: 5,
+        requests: 15,
         windowMs: 60 * 60 * 1000,
       };
     }
@@ -187,7 +187,8 @@ export async function middleware(request: NextRequest) {
   // Redirect to signin if accessing protected route without auth
   if (isProtectedPath && !user) {
     const redirectUrl = new URL("/signin", request.url);
-    redirectUrl.searchParams.set("redirectTo", pathname);
+    // Use pathname instead of encoding it
+    redirectUrl.searchParams.set("redirectTo", request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
