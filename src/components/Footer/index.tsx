@@ -110,7 +110,7 @@ const Footer = () => {
             <Text
               size="sm"
               fw={700}
-              c="violet.4"
+              c="magenta.4"
               tt="uppercase"
               style={{ letterSpacing: 1 }}
             >
@@ -146,7 +146,7 @@ const Footer = () => {
             <Text
               size="sm"
               fw={700}
-              c="violet.4"
+              c="magenta.4"
               tt="uppercase"
               style={{ letterSpacing: 1 }}
             >
@@ -193,7 +193,7 @@ const Footer = () => {
             <Text
               size="sm"
               fw={700}
-              c="violet.4"
+              c="magenta.4"
               tt="uppercase"
               style={{ letterSpacing: 1 }}
             >

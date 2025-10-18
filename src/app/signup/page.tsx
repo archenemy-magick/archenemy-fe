@@ -1,17 +1,23 @@
+"use client";
+
+import { Container, Box } from "@mantine/core";
 import { SignUpForm } from "~/components/SignUpForm";
 
 export default function SignUpPage() {
   return (
-    <div
+    <Box
       style={{
-        padding: "2rem",
         minHeight: "100vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        padding: "2rem",
       }}
     >
-      <SignUpForm />
-    </div>
+      <Container size="xs" style={{ width: "100%" }}>
+        <SignUpForm />
+      </Container>
+    </Box>
   );
 }

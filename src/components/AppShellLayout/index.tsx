@@ -93,7 +93,7 @@ const AppShellLayout = ({ children }: { children: React.ReactNode }) => {
               }}
             >
               <Group>
-                <Avatar radius="xl" color="violet">
+                <Avatar radius="xl" color="magenta">
                   {displayName[0].toUpperCase()}
                 </Avatar>
                 <div style={{ flex: 1 }}>
@@ -120,7 +120,7 @@ const AppShellLayout = ({ children }: { children: React.ReactNode }) => {
                 leftSection={<IconUserPlus size={16} />}
                 onClick={() => handleNavigation("/signup")}
                 variant="gradient"
-                gradient={{ from: "violet", to: "grape" }}
+                gradient={{ from: "magenta", to: "grape" }}
                 fullWidth
               >
                 Sign Up

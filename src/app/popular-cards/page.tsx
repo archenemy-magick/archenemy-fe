@@ -211,7 +211,7 @@ const PopularCardsPage = () => {
             withBorder
             style={{
               background: isCardSelected(topCard.id)
-                ? "linear-gradient(135deg, var(--mantine-color-violet-7), var(--mantine-color-magenta-6))"
+                ? "linear-gradient(135deg, var(--mantine-color-magenta-7), var(--mantine-color-magenta-6))"
                 : "linear-gradient(135deg, var(--mantine-color-magenta-6), var(--mantine-color-gold-5))",
               cursor: "pointer",
               transition: "all 0.3s ease",
@@ -234,7 +234,7 @@ const PopularCardsPage = () => {
                   <Badge
                     size="lg"
                     variant="filled"
-                    color="violet"
+                    color="magenta"
                     style={{
                       position: "absolute",
                       top: 8,

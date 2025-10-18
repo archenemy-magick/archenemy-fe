@@ -302,7 +302,7 @@ const DecksPage = () => {
                       </Button>
                       <Button
                         variant="light"
-                        color="violet"
+                        color="magenta"
                         leftSection={<IconEdit size={16} />}
                         onClick={(e) => {
                           e.stopPropagation();
