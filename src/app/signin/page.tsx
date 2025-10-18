@@ -1,6 +1,6 @@
 "use client";
 
-import { Container, Title, Paper } from "@mantine/core";
+import { Container, Box } from "@mantine/core";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SignInForm } from "~/components/SignInForm";
 import { useEffect } from "react";
@@ -21,14 +21,20 @@ const SignInPage = () => {
   }, [isAuthenticated, router, redirectTo]);
 
   return (
-    <Container size="xs" mt="xl">
-      <Title ta="center" mb="lg">
-        Sign In
-      </Title>
-      <Paper withBorder shadow="md" p="xl" radius="md">
+    <Box
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        padding: "2rem",
+      }}
+    >
+      <Container size="xs" style={{ width: "100%" }}>
         <SignInForm />
-      </Paper>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

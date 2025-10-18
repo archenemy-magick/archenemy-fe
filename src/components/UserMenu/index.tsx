@@ -138,7 +138,7 @@ export function UserMenu() {
           src={avatar_url}
           radius="xl"
           style={{ cursor: "pointer" }}
-          color="violet"
+          color="magenta"
         >
           {displayName[0].toUpperCase()}
         </Avatar>

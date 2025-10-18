@@ -14,7 +14,7 @@
 
 /* Remove default blue selection color */
 ::selection {
-  background-color: var(--mantine-color-violet-5);
+  background-color: var(--mantine-color-magenta-8);
   color: white;
 }
 
@@ -90,8 +90,8 @@
 .gradient-bg-purple {
   background: linear-gradient(
     135deg,
-    var(--mantine-color-violet-9) 0%,
-    var(--mantine-color-violet-7) 100%
+    var(--mantine-color-magenta-9) 0%,
+    var(--mantine-color-magenta-7) 100%
   );
 }
 
@@ -105,7 +105,7 @@
 
 /* Card selection glow */
 .card-selected {
-  box-shadow: 0 0 0 3px var(--mantine-color-violet-5),
+  box-shadow: 0 0 0 3px var(--mantine-color-magenta-5),
     0 8px 16px rgba(132, 94, 247, 0.4);
   transform: translateY(-2px);
 }
@@ -129,6 +129,6 @@
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--mantine-color-violet-5);
+  outline: 2px solid var(--mantine-color-magenta-5);
   outline-offset: 2px;
 }

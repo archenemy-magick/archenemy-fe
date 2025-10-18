@@ -264,7 +264,7 @@ const ArchenemyGame = () => {
               </Group>
               <Progress
                 value={(totalCardsPlayed / totalCards) * 100}
-                color="violet"
+                color="magenta"
                 size="sm"
                 radius="xl"
               />
@@ -272,7 +272,7 @@ const ArchenemyGame = () => {
 
             {/* Current Scheme Card */}
             <Paper p="lg" withBorder>
-              <Title order={3} mb="md" c="violet.4">
+              <Title order={3} mb="md" c="magenta.4">
                 Current Scheme
               </Title>
 
@@ -317,7 +317,7 @@ const ArchenemyGame = () => {
                     disabled={cardPool.length === 0}
                     size="lg"
                     fullWidth
-                    gradient={{ from: "violet", to: "grape", deg: 135 }}
+                    gradient={{ from: "magenta", to: "grape", deg: 135 }}
                     variant="gradient"
                   >
                     Play {previousCards.length > 0 || currentCard ? "New" : "A"}{" "}
@@ -427,7 +427,7 @@ const ArchenemyGame = () => {
                       border: "none",
                       color: "white",
                       "&:hover": {
-                        background: "var(--mantine-color-violet-6)",
+                        background: "var(--mantine-color-magenta-6)",
                       },
                     },
                   }}

@@ -249,7 +249,7 @@ const SaveDeckModal = ({
             onClick={handleSave}
             loading={deckIsSaving}
             disabled={!!nameError || !!descError || cards.length === 0}
-            gradient={{ from: "violet", to: "grape", deg: 135 }}
+            gradient={{ from: "magenta", to: "grape", deg: 135 }}
             variant="gradient"
             size="md"
           >

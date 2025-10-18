@@ -10,6 +10,7 @@ import {
   Text,
   Anchor,
   Stack,
+  useMantineColorScheme,
 } from "@mantine/core";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "~/store/configureStore";
@@ -32,11 +33,11 @@ export function SignUpForm() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const { loading, error } = useSelector((state: RootState) => state.user);
+  const { colorScheme } = useMantineColorScheme();
 
   const handleUsernameChange = (value: string) => {
     setUsername(value);
 
-    // Only validate if field has been touched (blurred once)
     if (touched) {
       if (value.trim().length === 0) {
         setUsernameError("Username cannot be empty");
@@ -50,7 +51,6 @@ export function SignUpForm() {
   const handleUsernameBlur = () => {
     setTouched(true);
 
-    // Validate on blur
     if (username.trim().length === 0) {
       setUsernameError("Username cannot be empty");
     } else {
@@ -63,7 +63,6 @@ export function SignUpForm() {
     e.preventDefault();
     dispatch(clearError());
 
-    // Final validation before submit
     const usernameValidation = validateUsername(username);
     if (!usernameValidation.valid) {
       setUsernameError(usernameValidation.error || "Invalid username");
@@ -91,15 +90,23 @@ export function SignUpForm() {
     }
   };
 
+  const isDark = colorScheme === "dark";
+
   return (
     <Paper
       withBorder
-      shadow="md"
-      p={30}
-      radius="md"
-      style={{ maxWidth: 420, margin: "0 auto" }}
+      shadow="xl"
+      p={40}
+      radius="lg"
+      style={{
+        maxWidth: 420,
+        width: "100%",
+        backgroundColor: isDark
+          ? "var(--mantine-color-dark-7)"
+          : "rgba(255, 255, 255, 0.95)",
+      }}
     >
-      <Title order={2} mb="md">
+      <Title order={2} mb="lg" ta="center" c={isDark ? "white" : "dark"}>
         Create Account
       </Title>
 
@@ -113,6 +120,14 @@ export function SignUpForm() {
             onChange={(e) => handleUsernameChange(e.target.value)}
             onBlur={handleUsernameBlur}
             error={usernameError}
+            size="md"
+            styles={{
+              label: {
+                color: isDark
+                  ? "var(--mantine-color-gray-3)"
+                  : "var(--mantine-color-dark-6)",
+              },
+            }}
           />
 
           <TextInput
@@ -122,6 +137,14 @@ export function SignUpForm() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            size="md"
+            styles={{
+              label: {
+                color: isDark
+                  ? "var(--mantine-color-gray-3)"
+                  : "var(--mantine-color-dark-6)",
+              },
+            }}
           />
 
           <PasswordInput
@@ -130,18 +153,44 @@ export function SignUpForm() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            size="md"
+            styles={{
+              label: {
+                color: isDark
+                  ? "var(--mantine-color-gray-3)"
+                  : "var(--mantine-color-dark-6)",
+              },
+            }}
           />
 
           <TextInput
             label="First Name (optional)"
+            placeholder="John"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
+            size="md"
+            styles={{
+              label: {
+                color: isDark
+                  ? "var(--mantine-color-gray-3)"
+                  : "var(--mantine-color-dark-6)",
+              },
+            }}
           />
 
           <TextInput
             label="Last Name (optional)"
+            placeholder="Doe"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
+            size="md"
+            styles={{
+              label: {
+                color: isDark
+                  ? "var(--mantine-color-gray-3)"
+                  : "var(--mantine-color-dark-6)",
+              },
+            }}
           />
 
           {error && (
@@ -150,15 +199,22 @@ export function SignUpForm() {
             </Text>
           )}
 
-          <Button fullWidth type="submit" loading={loading}>
+          <Button
+            fullWidth
+            type="submit"
+            loading={loading}
+            size="lg"
+            mt="sm"
+            color="pink"
+          >
             Sign Up
           </Button>
         </Stack>
       </form>
 
-      <Text ta="center" mt="md">
+      <Text ta="center" mt="lg" size="sm" c={isDark ? "gray.4" : "dark.4"}>
         Already have an account?{" "}
-        <Anchor href="/signin" fw={700}>
+        <Anchor href="/signin" fw={700} c="pink">
           Sign In
         </Anchor>
       </Text>

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { LinkButton } from "../common";
 import clsx from "clsx";
 import { UserMenu } from "~/components/UserMenu";
+import { useSelector } from "react-redux";
+import { RootState } from "~/store/configureStore";
 
 const Header = ({
   opened,
@@ -15,6 +17,8 @@ const Header = ({
   toggleMobileMenuOpen: () => void;
   toggleColorScheme: () => void;
 }) => {
+  const { isAuthenticated } = useSelector((state: RootState) => state.user);
+
   return (
     <Group h="100%" px="md">
       <Burger
@@ -33,6 +37,15 @@ const Header = ({
           <UserMenu />
         </Box>
         <Group ml="xl" visibleFrom="sm" gap={0}>
+          {!isAuthenticated && (
+            <LinkButton
+              variant="transparent"
+              className={classes.control}
+              href="/"
+            >
+              Home
+            </LinkButton>
+          )}
           <LinkButton
             variant="transparent"
             className={classes.control}

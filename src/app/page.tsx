@@ -118,7 +118,7 @@ const HomePage = () => {
       <Box
         style={{
           background:
-            "linear-gradient(135deg, var(--mantine-color-violet-9), var(--mantine-color-grape-9))",
+            "linear-gradient(135deg, var(--mantine-color-magenta-9), var(--mantine-color-grape-9))",
           paddingTop: rem(80),
           paddingBottom: rem(80),
         }}
@@ -200,7 +200,7 @@ const HomePage = () => {
       {/* Features Section */}
       <Container size="lg" py={80}>
         <Stack gap="xl" align="center" ta="center" mb={60}>
-          <Badge size="lg" variant="light" color="violet">
+          <Badge size="lg" variant="light" color="magenta">
             Features
           </Badge>
           <Title order={2} size={rem(36)}>
@@ -269,7 +269,7 @@ const HomePage = () => {
       >
         <Container size="lg">
           <Stack gap="xl" align="center" ta="center">
-            <Badge size="lg" variant="light" color="violet">
+            <Badge size="lg" variant="light" color="magenta">
               See It In Action
             </Badge>
             <Title order={2} size={rem(36)} c="white">
@@ -325,7 +325,7 @@ const HomePage = () => {
         <Stack gap="xl">
           <Group justify="space-between" align="center">
             <div>
-              <Badge size="lg" variant="light" color="violet" mb="md">
+              <Badge size="lg" variant="light" color="magenta" mb="md">
                 Community Favorites
               </Badge>
               <Title order={2} size={rem(36)}>
@@ -441,7 +441,7 @@ const HomePage = () => {
                         <Text fw={600} size="lg" lineClamp={1}>
                           {deck.name}
                         </Text>
-                        <Badge size="sm" variant="light" color="violet">
+                        <Badge size="sm" variant="light" color="magenta">
                           {deck.deck_cards?.length || 0} cards
                         </Badge>
                       </Group>
@@ -497,7 +497,7 @@ const HomePage = () => {
         <Box
           style={{
             background:
-              "linear-gradient(135deg, var(--mantine-color-violet-9), var(--mantine-color-grape-9))",
+              "linear-gradient(135deg, var(--mantine-color-magenta-9), var(--mantine-color-grape-9))",
             paddingTop: rem(60),
             paddingBottom: rem(60),
           }}
