@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   TextInput,
   PasswordInput,
@@ -15,7 +15,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "~/store/configureStore";
 import { signIn, clearError } from "~/store/reducers";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export function SignInForm() {
   const [email, setEmail] = useState("");
@@ -23,16 +23,36 @@ export function SignInForm() {
 
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { loading, error } = useSelector((state: RootState) => state.user);
   const { colorScheme } = useMantineColorScheme();
+
+  // Get redirect path and decode it
+  const redirectTo = searchParams.get("redirectTo") || "/decks";
+
+  useEffect(() => {
+    console.log("Redirect path:", redirectTo); // Debug log
+  }, [redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(clearError());
 
+    console.log("Attempting sign in..."); // Debug log
+
     const result = await dispatch(signIn({ email, password }));
+
     if (signIn.fulfilled.match(result)) {
-      router.push("/decks");
+      console.log("Sign in successful, redirecting to:", redirectTo); // Debug log
+
+      // Use window.location for production redirect issues
+      if (typeof window !== "undefined") {
+        window.location.href = redirectTo;
+      } else {
+        router.push(redirectTo);
+      }
+    } else {
+      console.log("Sign in failed"); // Debug log
     }
   };
 

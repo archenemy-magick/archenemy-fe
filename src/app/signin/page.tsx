@@ -1,25 +1,9 @@
 "use client";
 
 import { Container, Box } from "@mantine/core";
-import { useRouter, useSearchParams } from "next/navigation";
 import { SignInForm } from "~/components/SignInForm";
-import { useEffect } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "~/store";
 
 const SignInPage = () => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { isAuthenticated } = useSelector((state: RootState) => state.user);
-
-  const redirectTo = searchParams.get("redirectTo") || "/decks";
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push(redirectTo);
-    }
-  }, [isAuthenticated, router, redirectTo]);
-
   return (
     <Box
       style={{
