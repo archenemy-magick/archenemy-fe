@@ -49,10 +49,22 @@ export async function updateProfile(updates: {
   return data;
 }
 
-/**
- * Upload avatar image
- */
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 export async function uploadAvatar(file: File) {
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error("File too large. Max 2MB.");
+  }
+
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    throw new Error("Invalid file type. Only images allowed.");
+  }
+
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  if (!["jpg", "jpeg", "png", "gif", "webp"].includes(ext || "")) {
+    throw new Error("Invalid file extension.");
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();

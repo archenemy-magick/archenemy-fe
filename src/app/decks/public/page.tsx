@@ -270,6 +270,36 @@ const PublicDecksPage = () => {
                 style={{ cursor: "pointer" }}
                 onClick={() => handlePreviewDeck(deck)}
               >
+                {deck.deck_cards && deck.deck_cards.length > 0 && (
+                  <Card.Section mb="md">
+                    <Group
+                      gap={0}
+                      wrap="nowrap"
+                      style={{ overflow: "hidden", height: 120 }}
+                    >
+                      {deck.deck_cards.slice(0, 5).map((card, index) => (
+                        <Box
+                          key={card.id}
+                          style={{
+                            flex: 1,
+                            height: 120,
+                            minWidth: 0,
+                          }}
+                        >
+                          <Image
+                            src={card.normal_image}
+                            alt={card.name}
+                            fit="cover"
+                            h={120}
+                            style={{
+                              filter: "brightness(0.9)",
+                            }}
+                          />
+                        </Box>
+                      ))}
+                    </Group>
+                  </Card.Section>
+                )}
                 <Stack justify="space-between" h="100%">
                   <div>
                     <Group justify="space-between" mb="xs">
