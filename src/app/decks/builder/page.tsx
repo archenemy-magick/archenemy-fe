@@ -46,6 +46,7 @@ import SaveDeckModal from "../../../components/SaveDeckModal";
 import { CustomArchenemyCard } from "~/types";
 import { notifications } from "@mantine/notifications";
 import { getDeckById } from "~/lib/api/decks";
+import { ScrollToTop } from "~/components/ScrollToTop";
 
 const DeckBuilder = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -623,6 +624,7 @@ const DeckBuilder = () => {
           </Grid>
         )}
       </Stack>
+      <ScrollToTop />
     </Stack>
   );
 };

@@ -11,3 +11,4 @@ export { SignInForm } from "./SignInForm";
 export { UserMenu } from "./UserMenu";
 export { Providers } from "./Providers";
 export { default as DecksSubHeader } from "./DecksSubHeader";
+export { ScrollToTop } from "./ScrollToTop";
