@@ -5,7 +5,7 @@ interface LayoutProps {
   children: ReactNode;
 }
 
-export const metadata = pageMetadata.deckBuilder;
+export const metadata = pageMetadata.popularCards;
 
 export default function Layout({ children }: LayoutProps) {
   return <main>{children}</main>;

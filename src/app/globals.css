@@ -2,23 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================ */
-/* DESIGN SYSTEM UPGRADE - Global Styles */
-/* ============================================ */
-
-/* Smooth transitions for color scheme changes */
-* {
-  transition: background-color 0.2s ease, color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-/* Remove default blue selection color */
 ::selection {
   background-color: var(--mantine-color-magenta-8);
   color: white;
 }
 
-/* Better scrollbars */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -38,7 +26,6 @@
   background: var(--mantine-color-dark-3);
 }
 
-/* Card hover effects */
 .card-hover {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
@@ -53,19 +40,16 @@
   transform: translateY(-2px);
 }
 
-/* Card overlay for hover effects */
 .card-hover:hover .card-overlay {
   background: rgba(132, 94, 247, 0.1) !important;
 }
 
-/* Glass morphism for overlays */
 .glass-effect {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Light mode overrides */
 [data-mantine-color-scheme="light"] {
   .glass-effect {
     background: rgba(255, 255, 255, 0.8);
@@ -86,7 +70,6 @@
   }
 }
 
-/* Gradient backgrounds for sections */
 .gradient-bg-purple {
   background: linear-gradient(
     135deg,
@@ -103,14 +86,12 @@
   );
 }
 
-/* Card selection glow */
 .card-selected {
   box-shadow: 0 0 0 3px var(--mantine-color-magenta-5),
     0 8px 16px rgba(132, 94, 247, 0.4);
   transform: translateY(-2px);
 }
 
-/* Pulse animation for important elements */
 @keyframes pulse {
   0%,
   100% {
@@ -125,7 +106,6 @@
   animation: pulse 2s ease-in-out infinite;
 }
 
-/* Better focus states */
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
