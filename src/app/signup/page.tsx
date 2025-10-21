@@ -2,9 +2,6 @@
 
 import { Container, Box } from "@mantine/core";
 import { SignUpForm } from "~/components/SignUpForm";
-import { pageMetadata } from "~/config/metadata";
-
-export const metadata = pageMetadata.signUp;
 
 export default function SignUpPage() {
   return (
