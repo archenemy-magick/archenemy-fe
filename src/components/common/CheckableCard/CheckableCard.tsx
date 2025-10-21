@@ -80,10 +80,3 @@ const CheckableCard = ({ card, onClick, cardSelected }: CheckableCardProps) => {
 };
 
 export default CheckableCard;
-
-// Add this CSS to your globals.css:
-/*
-.card-hover:hover .card-overlay {
-  background: rgba(132, 94, 247, 0.1) !important;
-}
-*/

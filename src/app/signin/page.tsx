@@ -2,6 +2,9 @@
 
 import { Container, Box } from "@mantine/core";
 import { SignInForm } from "~/components/SignInForm";
+import { pageMetadata } from "~/config/metadata";
+
+export const metadata = pageMetadata.signIn;
 
 const SignInPage = () => {
   return (

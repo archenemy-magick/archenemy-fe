@@ -1,6 +1,6 @@
 "use client";
 
-import { MantineProvider } from "@mantine/core";
+import { MantineProvider, type MantineTheme } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 
 import AppShellLayout from "../AppShellLayout";
@@ -141,17 +141,16 @@ export default function CustomMantineProvider({
               radius: "lg",
               shadow: "sm",
             },
-            styles: {
+            styles: (theme: MantineTheme) => ({
               root: {
                 borderLeft: "3px solid transparent",
                 transition: "all 0.2s ease",
-                background: "linear-gradient(145deg, #3d3d45 0%, #2f2f37 100%)",
                 "&:hover": {
                   borderLeftColor: "#e91e8c",
                   boxShadow: "0 8px 24px rgba(233, 30, 140, 0.15)",
                 },
               },
-            },
+            }),
           },
           Paper: {
             defaultProps: {
