@@ -72,17 +72,12 @@ const HomePage = () => {
   useEffect(() => {
     const fetchTopDecks = async () => {
       try {
-        console.log("[HomePage] Fetching top decks...");
         setLoadingDecks(true);
         const decks = await getTopPublicDecks(3);
-        console.log("[HomePage] Fetched decks:", decks);
-        console.log("[HomePage] Number of decks:", decks.length);
         setTopDecks(decks);
       } catch (error) {
-        console.error("[HomePage] Failed to fetch top decks:", error);
       } finally {
         setLoadingDecks(false);
-        console.log("[HomePage] Loading complete");
       }
     };
 

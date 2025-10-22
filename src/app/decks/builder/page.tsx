@@ -188,7 +188,6 @@ const DeckBuilder = () => {
             })
           );
         } catch (error) {
-          console.error("Error loading deck:", error);
           notifications.show({
             title: "Error",
             message: "Failed to load deck for editing",
@@ -265,8 +264,6 @@ const DeckBuilder = () => {
       closeSaveDeckModal();
       router.push("/decks");
     } catch (error) {
-      console.error("Error saving deck:", error);
-
       notifications.show({
         title: "Error",
         message: "There was an error saving your deck. Please try again.",

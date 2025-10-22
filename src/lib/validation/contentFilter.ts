@@ -44,8 +44,6 @@ export const validateContent = (
 ): ValidationResult => {
   // Check if empty
   if (!text || text.trim().length === 0) {
-    console.log("test is empty");
-
     if (options.allowEmpty) {
       return { valid: true };
     }
@@ -73,8 +71,6 @@ export const validateContent = (
     const profaneWords = matches.map((match) =>
       text.substring(match.startIndex, match.endIndex)
     );
-
-    console.log("Profanity detected:", profaneWords); // Debug log
 
     return {
       valid: false,

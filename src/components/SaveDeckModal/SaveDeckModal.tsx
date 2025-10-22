@@ -13,6 +13,7 @@ import {
   Badge,
   Box,
   Alert,
+  Tooltip,
 } from "@mantine/core";
 import { useState, useEffect } from "react";
 import { IconAlertCircle } from "@tabler/icons-react";
@@ -54,22 +55,22 @@ const SaveDeckModal = ({
   const [descError, setDescError] = useState<string | null>(null);
   const [touched, setTouched] = useState({ name: false, description: false });
 
-  // useEffect(() => {
-  //   if (open) {
-  //     // setDeckName(initialName || "");
-  //     // setDescription(initialDescription || "");
-  //     setTouched({ name: false, description: false });
-  //   }
-  // }, [open, deckName, description, initialName, initialDescription]);
-
   const handleDeckNameChange = (value: string) => {
     setDeckName(value);
+    setTouched({ ...touched, name: true });
+
+    // Validate in real-time
     if (value.trim().length === 0) {
       setNameError("Deck name cannot be empty");
+    } else {
+      const validation = validateDeckName(value);
+      setNameError(validation.valid ? null : validation.error || null);
     }
   };
 
   const handleDeckNameBlur = () => {
+    setTouched({ ...touched, name: true });
+
     if (deckName.trim().length === 0) {
       setNameError("Deck name cannot be empty");
     } else {
@@ -80,9 +81,16 @@ const SaveDeckModal = ({
 
   const handleDescriptionChange = (value: string) => {
     setDescription(value);
+    setTouched({ ...touched, description: true });
+
+    // Validate in real-time
+    const validation = validateDescription(value);
+    setDescError(validation.valid ? null : validation.error || null);
   };
 
   const handleDescriptionBlur = () => {
+    setTouched({ ...touched, description: true });
+
     const validation = validateDescription(description);
     setDescError(validation.valid ? null : validation.error || null);
   };
@@ -208,24 +216,71 @@ const SaveDeckModal = ({
                   <Grid gutter="xs">
                     {typeCards.map((card) => (
                       <Grid.Col key={card.id} span={{ base: 4, sm: 3, md: 2 }}>
-                        <Box
-                          style={{
-                            position: "relative",
-                            borderRadius: "var(--mantine-radius-sm)",
-                            overflow: "hidden",
-                            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                        <Tooltip
+                          label={
+                            <Box
+                              style={{
+                                width: 300,
+                                maxWidth: "90vw",
+                              }}
+                            >
+                              <Image
+                                src={card.normal_image}
+                                alt={card.name}
+                                style={{
+                                  width: "100%",
+                                  height: "auto",
+                                  display: "block",
+                                  borderRadius: "8px",
+                                }}
+                              />
+                            </Box>
+                          }
+                          position="right"
+                          withArrow
+                          transitionProps={{ duration: 200 }}
+                          offset={20}
+                          styles={{
+                            tooltip: {
+                              padding: 0,
+                              backgroundColor: "transparent",
+                              border: "none",
+                            },
                           }}
                         >
-                          <Image
-                            src={card.normal_image}
-                            alt={card.name}
+                          <Box
                             style={{
-                              width: "100%",
-                              height: "auto",
-                              display: "block",
+                              position: "relative",
+                              borderRadius: "var(--mantine-radius-sm)",
+                              overflow: "hidden",
+                              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                              cursor: "pointer",
+                              transition:
+                                "transform 0.2s ease, box-shadow 0.2s ease",
                             }}
-                          />
-                        </Box>
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform =
+                                "translateY(-2px)";
+                              e.currentTarget.style.boxShadow =
+                                "0 4px 12px rgba(233, 30, 140, 0.3)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "translateY(0)";
+                              e.currentTarget.style.boxShadow =
+                                "0 2px 4px rgba(0, 0, 0, 0.1)";
+                            }}
+                          >
+                            <Image
+                              src={card.normal_image}
+                              alt={card.name}
+                              style={{
+                                width: "100%",
+                                height: "auto",
+                                display: "block",
+                              }}
+                            />
+                          </Box>
+                        </Tooltip>
                       </Grid.Col>
                     ))}
                   </Grid>

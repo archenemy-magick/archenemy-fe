@@ -90,7 +90,6 @@ const ProfilePage = () => {
       setLastName(data.last_name || "");
       setNewEmail(data.email);
     } catch (error) {
-      console.error("Error loading profile:", error);
       notifications.show({
         title: "Error",
         message: "Failed to load profile",
@@ -117,7 +116,6 @@ const ProfilePage = () => {
 
       await loadProfile();
     } catch (error: unknown) {
-      console.error("Error updating profile:", error);
       notifications.show({
         title: "Error",
         message: (error as Error).message || "Failed to update profile",
@@ -164,7 +162,6 @@ const ProfilePage = () => {
         color: "green",
       });
     } catch (error: unknown) {
-      console.error("Error uploading avatar:", error);
       notifications.show({
         title: "Error",
         message: (error as Error).message || "Failed to upload avatar",
@@ -189,7 +186,6 @@ const ProfilePage = () => {
       });
       await loadProfile();
     } catch (error: unknown) {
-      console.error("Error deleting avatar:", error);
       notifications.show({
         title: "Error",
         message: (error as Error).message || "Failed to delete avatar",
@@ -217,7 +213,6 @@ const ProfilePage = () => {
       });
       await loadProfile();
     } catch (error: unknown) {
-      console.error("Error updating email:", error);
       notifications.show({
         title: "Error",
         message: (error as Error).message || "Failed to update email",
@@ -264,7 +259,6 @@ const ProfilePage = () => {
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: unknown) {
-      console.error("Error updating password:", error);
       notifications.show({
         title: "Error",
         message: (error as Error).message || "Failed to update password",
@@ -283,7 +277,6 @@ const ProfilePage = () => {
       });
       router.push("/");
     } catch (error: unknown) {
-      console.error("Error deleting account:", error);
       notifications.show({
         title: "Error",
         message: (error as Error).message || "Failed to delete account",

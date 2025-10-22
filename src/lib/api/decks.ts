@@ -224,7 +224,6 @@ export async function getPublicDecks() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching public decks:", error);
     throw error;
   }
 
@@ -255,7 +254,6 @@ export async function cloneDeck(deckId: string) {
     .single();
 
   if (fetchError) {
-    console.error("Error fetching deck to clone:", fetchError);
     throw fetchError;
   }
 
@@ -277,7 +275,6 @@ export async function cloneDeck(deckId: string) {
     .single();
 
   if (createError) {
-    console.error("Error creating cloned deck:", createError);
     throw createError;
   }
 
@@ -298,7 +295,6 @@ export async function cloneDeck(deckId: string) {
 
   if (cardsError) {
     await supabase.from("archenemy_decks").delete().eq("id", newDeck.id);
-    console.error("Error copying cards to cloned deck:", cardsError);
     throw cardsError;
   }
 
@@ -316,7 +312,6 @@ export async function incrementDeckViews(deckId: string) {
   });
 
   if (error) {
-    console.error("Error incrementing deck views:", error);
     // Don't throw - view count is not critical
   }
 }
@@ -482,7 +477,6 @@ export async function refreshCardPopularity() {
   const { error } = await supabase.rpc("refresh_card_popularity");
 
   if (error) {
-    console.error("Error refreshing card popularity:", error);
     // Don't throw - this is not critical
   }
 }
@@ -521,7 +515,6 @@ export async function getTopPublicDecks(
     .limit(limit);
 
   if (error) {
-    console.error("Error fetching top public decks:", error);
     throw new Error("Failed to fetch top public decks");
   }
 

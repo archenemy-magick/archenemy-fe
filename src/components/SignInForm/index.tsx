@@ -30,21 +30,13 @@ export function SignInForm() {
   // Get redirect path and decode it
   const redirectTo = searchParams.get("redirectTo") || "/decks";
 
-  useEffect(() => {
-    console.log("Redirect path:", redirectTo); // Debug log
-  }, [redirectTo]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(clearError());
 
-    console.log("Attempting sign in..."); // Debug log
-
     const result = await dispatch(signIn({ email, password }));
 
     if (signIn.fulfilled.match(result)) {
-      console.log("Sign in successful, redirecting to:", redirectTo); // Debug log
-
       // Use window.location for production redirect issues
       if (typeof window !== "undefined") {
         window.location.href = redirectTo;
@@ -52,7 +44,6 @@ export function SignInForm() {
         router.push(redirectTo);
       }
     } else {
-      console.log("Sign in failed"); // Debug log
     }
   };
 

@@ -51,7 +51,7 @@ const Header = ({
             className={classes.control}
             href="/game/archenemy"
           >
-            Game
+            Archenemy Game
           </LinkButton>
           <LinkButton
             variant="transparent"
@@ -59,13 +59,6 @@ const Header = ({
             href="/popular-cards"
           >
             Popular Cards
-          </LinkButton>
-          <LinkButton
-            variant="transparent"
-            className={classes.control}
-            href="/decks/builder"
-          >
-            Deck Builder
           </LinkButton>
           <LinkButton
             variant="transparent"

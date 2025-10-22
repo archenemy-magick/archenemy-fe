@@ -6,6 +6,7 @@ import {
   IconUser,
   IconCards,
   IconDownload,
+  IconHome,
 } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "~/store/configureStore";
@@ -104,7 +105,6 @@ export function UserMenu() {
         });
       }
     } catch (error) {
-      console.error("Install prompt error:", error);
       notifications.show({
         title: "Error",
         message: "Failed to install app. Please try again.",
@@ -166,6 +166,12 @@ export function UserMenu() {
           onClick={() => router.push("/profile")}
         >
           Profile
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<IconHome size={14} />}
+          onClick={() => router.push("/")}
+        >
+          Home
         </Menu.Item>
 
         <Menu.Divider />

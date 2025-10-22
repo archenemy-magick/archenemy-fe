@@ -7,8 +7,6 @@ const DeckCard = ({
   selectDeck: () => void;
   deck: CustomArchenemyDeck;
 }) => {
-  console.log("deck in DeckCard", deck);
-
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
       <Card.Section>
