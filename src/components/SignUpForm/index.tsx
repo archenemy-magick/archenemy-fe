@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { validateUsername } from "~/lib/validation/contentFilter";
 import { notifications } from "@mantine/notifications";
 import { IconAlertCircle } from "@tabler/icons-react";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 export function SignUpForm() {
   const [email, setEmail] = useState("");
@@ -34,6 +35,7 @@ export function SignUpForm() {
   const router = useRouter();
   const { loading, error } = useSelector((state: RootState) => state.user);
   const { colorScheme } = useMantineColorScheme();
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleUsernameChange = (value: string) => {
     setUsername(value);
@@ -63,6 +65,7 @@ export function SignUpForm() {
     e.preventDefault();
     dispatch(clearError());
 
+    // Validate username
     const usernameValidation = validateUsername(username);
     if (!usernameValidation.valid) {
       setUsernameError(usernameValidation.error || "Invalid username");
@@ -75,18 +78,61 @@ export function SignUpForm() {
       return;
     }
 
-    const result = await dispatch(
-      signUp({
-        email,
-        password,
-        username,
-        firstName,
-        lastName,
-      })
-    );
+    // Execute reCAPTCHA
+    if (!executeRecaptcha) {
+      notifications.show({
+        title: "Error",
+        message: "reCAPTCHA not loaded. Please refresh and try again.",
+        color: "red",
+        icon: <IconAlertCircle />,
+      });
+      return;
+    }
 
-    if (signUp.fulfilled.match(result)) {
-      router.push("/decks");
+    try {
+      const recaptchaToken = await executeRecaptcha("signup");
+
+      const verifyResponse = await fetch("/api/verify-recaptcha", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token: recaptchaToken }),
+      });
+
+      const verifyResult = await verifyResponse.json();
+      if (!verifyResult.success || verifyResult.score < 0.5) {
+        notifications.show({
+          title: "Verification Failed",
+          message:
+            "Please try again. If the problem persists, contact support.",
+          color: "red",
+          icon: <IconAlertCircle />,
+        });
+        return;
+      }
+
+      const result = await dispatch(
+        signUp({
+          email,
+          password,
+          username,
+          firstName,
+          lastName,
+        })
+      );
+
+      if (signUp.fulfilled.match(result)) {
+        router.push("/decks");
+      }
+    } catch (error) {
+      console.error("reCAPTCHA error:", error);
+      notifications.show({
+        title: "Error",
+        message: "Something went wrong. Please try again.",
+        color: "red",
+        icon: <IconAlertCircle />,
+      });
     }
   };
 
@@ -209,6 +255,26 @@ export function SignUpForm() {
           >
             Sign Up
           </Button>
+
+          <Text size="xs" c="dimmed" ta="center">
+            This site is protected by reCAPTCHA and the Google{" "}
+            <Anchor
+              href="https://policies.google.com/privacy"
+              target="_blank"
+              size="xs"
+            >
+              Privacy Policy
+            </Anchor>{" "}
+            and{" "}
+            <Anchor
+              href="https://policies.google.com/terms"
+              target="_blank"
+              size="xs"
+            >
+              Terms of Service
+            </Anchor>{" "}
+            apply.
+          </Text>
         </Stack>
       </form>
 
