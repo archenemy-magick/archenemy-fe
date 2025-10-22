@@ -100,8 +100,6 @@ export const deckBuilderSlice = createSlice({
       state.deckSavingError = undefined;
     });
     builder.addCase(saveArchenemyDeck.rejected, (state, action) => {
-      console.log("action.error", action.error);
-
       state.deckSavingError = action.error.message;
       throw new Error(action.error.message || "Error saving deck");
     });

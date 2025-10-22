@@ -88,7 +88,6 @@ const DecksPage = () => {
       setDeleteModalOpen(false);
       setDeckToDelete(null);
     } catch (error) {
-      console.error("Error deleting deck:", error);
       notifications.show({
         title: "Error",
         message: "Failed to delete deck. Please try again.",
@@ -119,7 +118,6 @@ const DecksPage = () => {
       // Refresh the deck list
       dispatch(fetchAllArchenemyDecks());
     } catch (error) {
-      console.error("Error cloning deck:", error);
       notifications.show({
         title: "Error",
         message: "Failed to clone deck. Please try again.",

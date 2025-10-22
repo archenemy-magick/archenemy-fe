@@ -39,14 +39,14 @@ export function SignUpForm() {
 
   const handleUsernameChange = (value: string) => {
     setUsername(value);
+    setTouched(true);
 
-    if (touched) {
-      if (value.trim().length === 0) {
-        setUsernameError("Username cannot be empty");
-      } else {
-        const validation = validateUsername(value);
-        setUsernameError(validation.valid ? null : validation.error || null);
-      }
+    // Validate in real-time
+    if (value.trim().length === 0) {
+      setUsernameError("Username cannot be empty");
+    } else {
+      const validation = validateUsername(value);
+      setUsernameError(validation.valid ? null : validation.error || null);
     }
   };
 

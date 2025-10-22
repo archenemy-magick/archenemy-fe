@@ -63,7 +63,6 @@ const DeckDetailPage = () => {
         const deckData = await getDeckById(deckId);
         setDeck(deckData);
       } catch (err) {
-        console.error("Error loading deck:", err);
         setError("Failed to load deck");
       } finally {
         setLoading(false);

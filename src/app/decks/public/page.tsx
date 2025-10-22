@@ -70,7 +70,6 @@ const PublicDecksPage = () => {
         const likes = await getUserLikesForDecks(deckIds);
         setLikedDecks(likes);
       } catch (error) {
-        console.error("Error fetching public decks:", error);
         notifications.show({
           title: "Error",
           message: "Failed to load public decks",
@@ -113,7 +112,6 @@ const PublicDecksPage = () => {
       // TODO: probably remove this setTimeout?
       router.push("/decks");
     } catch (error) {
-      console.error("Error cloning deck:", error);
       notifications.show({
         title: "Error",
         message: "Failed to clone deck. Please try again.",
@@ -174,7 +172,6 @@ const PublicDecksPage = () => {
         });
       }
     } catch (error) {
-      console.error("Error toggling like:", error);
       notifications.show({
         title: "Error",
         message: "Failed to update like. Please try again.",

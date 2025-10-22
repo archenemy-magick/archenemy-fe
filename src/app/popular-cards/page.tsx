@@ -58,7 +58,6 @@ const PopularCardsPage = () => {
         const data = await getPopularCards(50);
         setCards(data);
       } catch (error) {
-        console.error("Error fetching popular cards:", error);
         notifications.show({
           title: "Error",
           message: "Failed to load popular cards",
@@ -117,7 +116,6 @@ const PopularCardsPage = () => {
         router.push("/decks");
       }, 1000);
     } catch (error) {
-      console.error("Error saving deck:", error);
       notifications.show({
         title: "Error",
         message: "There was an error saving your deck. Please try again.",
