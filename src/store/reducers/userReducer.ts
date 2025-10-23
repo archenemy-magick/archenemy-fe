@@ -25,7 +25,6 @@ export const initialUserState: InitialUserState = {
   avatar_url: null,
 };
 
-// Async Thunks
 export const signUp = createAsyncThunk(
   "user/signUp",
   async (
@@ -52,8 +51,8 @@ export const signUp = createAsyncThunk(
         options: {
           data: {
             username,
-            firstName,
-            lastName,
+            first_name: firstName, // Changed from firstName
+            last_name: lastName, // Changed from lastName
           },
         },
       });
@@ -63,8 +62,8 @@ export const signUp = createAsyncThunk(
         id: data.user?.id || null,
         email: data.user?.email || null,
         username: data.user?.user_metadata?.username || null,
-        firstName: data.user?.user_metadata?.firstName || null,
-        lastName: data.user?.user_metadata?.lastName || null,
+        firstName: data.user?.user_metadata?.first_name || null, // Changed
+        lastName: data.user?.user_metadata?.last_name || null, // Changed
         avatar_url: data.user?.user_metadata?.avatar_url || null,
       };
     } catch (error: unknown) {
