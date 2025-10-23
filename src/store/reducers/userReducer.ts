@@ -45,14 +45,20 @@ export const signUp = createAsyncThunk(
   ) => {
     try {
       const supabase = createClient();
+
+      // Create full name for display
+      const fullName =
+        [firstName, lastName].filter(Boolean).join(" ") || username;
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             username,
-            first_name: firstName, // Changed from firstName
-            last_name: lastName, // Changed from lastName
+            first_name: firstName,
+            last_name: lastName,
+            full_name: fullName, // Add this for Supabase Auth display
           },
         },
       });
@@ -62,8 +68,8 @@ export const signUp = createAsyncThunk(
         id: data.user?.id || null,
         email: data.user?.email || null,
         username: data.user?.user_metadata?.username || null,
-        firstName: data.user?.user_metadata?.first_name || null, // Changed
-        lastName: data.user?.user_metadata?.last_name || null, // Changed
+        firstName: data.user?.user_metadata?.first_name || null,
+        lastName: data.user?.user_metadata?.last_name || null,
         avatar_url: data.user?.user_metadata?.avatar_url || null,
       };
     } catch (error: unknown) {

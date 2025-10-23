@@ -11,6 +11,7 @@ import {
   Anchor,
   Stack,
   useMantineColorScheme,
+  Alert,
 } from "@mantine/core";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "~/store/configureStore";
@@ -18,8 +19,7 @@ import { signUp, clearError } from "~/store/reducers";
 import { useRouter } from "next/navigation";
 import { validateUsername } from "~/lib/validation/contentFilter";
 import { notifications } from "@mantine/notifications";
-import { IconAlertCircle } from "@tabler/icons-react";
-import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { IconAlertCircle, IconMailCheck } from "@tabler/icons-react";
 
 export function SignUpForm() {
   const [email, setEmail] = useState("");
@@ -30,12 +30,12 @@ export function SignUpForm() {
 
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const { loading, error } = useSelector((state: RootState) => state.user);
   const { colorScheme } = useMantineColorScheme();
-  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleUsernameChange = (value: string) => {
     setUsername(value);
@@ -65,7 +65,6 @@ export function SignUpForm() {
     e.preventDefault();
     dispatch(clearError());
 
-    // Validate username
     const usernameValidation = validateUsername(username);
     if (!usernameValidation.valid) {
       setUsernameError(usernameValidation.error || "Invalid username");
@@ -78,60 +77,25 @@ export function SignUpForm() {
       return;
     }
 
-    // Execute reCAPTCHA
-    if (!executeRecaptcha) {
+    const result = await dispatch(
+      signUp({
+        email,
+        password,
+        username,
+        firstName,
+        lastName,
+      })
+    );
+
+    if (signUp.fulfilled.match(result)) {
+      // Show success state instead of redirecting
+      setSignupSuccess(true);
+
       notifications.show({
-        title: "Error",
-        message: "reCAPTCHA not loaded. Please refresh and try again.",
-        color: "red",
-        icon: <IconAlertCircle />,
-      });
-      return;
-    }
-
-    try {
-      const recaptchaToken = await executeRecaptcha("signup");
-
-      const verifyResponse = await fetch("/api/verify-recaptcha", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token: recaptchaToken }),
-      });
-
-      const verifyResult = await verifyResponse.json();
-      if (!verifyResult.success || verifyResult.score < 0.5) {
-        notifications.show({
-          title: "Verification Failed",
-          message:
-            "Please try again. If the problem persists, contact support.",
-          color: "red",
-          icon: <IconAlertCircle />,
-        });
-        return;
-      }
-
-      const result = await dispatch(
-        signUp({
-          email,
-          password,
-          username,
-          firstName,
-          lastName,
-        })
-      );
-
-      if (signUp.fulfilled.match(result)) {
-        router.push("/decks");
-      }
-    } catch (error) {
-      console.error("reCAPTCHA error:", error);
-      notifications.show({
-        title: "Error",
-        message: "Something went wrong. Please try again.",
-        color: "red",
-        icon: <IconAlertCircle />,
+        title: "Account Created!",
+        message: "Please check your email to confirm your account.",
+        color: "green",
+        autoClose: false,
       });
     }
   };
@@ -156,134 +120,164 @@ export function SignUpForm() {
         Create Account
       </Title>
 
-      <form onSubmit={handleSubmit}>
-        <Stack gap="md">
-          <TextInput
-            label="Username"
-            placeholder="archenemy_master"
-            required
-            value={username}
-            onChange={(e) => handleUsernameChange(e.target.value)}
-            onBlur={handleUsernameBlur}
-            error={usernameError}
-            size="md"
-            styles={{
-              label: {
-                color: isDark
-                  ? "var(--mantine-color-gray-3)"
-                  : "var(--mantine-color-dark-6)",
-              },
-            }}
-          />
-
-          <TextInput
-            label="Email"
-            placeholder="you@example.com"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            size="md"
-            styles={{
-              label: {
-                color: isDark
-                  ? "var(--mantine-color-gray-3)"
-                  : "var(--mantine-color-dark-6)",
-              },
-            }}
-          />
-
-          <PasswordInput
-            label="Password"
-            placeholder="Strong password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            size="md"
-            styles={{
-              label: {
-                color: isDark
-                  ? "var(--mantine-color-gray-3)"
-                  : "var(--mantine-color-dark-6)",
-              },
-            }}
-          />
-
-          <TextInput
-            label="First Name (optional)"
-            placeholder="John"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            size="md"
-            styles={{
-              label: {
-                color: isDark
-                  ? "var(--mantine-color-gray-3)"
-                  : "var(--mantine-color-dark-6)",
-              },
-            }}
-          />
-
-          <TextInput
-            label="Last Name (optional)"
-            placeholder="Doe"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            size="md"
-            styles={{
-              label: {
-                color: isDark
-                  ? "var(--mantine-color-gray-3)"
-                  : "var(--mantine-color-dark-6)",
-              },
-            }}
-          />
-
-          {error && (
-            <Text c="red" size="sm">
-              {error}
-            </Text>
-          )}
+      {signupSuccess ? (
+        <Stack gap="lg" align="center">
+          <Alert
+            icon={<IconMailCheck size={24} />}
+            title="Check Your Email!"
+            color="green"
+            variant="light"
+            style={{ width: "100%" }}
+          >
+            <Stack gap="sm">
+              <Text size="sm">
+                We&apos;ve sent a confirmation email to <strong>{email}</strong>
+              </Text>
+              <Text size="sm">
+                Please check your inbox and click the confirmation link to
+                activate your account.
+              </Text>
+              <Text size="xs" c="dimmed">
+                Can&apos;t find the email? Check your spam folder or{" "}
+                <Anchor
+                  size="xs"
+                  onClick={() => {
+                    setSignupSuccess(false);
+                    setEmail("");
+                    setPassword("");
+                    setUsername("");
+                    setFirstName("");
+                    setLastName("");
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  Try again
+                </Anchor>
+              </Text>
+            </Stack>
+          </Alert>
 
           <Button
+            variant="light"
             fullWidth
-            type="submit"
-            loading={loading}
-            size="lg"
-            mt="sm"
-            color="pink"
+            onClick={() => router.push("/signin")}
+            mt="md"
           >
-            Sign Up
+            Go to Sign In
           </Button>
-
-          <Text size="xs" c="dimmed" ta="center">
-            This site is protected by reCAPTCHA and the Google{" "}
-            <Anchor
-              href="https://policies.google.com/privacy"
-              target="_blank"
-              size="xs"
-            >
-              Privacy Policy
-            </Anchor>{" "}
-            and{" "}
-            <Anchor
-              href="https://policies.google.com/terms"
-              target="_blank"
-              size="xs"
-            >
-              Terms of Service
-            </Anchor>{" "}
-            apply.
-          </Text>
         </Stack>
-      </form>
+      ) : (
+        <>
+          <form onSubmit={handleSubmit}>
+            <Stack gap="md">
+              <TextInput
+                label="Username"
+                placeholder="archenemy_master"
+                required
+                value={username}
+                onChange={(e) => handleUsernameChange(e.target.value)}
+                onBlur={handleUsernameBlur}
+                error={usernameError}
+                size="md"
+                styles={{
+                  label: {
+                    color: isDark
+                      ? "var(--mantine-color-gray-3)"
+                      : "var(--mantine-color-dark-6)",
+                  },
+                }}
+              />
 
-      <Text ta="center" mt="lg" size="sm" c={isDark ? "gray.4" : "dark.4"}>
-        Already have an account?{" "}
-        <Anchor href="/signin" fw={700} c="pink">
-          Sign In
-        </Anchor>
-      </Text>
+              <TextInput
+                label="Email"
+                placeholder="you@example.com"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                size="md"
+                styles={{
+                  label: {
+                    color: isDark
+                      ? "var(--mantine-color-gray-3)"
+                      : "var(--mantine-color-dark-6)",
+                  },
+                }}
+              />
+
+              <PasswordInput
+                label="Password"
+                placeholder="Strong password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                size="md"
+                styles={{
+                  label: {
+                    color: isDark
+                      ? "var(--mantine-color-gray-3)"
+                      : "var(--mantine-color-dark-6)",
+                  },
+                }}
+              />
+
+              <TextInput
+                label="First Name (optional)"
+                placeholder="John"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                size="md"
+                styles={{
+                  label: {
+                    color: isDark
+                      ? "var(--mantine-color-gray-3)"
+                      : "var(--mantine-color-dark-6)",
+                  },
+                }}
+              />
+
+              <TextInput
+                label="Last Name (optional)"
+                placeholder="Doe"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                size="md"
+                styles={{
+                  label: {
+                    color: isDark
+                      ? "var(--mantine-color-gray-3)"
+                      : "var(--mantine-color-dark-6)",
+                  },
+                }}
+              />
+
+              {error && (
+                <Text c="red" size="sm">
+                  {error}
+                </Text>
+              )}
+
+              <Button
+                fullWidth
+                type="submit"
+                loading={loading}
+                size="lg"
+                mt="sm"
+                color="pink"
+              >
+                Sign Up
+              </Button>
+            </Stack>
+          </form>
+
+          <Text ta="center" mt="lg" size="sm" c={isDark ? "gray.4" : "dark.4"}>
+            Already have an account?{" "}
+            <Anchor href="/signin" fw={700} c="pink">
+              Sign In
+            </Anchor>
+          </Text>
+        </>
+      )}
     </Paper>
   );
 }
