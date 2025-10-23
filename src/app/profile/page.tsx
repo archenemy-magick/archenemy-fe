@@ -12,10 +12,8 @@ import {
   TextInput,
   PasswordInput,
   FileButton,
-  Divider,
   Badge,
   Modal,
-  Box,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -28,6 +26,8 @@ import {
   IconLock,
   IconUserCircle,
   IconAlertTriangle,
+  IconCheck,
+  IconX,
 } from "@tabler/icons-react";
 import {
   getCurrentUserProfile,
@@ -67,18 +67,24 @@ const ProfilePage = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // Password validation states
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState<
+    string | null
+  >(null);
+
   // Modal states
   const [
     deleteModalOpened,
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
 
+  const dispatch = useDispatch<AppDispatch>();
+
   // Load profile on mount
   useEffect(() => {
     loadProfile();
   }, []);
-
-  const dispatch = useDispatch<AppDispatch>();
 
   const loadProfile = async () => {
     try {
@@ -97,6 +103,34 @@ const ProfilePage = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Real-time password validation
+  const handlePasswordChange = (value: string) => {
+    setNewPassword(value);
+
+    if (value.length > 0 && value.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+    } else {
+      setPasswordError(null);
+    }
+
+    // Check if passwords match
+    if (confirmPassword && value !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match");
+    } else if (confirmPassword) {
+      setConfirmPasswordError(null);
+    }
+  };
+
+  const handleConfirmPasswordChange = (value: string) => {
+    setConfirmPassword(value);
+
+    if (value.length > 0 && newPassword !== value) {
+      setConfirmPasswordError("Passwords do not match");
+    } else {
+      setConfirmPasswordError(null);
     }
   };
 
@@ -231,19 +265,10 @@ const ProfilePage = () => {
       return;
     }
 
-    if (newPassword !== confirmPassword) {
+    if (passwordError || confirmPasswordError) {
       notifications.show({
         title: "Error",
-        message: "Passwords do not match",
-        color: "red",
-      });
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      notifications.show({
-        title: "Error",
-        message: "Password must be at least 6 characters",
+        message: "Please fix password errors before saving",
         color: "red",
       });
       return;
@@ -258,6 +283,8 @@ const ProfilePage = () => {
       });
       setNewPassword("");
       setConfirmPassword("");
+      setPasswordError(null);
+      setConfirmPasswordError(null);
     } catch (error: unknown) {
       notifications.show({
         title: "Error",
@@ -300,6 +327,17 @@ const ProfilePage = () => {
       </Container>
     );
   }
+
+  // Password strength indicator
+  const getPasswordStrengthColor = () => {
+    if (!newPassword) return undefined;
+    if (newPassword.length < 6) return "red";
+    if (newPassword.length < 8) return "yellow";
+    return "green";
+  };
+
+  const passwordsMatch =
+    newPassword && confirmPassword && newPassword === confirmPassword;
 
   return (
     <Container size="md" py="xl">
@@ -443,15 +481,55 @@ const ProfilePage = () => {
               label="New Password"
               placeholder="Enter new password"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.currentTarget.value)}
+              onChange={(e) => handlePasswordChange(e.currentTarget.value)}
+              error={passwordError}
+              rightSection={
+                newPassword && !passwordError ? (
+                  <IconCheck size={16} color="green" />
+                ) : newPassword && passwordError ? (
+                  <IconX size={16} color="red" />
+                ) : null
+              }
             />
+            {newPassword && !passwordError && (
+              <Text size="xs" c={getPasswordStrengthColor()}>
+                {newPassword.length < 8 ? "Good password" : "Strong password"}
+              </Text>
+            )}
+
             <PasswordInput
               label="Confirm Password"
               placeholder="Confirm new password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.currentTarget.value)}
+              onChange={(e) =>
+                handleConfirmPasswordChange(e.currentTarget.value)
+              }
+              error={confirmPasswordError}
+              rightSection={
+                passwordsMatch ? (
+                  <IconCheck size={16} color="green" />
+                ) : confirmPassword && confirmPasswordError ? (
+                  <IconX size={16} color="red" />
+                ) : null
+              }
             />
-            <Button onClick={handleUpdatePassword}>Change Password</Button>
+            {passwordsMatch && (
+              <Text size="xs" c="green">
+                ✓ Passwords match
+              </Text>
+            )}
+
+            <Button
+              onClick={handleUpdatePassword}
+              disabled={
+                !newPassword ||
+                !!passwordError ||
+                !!confirmPasswordError ||
+                !passwordsMatch
+              }
+            >
+              Change Password
+            </Button>
           </Stack>
         </Paper>
 

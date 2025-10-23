@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   TextInput,
   PasswordInput,
@@ -11,6 +11,7 @@ import {
   Anchor,
   Stack,
   useMantineColorScheme,
+  Group,
 } from "@mantine/core";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "~/store/configureStore";
@@ -43,7 +44,6 @@ export function SignInForm() {
       } else {
         router.push(redirectTo);
       }
-    } else {
     }
   };
 
@@ -86,21 +86,32 @@ export function SignInForm() {
             }}
           />
 
-          <PasswordInput
-            label="Password"
-            placeholder="Enter your password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            size="md"
-            styles={{
-              label: {
-                color: isDark
-                  ? "var(--mantine-color-gray-3)"
-                  : "var(--mantine-color-dark-6)",
-              },
-            }}
-          />
+          <div>
+            <Group justify="space-between" mb={5}>
+              <Text
+                component="label"
+                size="sm"
+                fw={500}
+                c={
+                  isDark
+                    ? "var(--mantine-color-gray-3)"
+                    : "var(--mantine-color-dark-6)"
+                }
+              >
+                Password
+              </Text>
+              <Anchor href="/auth/forgot-password" size="xs" c="pink" fw={500}>
+                Forgot password?
+              </Anchor>
+            </Group>
+            <PasswordInput
+              placeholder="Enter your password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              size="md"
+            />
+          </div>
 
           {error && (
             <Text c="red" size="sm">
