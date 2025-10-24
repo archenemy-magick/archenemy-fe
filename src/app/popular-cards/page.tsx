@@ -86,10 +86,12 @@ const PopularCardsPage = () => {
     deckName,
     description,
     cards,
+    isPublic, // NEW
   }: {
     deckName: string;
     description?: string;
     cards: CustomArchenemyCard[];
+    isPublic: boolean; // NEW
   }) => {
     setDeckIsSaving(true);
 
@@ -99,12 +101,15 @@ const PopularCardsPage = () => {
           deckName,
           description,
           selectedCards: cards,
+          isPublic, // NEW - pass to thunk
         })
       ).unwrap();
 
       notifications.show({
         title: "Deck Saved",
-        message: "Your deck has been created successfully!",
+        message: `Your deck has been created successfully as ${
+          isPublic ? "public" : "private"
+        }!`,
         color: "green",
       });
 

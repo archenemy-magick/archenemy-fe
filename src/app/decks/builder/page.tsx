@@ -14,7 +14,7 @@ import {
   Badge,
   Select,
   Menu,
-  ActionIcon,
+  Container,
 } from "@mantine/core";
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -64,6 +64,7 @@ const DeckBuilder = () => {
 
   const [deckIsSaving, setDeckIsSaving] = useState(false);
   const [isLoadingDeck, setIsLoadingDeck] = useState(false);
+  const [editingDeckIsPublic, setEditingDeckIsPublic] = useState(false); // NEW
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -187,6 +188,7 @@ const DeckBuilder = () => {
               cards: deck.deck_cards,
             })
           );
+          setEditingDeckIsPublic(deck.is_public || false); // NEW - load privacy setting
         } catch (error) {
           notifications.show({
             title: "Error",
@@ -219,10 +221,12 @@ const DeckBuilder = () => {
     deckName,
     description,
     cards,
+    isPublic, // NEW
   }: {
     deckName: string;
     description?: string;
     cards: CustomArchenemyCard[];
+    isPublic: boolean; // NEW
   }) => {
     setDeckIsSaving(true);
 
@@ -235,12 +239,15 @@ const DeckBuilder = () => {
             deckName,
             description,
             selectedCards: cards,
+            isPublic, // NEW
           })
         ).unwrap();
 
         notifications.show({
           title: "Deck Updated",
-          message: "Your deck has been updated successfully!",
+          message: `Your deck has been updated as ${
+            isPublic ? "public" : "private"
+          }!`,
           color: "green",
         });
       } else {
@@ -250,12 +257,15 @@ const DeckBuilder = () => {
             deckName,
             description,
             selectedCards: cards,
+            isPublic, // NEW
           })
         ).unwrap();
 
         notifications.show({
           title: "Deck Saved",
-          message: "Your deck has been saved successfully!",
+          message: `Your deck has been saved as ${
+            isPublic ? "public" : "private"
+          }!`,
           color: "green",
         });
       }
@@ -279,54 +289,31 @@ const DeckBuilder = () => {
     router.push("/decks");
   };
 
-  const clearFilters = () => {
-    setSearchQuery("");
-    setTypeFilter("all");
-  };
-
-  // Sort options for the select dropdowns
-  const sortOptions = [
-    { value: "name-asc", label: "Name (A-Z)" },
-    { value: "name-desc", label: "Name (Z-A)" },
-    { value: "type-asc", label: "Type (A-Z)" },
-    { value: "type-desc", label: "Type (Z-A)" },
-  ];
-
-  // Bulk operation handlers
-  const handleSelectAllOfType = (type: string) => {
-    const cardsToAdd = filteredCardPool.filter(
-      (card) =>
-        card.type_line === type &&
-        !selectedCards.some((sc) => sc.id === card.id)
-    );
-    dispatch(addCards(cardsToAdd));
+  const handleSelectAllFiltered = () => {
+    dispatch(addCards(unselectedCardsList));
     notifications.show({
-      title: "Cards Added",
-      message: `Added ${cardsToAdd.length} ${type} cards to your deck`,
+      message: `Added ${unselectedCardsList.length} cards`,
       color: "blue",
     });
   };
 
-  const handleSelectAllFiltered = () => {
-    const cardsToAdd = unselectedCardsList;
-    dispatch(addCards(cardsToAdd));
+  const handleSelectAllOfType = (type: string) => {
+    const cardsOfType = unselectedCardsList.filter(
+      (card) => card.type_line === type
+    );
+    dispatch(addCards(cardsOfType));
     notifications.show({
-      title: "Cards Added",
-      message: `Added ${cardsToAdd.length} cards to your deck`,
+      message: `Added ${cardsOfType.length} ${type} cards`,
       color: "blue",
     });
   };
 
   const handleSelectRandom = (count: number) => {
-    const availableCards = unselectedCardsList;
-    const cardsToAdd = [...availableCards]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, Math.min(count, availableCards.length));
-
-    dispatch(addCards(cardsToAdd));
+    const shuffled = [...unselectedCardsList].sort(() => Math.random() - 0.5);
+    const randomCards = shuffled.slice(0, Math.min(count, shuffled.length));
+    dispatch(addCards(randomCards));
     notifications.show({
-      title: "Random Cards Added",
-      message: `Added ${cardsToAdd.length} random cards to your deck`,
+      message: `Added ${randomCards.length} random cards`,
       color: "blue",
     });
   };
@@ -334,295 +321,311 @@ const DeckBuilder = () => {
   const handleClearAll = () => {
     dispatch(clearSelectedCards());
     notifications.show({
-      title: "Selection Cleared",
-      message: "All cards have been removed from your deck",
-      color: "orange",
+      message: "Cleared all selections",
+      color: "gray",
     });
   };
 
+  const clearFilters = () => {
+    setSearchQuery("");
+    setTypeFilter("all");
+  };
+
+  const sortOptions = [
+    { label: "Name (A-Z)", value: "name-asc" },
+    { label: "Name (Z-A)", value: "name-desc" },
+    { label: "Type (A-Z)", value: "type-asc" },
+    { label: "Type (Z-A)", value: "type-desc" },
+  ];
+
   if (isLoadingDeck) {
     return (
-      <Stack gap="sm" m="sm" align="center">
-        <Title order={1}>Loading deck...</Title>
+      <Stack align="center" justify="center" h="60vh">
+        <Text>Loading deck...</Text>
       </Stack>
     );
   }
 
   return (
-    <Stack m="md" py="md">
-      <SaveDeckModal
-        open={saveDeckModalOpened}
-        onClose={closeSaveDeckModal}
-        onSaveDeck={handleSaveDeck}
-        cards={selectedCards}
-        deckIsSaving={deckIsSaving}
-        initialName={editingDeckName}
-        initialDescription={editingDeckDescription}
-        isEditing={!!editingDeckId}
-      />
+    <Container size="xl" p="md">
+      <Stack gap="xl" pb="xl">
+        <SaveDeckModal
+          open={saveDeckModalOpened}
+          onClose={closeSaveDeckModal}
+          onSaveDeck={handleSaveDeck}
+          cards={selectedCards}
+          deckIsSaving={deckIsSaving}
+          initialName={editingDeckName}
+          initialDescription={editingDeckDescription}
+          initialIsPublic={editingDeckIsPublic} // NEW
+          isEditing={!!editingDeckId}
+        />
 
-      {/* Header Section */}
-      <Stack>
-        <Flex align="center" justify="space-between">
-          <Flex
-            direction={{ base: "column", md: "row" }}
-            gap="sm"
-            align="center"
-          >
-            <Title order={1}>
-              {editingDeckId ? `Edit Deck: ${editingDeckName}` : "Deck Builder"}
-            </Title>
-            {editingDeckId && (
-              <Text size="sm" c="dimmed">
-                Editing mode - modify your deck below
-              </Text>
-            )}
-          </Flex>
-          <Flex gap="sm">
-            {editingDeckId && (
-              <Button onClick={handleCancel} variant="subtle" color="gray">
-                Cancel
-              </Button>
-            )}
-            <Button
-              onClick={() => {
-                openSaveDeckModal();
-              }}
-              color="green"
-              disabled={selectedCards.length === 0}
+        {/* Header Section */}
+        <Stack>
+          <Flex align="center" justify="space-between">
+            <Flex
+              direction={{ base: "column", md: "row" }}
+              gap="sm"
+              align="center"
             >
-              {editingDeckId ? "Update Deck" : "Save Deck"}
-            </Button>
-          </Flex>
-        </Flex>
-      </Stack>
-
-      {/* Search and Filter Section */}
-      <Stack gap="md">
-        <Group gap="md" align="flex-end" wrap="wrap">
-          <TextInput
-            placeholder="Search by name or text..."
-            leftSection={<IconSearch size={16} />}
-            rightSection={
-              searchQuery && (
-                <IconX
-                  size={16}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setSearchQuery("")}
-                />
-              )
-            }
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.currentTarget.value)}
-            style={{ flex: 1, minWidth: 200, maxWidth: 400 }}
-          />
-
-          <SegmentedControl
-            value={typeFilter}
-            onChange={setTypeFilter}
-            data={[
-              { label: "All Types", value: "all" },
-              ...cardTypes.map((type) => ({
-                label: type,
-                value: type,
-              })),
-            ]}
-          />
-
-          <Select
-            placeholder="Sort by..."
-            leftSection={<IconSortAscending size={16} />}
-            value={sortOption}
-            onChange={(value) => setSortOption(value || "name-asc")}
-            data={sortOptions}
-            style={{ minWidth: 160 }}
-          />
-
-          <Menu shadow="md" width={220}>
-            <Menu.Target>
+              <Title order={1}>
+                {editingDeckId
+                  ? `Edit Deck: ${editingDeckName}`
+                  : "Deck Builder"}
+              </Title>
+              {editingDeckId && (
+                <Text size="sm" c="dimmed">
+                  Editing mode - modify your deck below
+                </Text>
+              )}
+            </Flex>
+            <Flex gap="sm">
+              {editingDeckId && (
+                <Button onClick={handleCancel} variant="subtle" color="gray">
+                  Cancel
+                </Button>
+              )}
               <Button
-                leftSection={<IconWand size={16} />}
-                rightSection={<IconChevronDown size={14} />}
-                variant="light"
-              >
-                Bulk Actions
-              </Button>
-            </Menu.Target>
-
-            <Menu.Dropdown>
-              <Menu.Label>Select Cards</Menu.Label>
-              <Menu.Item onClick={handleSelectAllFiltered}>
-                Add All Filtered ({unselectedCardsList.length})
-              </Menu.Item>
-              {cardTypes.map((type) => {
-                const count = filteredCardPool.filter(
-                  (card) =>
-                    card.type_line === type &&
-                    !selectedCards.some((sc) => sc.id === card.id)
-                ).length;
-                return (
-                  <Menu.Item
-                    key={type}
-                    onClick={() => handleSelectAllOfType(type)}
-                    disabled={count === 0}
-                  >
-                    Add All {type} ({count})
-                  </Menu.Item>
-                );
-              })}
-
-              <Menu.Divider />
-
-              <Menu.Label>Random Selection</Menu.Label>
-              <Menu.Item
-                onClick={() => handleSelectRandom(10)}
-                disabled={unselectedCardsList.length === 0}
-              >
-                Add 10 Random Cards
-              </Menu.Item>
-              <Menu.Item
-                onClick={() => handleSelectRandom(20)}
-                disabled={unselectedCardsList.length === 0}
-              >
-                Add 20 Random Cards
-              </Menu.Item>
-
-              <Menu.Divider />
-
-              <Menu.Item
-                color="red"
-                onClick={handleClearAll}
+                onClick={() => {
+                  openSaveDeckModal();
+                }}
+                color="green"
                 disabled={selectedCards.length === 0}
               >
-                Clear All Selections
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+                {editingDeckId ? "Update Deck" : "Save Deck"}
+              </Button>
+            </Flex>
+          </Flex>
+        </Stack>
 
-          {(searchQuery || typeFilter !== "all") && (
-            <Button
-              variant="subtle"
-              color="gray"
-              onClick={clearFilters}
-              leftSection={<IconX size={16} />}
-            >
-              Clear Filters
-            </Button>
-          )}
-        </Group>
+        {/* Search and Filter Section */}
+        <Stack gap="md">
+          <Group gap="md" align="flex-end" wrap="wrap">
+            <TextInput
+              placeholder="Search by name or text..."
+              leftSection={<IconSearch size={16} />}
+              rightSection={
+                searchQuery && (
+                  <IconX
+                    size={16}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => setSearchQuery("")}
+                  />
+                )
+              }
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.currentTarget.value)}
+              style={{ flex: 1, minWidth: 200, maxWidth: 400 }}
+            />
 
-        {/* Filter Results Summary */}
-        <Group gap="xs">
-          <Badge variant="light" size="lg">
-            {selectedCards.length} selected
-          </Badge>
-          <Badge variant="light" color="gray" size="lg">
-            {filteredCardPool.length} cards shown
-          </Badge>
-          {(searchQuery || typeFilter !== "all") && (
-            <Badge variant="light" color="blue" size="lg">
-              {cardPool.length} total cards
+            <SegmentedControl
+              value={typeFilter}
+              onChange={setTypeFilter}
+              data={[
+                { label: "All Types", value: "all" },
+                ...cardTypes.map((type) => ({
+                  label: type,
+                  value: type,
+                })),
+              ]}
+            />
+
+            <Select
+              placeholder="Sort by..."
+              leftSection={<IconSortAscending size={16} />}
+              value={sortOption}
+              onChange={(value) => setSortOption(value || "name-asc")}
+              data={sortOptions}
+              style={{ minWidth: 160 }}
+            />
+
+            <Menu shadow="md" width={220}>
+              <Menu.Target>
+                <Button
+                  leftSection={<IconWand size={16} />}
+                  rightSection={<IconChevronDown size={14} />}
+                  variant="light"
+                >
+                  Bulk Actions
+                </Button>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Label>Select Cards</Menu.Label>
+                <Menu.Item onClick={handleSelectAllFiltered}>
+                  Add All Filtered ({unselectedCardsList.length})
+                </Menu.Item>
+                {cardTypes.map((type) => {
+                  const count = filteredCardPool.filter(
+                    (card) =>
+                      card.type_line === type &&
+                      !selectedCards.some((sc) => sc.id === card.id)
+                  ).length;
+                  return (
+                    <Menu.Item
+                      key={type}
+                      onClick={() => handleSelectAllOfType(type)}
+                      disabled={count === 0}
+                    >
+                      Add All {type} ({count})
+                    </Menu.Item>
+                  );
+                })}
+
+                <Menu.Divider />
+
+                <Menu.Label>Random Selection</Menu.Label>
+                <Menu.Item
+                  onClick={() => handleSelectRandom(10)}
+                  disabled={unselectedCardsList.length === 0}
+                >
+                  Add 10 Random Cards
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => handleSelectRandom(20)}
+                  disabled={unselectedCardsList.length === 0}
+                >
+                  Add 20 Random Cards
+                </Menu.Item>
+
+                <Menu.Divider />
+
+                <Menu.Item
+                  color="red"
+                  onClick={handleClearAll}
+                  disabled={selectedCards.length === 0}
+                >
+                  Clear All Selections
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+
+            {(searchQuery || typeFilter !== "all") && (
+              <Button
+                variant="subtle"
+                color="gray"
+                onClick={clearFilters}
+                leftSection={<IconX size={16} />}
+              >
+                Clear Filters
+              </Button>
+            )}
+          </Group>
+
+          {/* Filter Results Summary */}
+          <Group gap="xs">
+            <Badge variant="light" size="lg">
+              {selectedCards.length} selected
             </Badge>
-          )}
-        </Group>
-      </Stack>
+            <Badge variant="light" color="gray" size="lg">
+              {filteredCardPool.length} cards shown
+            </Badge>
+            {(searchQuery || typeFilter !== "all") && (
+              <Badge variant="light" color="blue" size="lg">
+                {cardPool.length} total cards
+              </Badge>
+            )}
+          </Group>
+        </Stack>
 
-      {/* Selected Cards Section */}
-      {selectedCardsList.length > 0 && (
+        {/* Selected Cards Section */}
+        {selectedCardsList.length > 0 && (
+          <Stack gap="md">
+            <Divider
+              label={
+                <Group gap="md">
+                  <Title order={2}>
+                    Selected Cards ({selectedCardsList.length})
+                  </Title>
+                  <Select
+                    placeholder="Sort by..."
+                    leftSection={<IconSortAscending size={16} />}
+                    value={selectedCardsSortOption}
+                    onChange={(value) =>
+                      setSelectedCardsSortOption(value || "name-asc")
+                    }
+                    data={sortOptions}
+                    size="xs"
+                    style={{ minWidth: 140 }}
+                  />
+                </Group>
+              }
+              labelPosition="left"
+            />
+            <Grid>
+              {selectedCardsList.map((card) => (
+                <Grid.Col
+                  span={{
+                    base: 12,
+                    sm: 6,
+                    md: 4,
+                    lg: 3,
+                    xl: 2,
+                  }}
+                  key={card.id}
+                >
+                  <Box>
+                    <CheckableCard
+                      card={card}
+                      onClick={() => dispatch(removeCard(card))}
+                      cardSelected={true}
+                    />
+                  </Box>
+                </Grid.Col>
+              ))}
+            </Grid>
+          </Stack>
+        )}
+
+        {/* Unselected Cards Section */}
         <Stack gap="md">
           <Divider
             label={
-              <Group gap="md">
-                <Title order={2}>
-                  Selected Cards ({selectedCardsList.length})
-                </Title>
-                <Select
-                  placeholder="Sort by..."
-                  leftSection={<IconSortAscending size={16} />}
-                  value={selectedCardsSortOption}
-                  onChange={(value) =>
-                    setSelectedCardsSortOption(value || "name-asc")
-                  }
-                  data={sortOptions}
-                  size="xs"
-                  style={{ minWidth: 140 }}
-                />
-              </Group>
+              <Title order={2}>
+                {selectedCardsList.length > 0 ? "Available Cards" : "All Cards"}
+                {unselectedCardsList.length === 0 &&
+                  filteredCardPool.length === 0 && (
+                    <Text size="sm" c="dimmed" ml="md" component="span">
+                      No cards match your filters
+                    </Text>
+                  )}
+              </Title>
             }
             labelPosition="left"
           />
-          <Grid>
-            {selectedCardsList.map((card) => (
-              <Grid.Col
-                span={{
-                  base: 12,
-                  sm: 6,
-                  md: 4,
-                  lg: 3,
-                  xl: 2,
-                }}
-                key={card.id}
-              >
-                <Box>
-                  <CheckableCard
-                    card={card}
-                    onClick={() => dispatch(removeCard(card))}
-                    cardSelected={true}
-                  />
-                </Box>
-              </Grid.Col>
-            ))}
-          </Grid>
+          {unselectedCardsList.length === 0 && filteredCardPool.length === 0 ? (
+            <Text c="dimmed" ta="center" py="xl">
+              Try adjusting your search or filters
+            </Text>
+          ) : (
+            <Grid>
+              {unselectedCardsList.map((card) => (
+                <Grid.Col
+                  span={{
+                    base: 12,
+                    sm: 6,
+                    md: 4,
+                    lg: 3,
+                    xl: 2,
+                  }}
+                  key={card.id}
+                >
+                  <Box>
+                    <CheckableCard
+                      card={card}
+                      onClick={() => dispatch(addCard(card))}
+                      cardSelected={false}
+                    />
+                  </Box>
+                </Grid.Col>
+              ))}
+            </Grid>
+          )}
         </Stack>
-      )}
-
-      {/* Unselected Cards Section */}
-      <Stack gap="md">
-        <Divider
-          label={
-            <Title order={2}>
-              {selectedCardsList.length > 0 ? "Available Cards" : "All Cards"}
-              {unselectedCardsList.length === 0 &&
-                filteredCardPool.length === 0 && (
-                  <Text size="sm" c="dimmed" ml="md" component="span">
-                    No cards match your filters
-                  </Text>
-                )}
-            </Title>
-          }
-          labelPosition="left"
-        />
-        {unselectedCardsList.length === 0 && filteredCardPool.length === 0 ? (
-          <Text c="dimmed" ta="center" py="xl">
-            Try adjusting your search or filters
-          </Text>
-        ) : (
-          <Grid>
-            {unselectedCardsList.map((card) => (
-              <Grid.Col
-                span={{
-                  base: 12,
-                  sm: 6,
-                  md: 4,
-                  lg: 3,
-                  xl: 2,
-                }}
-                key={card.id}
-              >
-                <Box>
-                  <CheckableCard
-                    card={card}
-                    onClick={() => dispatch(addCard(card))}
-                    cardSelected={false}
-                  />
-                </Box>
-              </Grid.Col>
-            ))}
-          </Grid>
-        )}
+        <ScrollToTop />
       </Stack>
-      <ScrollToTop />
-    </Stack>
+    </Container>
   );
 };
 
