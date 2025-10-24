@@ -35,7 +35,7 @@ const Footer = () => {
       href: "https://discord.gg/yourserver",
     },
 
-    { icon: IconMail, label: "Email", href: "mailto:contact@archenemy.app" },
+    { icon: IconMail, label: "Email", href: "mailto:contact@magicsak.com" },
   ];
 
   const quickLinks = [
@@ -203,13 +203,13 @@ const Footer = () => {
               Questions or feedback?
             </Text>
             <Anchor
-              href="mailto:contact@archenemy.app"
+              href="mailto:contact@magicsak.com"
               size="sm"
               c="magenta.4"
               fw={500}
               style={{ textDecoration: "none" }}
             >
-              contact@archenemy.app
+              contact@magicsak.com
             </Anchor>
             <Group gap="sm">
               {socialLinks.map((social) => {
@@ -283,6 +283,17 @@ const Footer = () => {
             </Text>
           </Group>
         </Group>
+        <Text size="xs" c="dimmed">
+          Protected by reCAPTCHA. Google{" "}
+          <Anchor href="https://policies.google.com/privacy" size="xs">
+            Privacy Policy
+          </Anchor>{" "}
+          and{" "}
+          <Anchor href="https://policies.google.com/terms" size="xs">
+            Terms
+          </Anchor>{" "}
+          apply.
+        </Text>
       </Container>
     </Box>
   );

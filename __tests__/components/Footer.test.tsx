@@ -123,11 +123,11 @@ describe("Footer", () => {
     it("should display contact email", () => {
       render(<Footer />);
 
-      const emailLink = screen.getByText("contact@archenemy.app");
+      const emailLink = screen.getByText("contact@magicsak.com");
       expect(emailLink).toBeInTheDocument();
       expect(emailLink.closest("a")).toHaveAttribute(
         "href",
-        "mailto:contact@archenemy.app"
+        "mailto:contact@magicsak.com"
       );
     });
 
@@ -171,7 +171,7 @@ describe("Footer", () => {
         "href",
         "https://github.com/archenemy-magick"
       );
-      expect(emailLink).toHaveAttribute("href", "mailto:contact@archenemy.app");
+      expect(emailLink).toHaveAttribute("href", "mailto:contact@magicsak.com");
     });
 
     it("should open social links in new tab", () => {

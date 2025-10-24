@@ -112,3 +112,10 @@ textarea:focus-visible {
   outline: 2px solid var(--mantine-color-magenta-5);
   outline-offset: 2px;
 }
+
+/* Hide Google reCAPTCHA badge */
+.grecaptcha-badge {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}

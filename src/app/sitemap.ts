@@ -39,7 +39,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
-      url: `https://magicsak.com/faq`,
+      url: "https://magicsak.com/faq",
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.6,
@@ -49,6 +49,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.6,
+    },
+    {
+      url: "https://magicsak.com/privacy",
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: "https://magicsak.com/terms",
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
     },
   ];
 }
