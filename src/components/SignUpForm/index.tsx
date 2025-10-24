@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   TextInput,
   PasswordInput,
@@ -12,6 +12,7 @@ import {
   Stack,
   useMantineColorScheme,
   Alert,
+  Loader,
 } from "@mantine/core";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "~/store/configureStore";
@@ -19,7 +20,13 @@ import { signUp, clearError } from "~/store/reducers";
 import { useRouter } from "next/navigation";
 import { validateUsername } from "~/lib/validation/contentFilter";
 import { notifications } from "@mantine/notifications";
-import { IconAlertCircle, IconMailCheck } from "@tabler/icons-react";
+import {
+  IconAlertCircle,
+  IconMailCheck,
+  IconCheck,
+  IconX,
+} from "@tabler/icons-react";
+import { useDebouncedValue } from "@mantine/hooks";
 
 export function SignUpForm() {
   const [email, setEmail] = useState("");
@@ -31,19 +38,75 @@ export function SignUpForm() {
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
+    null
+  );
 
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const { loading, error } = useSelector((state: RootState) => state.user);
   const { colorScheme } = useMantineColorScheme();
 
+  // Debounce username for API checks (wait 500ms after user stops typing)
+  const [debouncedUsername] = useDebouncedValue(username, 500);
+
+  // Check username availability with API
+  const checkUsernameAvailability = useCallback(
+    async (usernameToCheck: string) => {
+      if (!usernameToCheck || usernameToCheck.length < 3) {
+        setUsernameAvailable(null);
+        return;
+      }
+
+      setCheckingUsername(true);
+      try {
+        const response = await fetch(
+          `/api/auth/check-username?username=${encodeURIComponent(
+            usernameToCheck
+          )}`
+        );
+        const data = await response.json();
+
+        if (response.ok) {
+          setUsernameAvailable(data.available);
+          if (!data.available) {
+            setUsernameError("This username is already taken");
+          }
+        } else {
+          console.error("Error checking username:", data.error);
+        }
+      } catch (error) {
+        console.error("Failed to check username:", error);
+      } finally {
+        setCheckingUsername(false);
+      }
+    },
+    []
+  );
+
+  // Check username availability when debounced value changes
+  useEffect(() => {
+    if (debouncedUsername && touched) {
+      const validation = validateUsername(debouncedUsername);
+      if (validation.valid) {
+        checkUsernameAvailability(debouncedUsername);
+      } else {
+        setUsernameAvailable(null);
+      }
+    }
+  }, [debouncedUsername, touched, checkUsernameAvailability]);
+
   const handleUsernameChange = (value: string) => {
     setUsername(value);
     setTouched(true);
+    setUsernameAvailable(null);
 
-    // Validate in real-time
+    // Validate format in real-time
     if (value.trim().length === 0) {
       setUsernameError("Username cannot be empty");
+    } else if (value.trim().length < 3) {
+      setUsernameError("Username must be at least 3 characters");
     } else {
       const validation = validateUsername(value);
       setUsernameError(validation.valid ? null : validation.error || null);
@@ -55,6 +118,8 @@ export function SignUpForm() {
 
     if (username.trim().length === 0) {
       setUsernameError("Username cannot be empty");
+    } else if (username.trim().length < 3) {
+      setUsernameError("Username must be at least 3 characters");
     } else {
       const validation = validateUsername(username);
       setUsernameError(validation.valid ? null : validation.error || null);
@@ -65,12 +130,24 @@ export function SignUpForm() {
     e.preventDefault();
     dispatch(clearError());
 
+    // Final username validation
     const usernameValidation = validateUsername(username);
     if (!usernameValidation.valid) {
       setUsernameError(usernameValidation.error || "Invalid username");
       notifications.show({
         title: "Invalid Username",
         message: usernameValidation.error || "Please enter a valid username",
+        color: "red",
+        icon: <IconAlertCircle />,
+      });
+      return;
+    }
+
+    // Check if username is available
+    if (usernameAvailable === false) {
+      notifications.show({
+        title: "Username Taken",
+        message: "This username is already in use. Please choose another.",
         color: "red",
         icon: <IconAlertCircle />,
       });
@@ -97,10 +174,53 @@ export function SignUpForm() {
         color: "green",
         autoClose: false,
       });
+    } else if (signUp.rejected.match(result)) {
+      // Handle specific error cases
+      const errorMessage = result.payload as string;
+
+      if (errorMessage?.toLowerCase().includes("username")) {
+        setUsernameError("This username is already taken");
+        notifications.show({
+          title: "Username Taken",
+          message: "This username is already in use. Please choose another.",
+          color: "red",
+          icon: <IconAlertCircle />,
+        });
+      } else if (errorMessage?.toLowerCase().includes("email")) {
+        notifications.show({
+          title: "Email Already Registered",
+          message: "An account with this email already exists.",
+          color: "red",
+          icon: <IconAlertCircle />,
+        });
+      } else {
+        notifications.show({
+          title: "Signup Failed",
+          message:
+            errorMessage ||
+            "An error occurred during signup. Please try again.",
+          color: "red",
+          icon: <IconAlertCircle />,
+        });
+      }
     }
   };
 
   const isDark = colorScheme === "dark";
+
+  // Determine the right section icon for username field
+  const getUsernameRightSection = () => {
+    if (checkingUsername) {
+      return <Loader size="xs" />;
+    }
+    if (usernameAvailable === true && !usernameError) {
+      return <IconCheck size={16} color="green" />;
+    }
+    if (usernameAvailable === false || (usernameError && touched)) {
+      return <IconX size={16} color="red" />;
+    }
+    return null;
+  };
 
   return (
     <Paper
@@ -148,6 +268,8 @@ export function SignUpForm() {
                     setUsername("");
                     setFirstName("");
                     setLastName("");
+                    setUsernameAvailable(null);
+                    setTouched(false);
                   }}
                   style={{ cursor: "pointer" }}
                 >
@@ -178,12 +300,21 @@ export function SignUpForm() {
                 onChange={(e) => handleUsernameChange(e.target.value)}
                 onBlur={handleUsernameBlur}
                 error={usernameError}
+                rightSection={getUsernameRightSection()}
+                description={
+                  usernameAvailable === true && !usernameError
+                    ? "Username is available!"
+                    : undefined
+                }
                 size="md"
                 styles={{
                   label: {
                     color: isDark
                       ? "var(--mantine-color-gray-3)"
                       : "var(--mantine-color-dark-6)",
+                  },
+                  description: {
+                    color: "var(--mantine-color-green-6)",
                   },
                 }}
               />
@@ -251,16 +382,21 @@ export function SignUpForm() {
                 }}
               />
 
-              {error && (
-                <Text c="red" size="sm">
+              {error && !usernameError && (
+                <Alert icon={<IconAlertCircle />} color="red" variant="light">
                   {error}
-                </Text>
+                </Alert>
               )}
 
               <Button
                 fullWidth
                 type="submit"
                 loading={loading}
+                disabled={
+                  checkingUsername ||
+                  usernameAvailable === false ||
+                  !!usernameError
+                }
                 size="lg"
                 mt="sm"
                 color="pink"
