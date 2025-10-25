@@ -5,7 +5,6 @@ import {
   Title,
   Text,
   Stack,
-  Card,
   Group,
   Badge,
   Image,
@@ -14,6 +13,7 @@ import {
   Center,
   Button,
   Divider,
+  Box,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -86,12 +86,12 @@ const PopularCardsPage = () => {
     deckName,
     description,
     cards,
-    isPublic, // NEW
+    isPublic,
   }: {
     deckName: string;
     description?: string;
     cards: CustomArchenemyCard[];
-    isPublic: boolean; // NEW
+    isPublic: boolean;
   }) => {
     setDeckIsSaving(true);
 
@@ -101,7 +101,7 @@ const PopularCardsPage = () => {
           deckName,
           description,
           selectedCards: cards,
-          isPublic, // NEW - pass to thunk
+          isPublic,
         })
       ).unwrap();
 
@@ -317,29 +317,30 @@ const PopularCardsPage = () => {
               key={card.id}
               span={{ base: 12, sm: 6, md: 4, lg: 3, xl: 2 }}
             >
-              <div style={{ position: "relative" }}>
+              <Box style={{ position: "relative", width: "100%" }}>
                 <CheckableCard
                   card={card}
                   onClick={() => handleCardClick(card)}
                   cardSelected={isCardSelected(card.id)}
                 />
 
-                {/* Popularity Badge */}
+                {/* Popularity Badge - positioned on top of card */}
                 <Badge
                   size="sm"
-                  variant="light"
+                  variant="filled"
                   color={index < 3 ? "gold" : "gray"}
                   style={{
                     position: "absolute",
                     top: 8,
                     left: 8,
                     fontWeight: index < 3 ? 700 : 500,
+                    zIndex: 10,
                   }}
                 >
                   #{index + 1}
                 </Badge>
 
-                {/* Stats Badge */}
+                {/* Stats Badge - positioned at bottom of card */}
                 <Paper
                   p="xs"
                   withBorder
@@ -348,26 +349,27 @@ const PopularCardsPage = () => {
                     bottom: 8,
                     left: 8,
                     right: 8,
-                    backgroundColor: "rgba(0, 0, 0, 0.7)",
+                    backgroundColor: "rgba(0, 0, 0, 0.8)",
                     backdropFilter: "blur(8px)",
+                    zIndex: 10,
                   }}
                 >
                   <Group gap="xs" justify="space-between">
                     <Group gap={4}>
-                      <IconCards size={12} />
-                      <Text size="xs" fw={500}>
+                      <IconCards size={12} color="white" />
+                      <Text size="xs" fw={500} c="white">
                         {card.deck_count}
                       </Text>
                     </Group>
                     <Group gap={4}>
-                      <IconUsers size={12} />
-                      <Text size="xs" fw={500}>
+                      <IconUsers size={12} color="white" />
+                      <Text size="xs" fw={500} c="white">
                         {card.unique_users}
                       </Text>
                     </Group>
                   </Group>
                 </Paper>
-              </div>
+              </Box>
             </Grid.Col>
           ))}
         </Grid>

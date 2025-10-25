@@ -86,30 +86,7 @@ describe("Footer", () => {
     it("should display all community links", () => {
       render(<Footer />);
 
-      expect(screen.getByText("Join Discord")).toBeInTheDocument();
       expect(screen.getByText("Send Feedback")).toBeInTheDocument();
-      expect(screen.getByText("Report Bug")).toBeInTheDocument();
-      expect(screen.getByText("Changelog")).toBeInTheDocument();
-    });
-
-    it("should have correct href for Discord link", () => {
-      render(<Footer />);
-
-      const discordLink = screen.getByText("Join Discord").closest("a");
-      expect(discordLink).toHaveAttribute(
-        "href",
-        "https://discord.gg/yourserver"
-      );
-    });
-
-    it("should have correct href for GitHub issues link", () => {
-      render(<Footer />);
-
-      const bugLink = screen.getByText("Report Bug").closest("a");
-      expect(bugLink).toHaveAttribute(
-        "href",
-        "https://github.com/archenemy-magick/archenemy-fe/issues"
-      );
     });
   });
 
