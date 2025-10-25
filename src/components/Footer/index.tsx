@@ -141,8 +141,7 @@ const Footer = () => {
             </Stack>
           </Stack>
 
-          {/* Community & Support */}
-          <Stack gap="md">
+          {/* <Stack gap="md">
             <Text
               size="sm"
               fw={700}
@@ -154,14 +153,6 @@ const Footer = () => {
             </Text>
             <Stack gap="xs">
               <Anchor
-                href="https://discord.gg/yourserver"
-                size="sm"
-                c="dimmed"
-                style={{ textDecoration: "none" }}
-              >
-                Join Discord
-              </Anchor>
-              <Anchor
                 href="/feedback"
                 size="sm"
                 c="dimmed"
@@ -169,24 +160,8 @@ const Footer = () => {
               >
                 Send Feedback
               </Anchor>
-              <Anchor
-                href="https://github.com/archenemy-magick/archenemy-fe/issues"
-                size="sm"
-                c="dimmed"
-                style={{ textDecoration: "none" }}
-              >
-                Report Bug
-              </Anchor>
-              <Anchor
-                href="/changelog"
-                size="sm"
-                c="dimmed"
-                style={{ textDecoration: "none" }}
-              >
-                Changelog
-              </Anchor>
             </Stack>
-          </Stack>
+          </Stack> */}
 
           {/* Contact & Social */}
           <Stack gap="md">
