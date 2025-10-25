@@ -217,7 +217,19 @@ const DeckDetailPage = () => {
                     </Card.Section>
                   )}
                   <Stack gap="xs" mt="xs">
-                    <Text fw={500} size="sm">
+                    <Text
+                      fw={600}
+                      size="lg"
+                      lineClamp={2}
+                      style={{
+                        minHeight: "3em",
+                        lineHeight: "1.5em",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
                       {card.name}
                     </Text>
                     <Text size="xs" c="dimmed">
@@ -241,7 +253,6 @@ const DeckDetailPage = () => {
         withCloseButton={false}
         styles={{
           body: { padding: 0 },
-          content: { background: "transparent" },
         }}
       >
         {selectedCard && (
