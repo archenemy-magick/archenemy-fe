@@ -30,9 +30,11 @@ import {
   IconDotsVertical,
   IconCards,
   IconCopy,
+  IconWorld,
+  IconLock,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { cloneDeck } from "~/lib/api/decks";
+import { cloneDeck, updateDeck } from "~/lib/api/decks";
 
 const DecksPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -47,6 +49,7 @@ const DecksPage = () => {
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [cloning, setCloning] = useState<string | null>(null);
+  const [togglingPrivacy, setTogglingPrivacy] = useState<string | null>(null); // NEW
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -125,6 +128,36 @@ const DecksPage = () => {
       });
     } finally {
       setCloning(null);
+    }
+  };
+
+  // NEW: Privacy toggle handler
+  const handleTogglePrivacy = async (
+    e: React.MouseEvent,
+    deckId: string,
+    currentIsPublic: boolean
+  ) => {
+    e.stopPropagation();
+    setTogglingPrivacy(deckId);
+
+    try {
+      await updateDeck(deckId, { is_public: !currentIsPublic });
+
+      notifications.show({
+        message: `Deck is now ${!currentIsPublic ? "public" : "private"}`,
+        color: "green",
+      });
+
+      // Refresh the deck list
+      dispatch(fetchAllArchenemyDecks());
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: "Failed to update deck privacy",
+        color: "red",
+      });
+    } finally {
+      setTogglingPrivacy(null);
     }
   };
 
@@ -249,11 +282,14 @@ const DecksPage = () => {
                         <Text fw={600} size="lg" lineClamp={1}>
                           {deck.name}
                         </Text>
-                        {deck.is_public && (
-                          <Badge color="green" variant="light" size="sm">
-                            PUBLIC
-                          </Badge>
-                        )}
+                        {/* Updated Privacy Badge */}
+                        <Badge
+                          size="sm"
+                          variant="dot"
+                          color={deck.is_public ? "violet" : "gray"}
+                        >
+                          {deck.is_public ? "Public" : "Private"}
+                        </Badge>
                       </Group>
 
                       <Box
@@ -319,7 +355,9 @@ const DecksPage = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                             }}
-                            loading={cloning === deck.id}
+                            loading={
+                              cloning === deck.id || togglingPrivacy === deck.id
+                            }
                           >
                             <IconDotsVertical size={18} />
                           </ActionIcon>
@@ -334,7 +372,32 @@ const DecksPage = () => {
                           >
                             Duplicate Deck
                           </Menu.Item>
+
                           <Menu.Divider />
+
+                          {/* NEW: Privacy Toggle Menu Item */}
+                          <Menu.Item
+                            leftSection={
+                              deck.is_public ? (
+                                <IconLock size={16} />
+                              ) : (
+                                <IconWorld size={16} />
+                              )
+                            }
+                            onClick={(e) =>
+                              handleTogglePrivacy(
+                                e,
+                                deck.id,
+                                deck.is_public || false
+                              )
+                            }
+                            disabled={togglingPrivacy === deck.id}
+                          >
+                            Make {deck.is_public ? "Private" : "Public"}
+                          </Menu.Item>
+
+                          <Menu.Divider />
+
                           <Menu.Item
                             color="red"
                             leftSection={<IconTrash size={16} />}

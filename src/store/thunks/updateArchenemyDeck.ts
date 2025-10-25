@@ -1,9 +1,9 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import {
   updateDeck,
-  getDeckCards,
   removeCardFromDeck,
   addCardToDeck,
+  getDeckCards,
 } from "~/lib/api/decks";
 import { CustomArchenemyCard } from "~/types";
 
@@ -14,41 +14,40 @@ export const updateArchenemyDeck = createAsyncThunk(
     deckName,
     description,
     selectedCards,
+    isPublic, // NEW
   }: {
     deckId: string;
     deckName: string;
     description?: string;
     selectedCards: CustomArchenemyCard[];
+    isPublic?: boolean; // NEW
   }) => {
-    // Update deck metadata
-    await updateDeck(deckId, {
+    // Update deck metadata (including privacy setting)
+    const updatedDeck = await updateDeck(deckId, {
       name: deckName,
       description,
+      is_public: isPublic, // NEW
     });
 
     // Get current cards in the deck
     const currentCards = await getDeckCards(deckId);
-    const currentCardIds = currentCards.map((card) => card.id);
-    const newCardIds = selectedCards.map((card) => card.id);
-
-    // Find cards to remove (in current but not in new)
-    const cardsToRemove = currentCardIds.filter(
-      (id) => !newCardIds.includes(id)
-    );
-
-    // Find cards to add (in new but not in current)
-    const cardsToAdd = newCardIds.filter((id) => !currentCardIds.includes(id));
+    const currentCardIds = new Set(currentCards.map((card) => card.id));
+    const newCardIds = new Set(selectedCards.map((card) => card.id));
 
     // Remove cards that are no longer in the deck
-    for (const cardId of cardsToRemove) {
-      await removeCardFromDeck(deckId, cardId);
+    for (const card of currentCards) {
+      if (!newCardIds.has(card.id)) {
+        await removeCardFromDeck(deckId, card.id);
+      }
     }
 
-    // Add new cards to the deck
-    for (const cardId of cardsToAdd) {
-      await addCardToDeck(deckId, cardId);
+    // Add new cards that weren't in the deck before
+    for (const card of selectedCards) {
+      if (!currentCardIds.has(card.id)) {
+        await addCardToDeck(deckId, card.id);
+      }
     }
 
-    return { deckId, deckName, description };
+    return updatedDeck;
   }
 );

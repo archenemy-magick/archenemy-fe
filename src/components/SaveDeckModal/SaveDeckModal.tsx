@@ -1,4 +1,3 @@
-// src/components/SaveDeckModal/index.tsx
 import {
   Modal,
   TextInput,
@@ -14,6 +13,7 @@ import {
   Box,
   Alert,
   Tooltip,
+  Switch,
 } from "@mantine/core";
 import { useState, useEffect } from "react";
 import { IconAlertCircle } from "@tabler/icons-react";
@@ -31,11 +31,13 @@ interface SaveDeckModalProps {
     deckName: string;
     description?: string;
     cards: CustomArchenemyCard[];
+    isPublic: boolean;
   }) => void;
   cards: CustomArchenemyCard[];
   deckIsSaving: boolean;
   initialName?: string;
   initialDescription?: string;
+  initialIsPublic?: boolean;
   isEditing?: boolean;
 }
 
@@ -47,13 +49,24 @@ const SaveDeckModal = ({
   deckIsSaving,
   initialName,
   initialDescription,
+  initialIsPublic = false,
   isEditing,
 }: SaveDeckModalProps) => {
   const [deckName, setDeckName] = useState(initialName || "");
   const [description, setDescription] = useState(initialDescription || "");
+  const [isPublic, setIsPublic] = useState(initialIsPublic);
   const [nameError, setNameError] = useState<string | null>(null);
   const [descError, setDescError] = useState<string | null>(null);
   const [touched, setTouched] = useState({ name: false, description: false });
+
+  // Update state when initial values change (for editing)
+  useEffect(() => {
+    if (open) {
+      setDeckName(initialName || "");
+      setDescription(initialDescription || "");
+      setIsPublic(initialIsPublic);
+    }
+  }, [open, initialName, initialDescription, initialIsPublic]);
 
   const handleDeckNameChange = (value: string) => {
     setDeckName(value);
@@ -126,6 +139,7 @@ const SaveDeckModal = ({
       deckName: deckName.trim(),
       description: description.trim() || undefined,
       cards,
+      isPublic,
     });
   };
 
@@ -188,6 +202,25 @@ const SaveDeckModal = ({
           maxLength={200}
           size="md"
         />
+
+        {/* Simple Public/Private Switch */}
+        <Group justify="space-between">
+          <div>
+            <Text size="sm" fw={500}>
+              Make deck public
+            </Text>
+            <Text size="xs" c="dimmed">
+              {isPublic
+                ? "Anyone can view and copy this deck"
+                : "Only you can see this deck"}
+            </Text>
+          </div>
+          <Switch
+            checked={isPublic}
+            onChange={(event) => setIsPublic(event.currentTarget.checked)}
+            size="md"
+          />
+        </Group>
 
         {/* Cards Preview */}
         <div>

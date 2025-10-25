@@ -17,6 +17,7 @@ import {
   Divider,
   HoverCard,
   Image,
+  Container,
 } from "@mantine/core";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -191,300 +192,306 @@ const PublicDecksPage = () => {
   }
 
   return (
-    <Stack gap="md" m="md" py="md">
-      {/* Header */}
-      <Group justify="space-between" align="center">
-        <div>
-          <Title order={1}>Public Decks</Title>
-          <Text c="dimmed" size="sm">
-            Discover and clone decks from the community
-          </Text>
-        </div>
-        <Button onClick={() => router.push("/decks")}>My Decks</Button>
-      </Group>
-
-      {/* Search Bar */}
-      <TextInput
-        placeholder="Search by deck name, description, or author..."
-        leftSection={<IconSearch size={16} />}
-        rightSection={
-          searchQuery && (
-            <IconX
-              size={16}
-              style={{ cursor: "pointer" }}
-              onClick={() => setSearchQuery("")}
-            />
-          )
-        }
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.currentTarget.value)}
-        size="md"
-      />
-
-      {/* Results Summary */}
-      <Group gap="xs">
-        <Badge variant="light" size="lg">
-          {filteredDecks.length} decks found
-        </Badge>
-        {searchQuery && (
-          <Badge variant="light" color="blue" size="lg">
-            Filtered from {publicDecks.length} total
-          </Badge>
-        )}
-      </Group>
-
-      {/* Deck Grid */}
-      {filteredDecks.length === 0 ? (
-        <Card padding="xl" withBorder>
-          <Stack align="center" gap="md">
-            <IconCards size={48} stroke={1.5} color="gray" />
-            <Title order={3} c="dimmed">
-              {searchQuery
-                ? "No decks match your search"
-                : "No public decks yet"}
-            </Title>
-            <Text c="dimmed" ta="center">
-              {searchQuery
-                ? "Try adjusting your search terms"
-                : "Be the first to share a deck with the community!"}
+    <Container size="xl" p="md">
+      <Stack gap="md">
+        {/* Header */}
+        <Group justify="space-between" align="center">
+          <div>
+            <Title order={1}>Public Decks</Title>
+            <Text c="dimmed" size="sm">
+              Discover and clone decks from the community
             </Text>
-            {!searchQuery && (
-              <Button onClick={() => router.push("/decks/builder")}>
-                Build a Deck
-              </Button>
-            )}
-          </Stack>
-        </Card>
-      ) : (
-        <Grid>
-          {filteredDecks.map((deck) => (
-            <Grid.Col key={deck.id} span={{ base: 12, sm: 6, md: 4 }}>
-              <Card
-                shadow="sm"
-                padding="lg"
-                withBorder
-                h="100%"
+          </div>
+          <Button onClick={() => router.push("/decks")}>My Decks</Button>
+        </Group>
+
+        {/* Search Bar */}
+        <TextInput
+          placeholder="Search by deck name, description, or author..."
+          leftSection={<IconSearch size={16} />}
+          rightSection={
+            searchQuery && (
+              <IconX
+                size={16}
                 style={{ cursor: "pointer" }}
-                onClick={() => handlePreviewDeck(deck)}
-              >
-                {deck.deck_cards && deck.deck_cards.length > 0 && (
-                  <Card.Section mb="md">
-                    <Group
-                      gap={0}
-                      wrap="nowrap"
-                      style={{ overflow: "hidden", height: 120 }}
-                    >
-                      {deck.deck_cards.slice(0, 5).map((card, index) => (
-                        <Box
-                          key={card.id}
-                          style={{
-                            flex: 1,
-                            height: 120,
-                            minWidth: 0,
-                          }}
-                        >
-                          <Image
-                            src={card.normal_image}
-                            alt={card.name}
-                            fit="cover"
-                            h={120}
-                            style={{
-                              filter: "brightness(0.9)",
-                            }}
-                          />
-                        </Box>
-                      ))}
-                    </Group>
-                  </Card.Section>
-                )}
-                <Stack justify="space-between" h="100%">
-                  <div>
-                    <Group justify="space-between" mb="xs">
-                      <Text fw={600} size="lg" lineClamp={1}>
-                        {deck.name}
-                      </Text>
-                      <Group gap="xs">
-                        <Badge variant="light" size="sm">
-                          {deck.deck_cards?.length || 0} cards
-                        </Badge>
-                        {deck.like_count !== undefined &&
-                          deck.like_count > 0 && (
-                            <Badge variant="light" color="pink" size="sm">
-                              {deck.like_count} ❤️
-                            </Badge>
-                          )}
-                      </Group>
-                    </Group>
+                onClick={() => setSearchQuery("")}
+              />
+            )
+          }
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.currentTarget.value)}
+          size="md"
+        />
 
-                    {deck.description && (
-                      <Text size="sm" c="dimmed" lineClamp={2} mb="sm">
-                        {deck.description}
-                      </Text>
-                    )}
-
-                    <Group gap="xs" mb="md">
-                      <Text size="xs" c="dimmed">
-                        by {deck.profiles?.username || "Unknown"}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        •
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {new Date(deck.created_at).toLocaleDateString()}
-                      </Text>
-                    </Group>
-                  </div>
-
-                  <Group gap="xs">
-                    <Tooltip
-                      label={likedDecks.has(deck.id) ? "Unlike" : "Like"}
-                    >
-                      <ActionIcon
-                        variant="light"
-                        size="lg"
-                        color={likedDecks.has(deck.id) ? "pink" : "gray"}
-                        onClick={(e) =>
-                          handleToggleLike(e, deck.id, likedDecks.has(deck.id))
-                        }
-                        loading={likingDeck === deck.id}
-                      >
-                        {likedDecks.has(deck.id) ? (
-                          <IconHeartFilled size={18} />
-                        ) : (
-                          <IconHeart size={18} />
-                        )}
-                      </ActionIcon>
-                    </Tooltip>
-
-                    <Button
-                      leftSection={<IconCopy size={16} />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCloneDeck(deck);
-                      }}
-                      loading={cloning === deck.id}
-                      disabled={cloning !== null}
-                      fullWidth
-                      variant="light"
-                    >
-                      Clone to My Decks
-                    </Button>
-                  </Group>
-                </Stack>
-              </Card>
-            </Grid.Col>
-          ))}
-        </Grid>
-      )}
-
-      {/* Preview Modal */}
-      <Modal
-        opened={previewOpened}
-        onClose={closePreview}
-        title={
-          <Group gap="xs">
-            <Text fw={600} size="lg">
-              {previewDeck?.name}
-            </Text>
-            <Badge variant="light">
-              {previewDeck?.deck_cards?.length || 0} cards
+        {/* Results Summary */}
+        <Group gap="xs">
+          <Badge variant="light" size="lg">
+            {filteredDecks.length} decks found
+          </Badge>
+          {searchQuery && (
+            <Badge variant="light" color="blue" size="lg">
+              Filtered from {publicDecks.length} total
             </Badge>
-          </Group>
-        }
-        size="xl"
-      >
-        {previewDeck && (
-          <Stack gap="md">
-            {previewDeck.description && (
-              <>
-                <div>
-                  <Text size="sm" fw={500} mb="xs">
-                    Description
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    {previewDeck.description}
-                  </Text>
-                </div>
-                <Divider />
-              </>
-            )}
+          )}
+        </Group>
 
-            <div>
-              <Text size="sm" fw={500} mb="xs">
-                Deck Creator
+        {/* Deck Grid */}
+        {filteredDecks.length === 0 ? (
+          <Card padding="xl" withBorder>
+            <Stack align="center" gap="md">
+              <IconCards size={48} stroke={1.5} color="gray" />
+              <Title order={3} c="dimmed">
+                {searchQuery
+                  ? "No decks match your search"
+                  : "No public decks yet"}
+              </Title>
+              <Text c="dimmed" ta="center">
+                {searchQuery
+                  ? "Try adjusting your search terms"
+                  : "Be the first to share a deck with the community!"}
               </Text>
-              <Text size="sm" c="dimmed">
-                {previewDeck.profiles?.username || "Unknown"}
-              </Text>
-            </div>
-
-            <Divider />
-
-            <div>
-              <Text size="sm" fw={500} mb="md">
-                Cards in this Deck
-              </Text>
-              <Grid>
-                {previewDeck.deck_cards?.map(
-                  (card: CustomArchenemyCard, index: number) => (
-                    <Grid.Col key={index} span={{ base: 6, sm: 4, md: 3 }}>
-                      <HoverCard width={320} shadow="md" position="top">
-                        <HoverCard.Target>
+              {!searchQuery && (
+                <Button onClick={() => router.push("/decks/builder")}>
+                  Build a Deck
+                </Button>
+              )}
+            </Stack>
+          </Card>
+        ) : (
+          <Grid>
+            {filteredDecks.map((deck) => (
+              <Grid.Col key={deck.id} span={{ base: 12, sm: 6, md: 4 }}>
+                <Card
+                  shadow="sm"
+                  padding="lg"
+                  withBorder
+                  h="100%"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => handlePreviewDeck(deck)}
+                >
+                  {deck.deck_cards && deck.deck_cards.length > 0 && (
+                    <Card.Section mb="md">
+                      <Group
+                        gap={0}
+                        wrap="nowrap"
+                        style={{ overflow: "hidden", height: 120 }}
+                      >
+                        {deck.deck_cards.slice(0, 5).map((card, index) => (
                           <Box
+                            key={card.id}
                             style={{
-                              cursor: "pointer",
-                              borderRadius: "var(--mantine-radius-md)",
-                              overflow: "hidden",
-                              border: "1px solid var(--mantine-color-dark-4)",
+                              flex: 1,
+                              height: 120,
+                              minWidth: 0,
                             }}
                           >
                             <Image
                               src={card.normal_image}
                               alt={card.name}
-                              fit="contain"
+                              fit="cover"
+                              h={120}
                               style={{
-                                aspectRatio: "5/7",
+                                filter: "brightness(0.9)",
                               }}
                             />
                           </Box>
-                        </HoverCard.Target>
-                        <HoverCard.Dropdown>
-                          <Stack gap="xs">
-                            <Image
-                              src={card.normal_image}
-                              alt={card.name}
-                              fit="contain"
-                              radius="md"
-                            />
-                            <div>
-                              <Text fw={600} size="sm">
-                                {card.name}
-                              </Text>
-                            </div>
-                          </Stack>
-                        </HoverCard.Dropdown>
-                      </HoverCard>
-                    </Grid.Col>
-                  )
-                )}
-              </Grid>
-            </div>
+                        ))}
+                      </Group>
+                    </Card.Section>
+                  )}
+                  <Stack justify="space-between" h="100%">
+                    <div>
+                      <Group justify="space-between" mb="xs">
+                        <Text fw={600} size="lg" lineClamp={1}>
+                          {deck.name}
+                        </Text>
+                        <Group gap="xs">
+                          <Badge variant="light" size="sm">
+                            {deck.deck_cards?.length || 0} cards
+                          </Badge>
+                          {deck.like_count !== undefined &&
+                            deck.like_count > 0 && (
+                              <Badge variant="light" color="pink" size="sm">
+                                {deck.like_count} ❤️
+                              </Badge>
+                            )}
+                        </Group>
+                      </Group>
 
-            <Button
-              leftSection={<IconCopy size={16} />}
-              onClick={() => {
-                handleCloneDeck(previewDeck);
-                closePreview();
-              }}
-              loading={cloning === previewDeck.id}
-              fullWidth
-            >
-              Clone to My Decks
-            </Button>
-          </Stack>
+                      {deck.description && (
+                        <Text size="sm" c="dimmed" lineClamp={2} mb="sm">
+                          {deck.description}
+                        </Text>
+                      )}
+
+                      <Group gap="xs" mb="md">
+                        <Text size="xs" c="dimmed">
+                          by {deck.profiles?.username || "Unknown"}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          •
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {new Date(deck.created_at).toLocaleDateString()}
+                        </Text>
+                      </Group>
+                    </div>
+
+                    <Group gap="xs">
+                      <Tooltip
+                        label={likedDecks.has(deck.id) ? "Unlike" : "Like"}
+                      >
+                        <ActionIcon
+                          variant="light"
+                          size="lg"
+                          color={likedDecks.has(deck.id) ? "pink" : "gray"}
+                          onClick={(e) =>
+                            handleToggleLike(
+                              e,
+                              deck.id,
+                              likedDecks.has(deck.id)
+                            )
+                          }
+                          loading={likingDeck === deck.id}
+                        >
+                          {likedDecks.has(deck.id) ? (
+                            <IconHeartFilled size={18} />
+                          ) : (
+                            <IconHeart size={18} />
+                          )}
+                        </ActionIcon>
+                      </Tooltip>
+
+                      <Button
+                        leftSection={<IconCopy size={16} />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCloneDeck(deck);
+                        }}
+                        loading={cloning === deck.id}
+                        disabled={cloning !== null}
+                        fullWidth
+                        variant="light"
+                      >
+                        Clone to My Decks
+                      </Button>
+                    </Group>
+                  </Stack>
+                </Card>
+              </Grid.Col>
+            ))}
+          </Grid>
         )}
-      </Modal>
-    </Stack>
+
+        {/* Preview Modal */}
+        <Modal
+          opened={previewOpened}
+          onClose={closePreview}
+          title={
+            <Group gap="xs">
+              <Text fw={600} size="lg">
+                {previewDeck?.name}
+              </Text>
+              <Badge variant="light">
+                {previewDeck?.deck_cards?.length || 0} cards
+              </Badge>
+            </Group>
+          }
+          size="xl"
+        >
+          {previewDeck && (
+            <Stack gap="md">
+              {previewDeck.description && (
+                <>
+                  <div>
+                    <Text size="sm" fw={500} mb="xs">
+                      Description
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      {previewDeck.description}
+                    </Text>
+                  </div>
+                  <Divider />
+                </>
+              )}
+
+              <div>
+                <Text size="sm" fw={500} mb="xs">
+                  Deck Creator
+                </Text>
+                <Text size="sm" c="dimmed">
+                  {previewDeck.profiles?.username || "Unknown"}
+                </Text>
+              </div>
+
+              <Divider />
+
+              <div>
+                <Text size="sm" fw={500} mb="md">
+                  Cards in this Deck
+                </Text>
+                <Grid>
+                  {previewDeck.deck_cards?.map(
+                    (card: CustomArchenemyCard, index: number) => (
+                      <Grid.Col key={index} span={{ base: 6, sm: 4, md: 3 }}>
+                        <HoverCard width={320} shadow="md" position="top">
+                          <HoverCard.Target>
+                            <Box
+                              style={{
+                                cursor: "pointer",
+                                borderRadius: "var(--mantine-radius-md)",
+                                overflow: "hidden",
+                                border: "1px solid var(--mantine-color-dark-4)",
+                              }}
+                            >
+                              <Image
+                                src={card.normal_image}
+                                alt={card.name}
+                                fit="contain"
+                                style={{
+                                  aspectRatio: "5/7",
+                                }}
+                              />
+                            </Box>
+                          </HoverCard.Target>
+                          <HoverCard.Dropdown>
+                            <Stack gap="xs">
+                              <Image
+                                src={card.normal_image}
+                                alt={card.name}
+                                fit="contain"
+                                radius="md"
+                              />
+                              <div>
+                                <Text fw={600} size="sm">
+                                  {card.name}
+                                </Text>
+                              </div>
+                            </Stack>
+                          </HoverCard.Dropdown>
+                        </HoverCard>
+                      </Grid.Col>
+                    )
+                  )}
+                </Grid>
+              </div>
+
+              <Button
+                leftSection={<IconCopy size={16} />}
+                onClick={() => {
+                  handleCloneDeck(previewDeck);
+                  closePreview();
+                }}
+                loading={cloning === previewDeck.id}
+                fullWidth
+              >
+                Clone to My Decks
+              </Button>
+            </Stack>
+          )}
+        </Modal>
+      </Stack>
+    </Container>
   );
 };
 

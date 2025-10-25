@@ -8,13 +8,15 @@ export const saveArchenemyDeck = createAsyncThunk(
     deckName,
     description,
     selectedCards,
+    isPublic = false, // NEW - defaults to private
   }: {
     deckName: string;
     description?: string;
     selectedCards: CustomArchenemyCard[];
+    isPublic?: boolean; // NEW
   }) => {
-    // Create the deck
-    const deck = await createDeck(deckName, description);
+    // Create the deck with isPublic flag
+    const deck = await createDeck(deckName, description, isPublic);
 
     // Add all cards to the deck
     for (const card of selectedCards) {
