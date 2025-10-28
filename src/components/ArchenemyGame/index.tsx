@@ -1,6 +1,6 @@
 "use client";
 
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import CardCard from "../common/SchemeCard";
 import {
   Box,
@@ -52,6 +52,7 @@ import {
   IconCards,
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import { GamePageAd } from "~/components/ads/GamePageAd";
 
 const ArchenemyGame = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -61,6 +62,7 @@ const ArchenemyGame = () => {
     dispatch(startGame());
     closeDeckModal();
   };
+  const isDesktop = useMediaQuery("(min-width: 1200px)");
 
   const [deckModalOpened, { open: openDeckModal, close: closeDeckModal }] =
     useDisclosure(true);
@@ -236,6 +238,7 @@ const ArchenemyGame = () => {
       <Grid gutter="md">
         {/* LEFT COLUMN - Current Scheme & Controls */}
         <Grid.Col span={{ base: 12, md: 4 }}>
+          <GamePageAd slot="1234567890" position="top" />
           <Stack gap="md">
             {/* Stats Card */}
             <Paper p="md" withBorder>
