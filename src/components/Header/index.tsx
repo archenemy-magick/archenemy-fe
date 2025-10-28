@@ -37,15 +37,20 @@ const Header = ({
           <UserMenu />
         </Box>
         <Group ml="xl" visibleFrom="sm" gap={0}>
-          {!isAuthenticated && (
-            <LinkButton
-              variant="transparent"
-              className={classes.control}
-              href="/"
-            >
-              Home
-            </LinkButton>
-          )}
+          <LinkButton
+            variant="transparent"
+            className={classes.control}
+            href="/"
+          >
+            Home
+          </LinkButton>
+          {/* <LinkButton
+            variant="transparent"
+            className={classes.control}
+            href="/articles"
+          >
+            Articles
+          </LinkButton> */}
           <LinkButton
             variant="transparent"
             className={classes.control}
@@ -65,7 +70,7 @@ const Header = ({
             className={classes.control}
             href="/decks"
           >
-            My Decks
+            Decks
           </LinkButton>
         </Group>
       </Group>
