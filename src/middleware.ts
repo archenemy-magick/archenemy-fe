@@ -171,8 +171,32 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Check for admin routes
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    if (!user) {
+      return NextResponse.redirect(new URL("/signin", request.url));
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+
+    const isAdmin = profile?.is_admin === true;
+    console.log("isAdmin", isAdmin);
+
+    if (!isAdmin) {
+      // Logged in but not admin - redirect to home with error
+      const redirectUrl = new URL("/", request.url);
+      redirectUrl.searchParams.set("error", "unauthorized");
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
   // Protected routes that require authentication
   const protectedPaths = [
+    "/admin/:path*",
     "/decks",
     "/archenemy",
     "/game",
