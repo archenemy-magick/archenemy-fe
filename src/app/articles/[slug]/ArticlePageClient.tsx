@@ -104,7 +104,7 @@ export default function ArticlePageClient({ article }: ArticlePageClientProps) {
           }}
         >
           <ReactMarkdown
-            rehypePlugins={[rehypeRaw]} // Add this line
+            rehypePlugins={[rehypeRaw]}
             components={{
               // Customize markdown rendering
               h1: ({ children }) => (
@@ -127,6 +127,35 @@ export default function ArticlePageClient({ article }: ArticlePageClientProps) {
                   {children}
                 </Text>
               ),
+              img: ({ src, alt }) => {
+                // Parse alt text for size hints like "Card Name|300"
+                const parts = alt?.split("|") || [];
+                const actualAlt = parts[0]?.trim() || "";
+                const widthStr = parts[1]?.trim();
+                const width = widthStr ? parseInt(widthStr) : 400;
+
+                return (
+                  <span
+                    style={{
+                      display: "block",
+                      textAlign: "center",
+                      margin: "1.5rem 0",
+                    }}
+                  >
+                    <Image
+                      src={src || ""}
+                      alt={actualAlt}
+                      radius="md"
+                      style={{
+                        maxWidth: `${width}px`,
+                        width: "100%",
+                        height: "auto",
+                        display: "inline-block",
+                      }}
+                    />
+                  </span>
+                );
+              },
               div: ({ node, className, children, ...props }) => {
                 // Check for custom class name
                 if (className === "card-text-layout") {
@@ -165,7 +194,6 @@ export default function ArticlePageClient({ article }: ArticlePageClientProps) {
                 This article references {article.article_cards.length} card(s)
                 from the Archenemy format
               </Text>
-              {/* TODO: Display actual cards */}
             </Paper>
           </>
         )}
@@ -178,7 +206,6 @@ export default function ArticlePageClient({ article }: ArticlePageClientProps) {
               <Text size="sm" c="dimmed">
                 This article references {article.article_decks.length} deck(s)
               </Text>
-              {/* TODO: Display actual decks */}
             </Paper>
           </>
         )}
