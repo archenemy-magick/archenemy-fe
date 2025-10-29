@@ -1,167 +1,130 @@
-"use client";
+import { Metadata } from "next";
+import { createServerSupabaseClient } from "~/lib/supabase/server";
+import { notFound } from "next/navigation";
+import ArticlePageClient from "./ArticlePageClient";
 
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import {
-  Container,
-  Title,
-  Text,
-  Stack,
-  Image,
-  Badge,
-  Group,
-  Divider,
-  Paper,
-  Loader,
-  Center,
-} from "@mantine/core";
-import ReactMarkdown from "react-markdown";
-import { getArticleBySlug } from "~/lib/api/articles";
-import { IconClock, IconEye } from "@tabler/icons-react";
-import { Article, ArticleTag } from "~/types/articles";
+interface ArticlePageProps {
+  params: Promise<{
+    slug: string;
+  }>;
+}
 
-export default function ArticlePage() {
-  const params = useParams();
-  const [article, setArticle] = useState<Article | null>(null);
-  const [loading, setLoading] = useState(true);
+// Generate dynamic metadata for SEO
+export async function generateMetadata({
+  params,
+}: ArticlePageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createServerSupabaseClient();
 
-  useEffect(() => {
-    const fetchArticle = async () => {
-      try {
-        const data = await getArticleBySlug(params.slug as string);
-        setArticle(data);
-      } catch (error) {
-        console.error("Failed to load article:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchArticle();
-  }, [params.slug]);
-
-  if (loading) {
-    return (
-      <Container py="xl">
-        <Center>
-          <Loader size="lg" />
-        </Center>
-      </Container>
-    );
-  }
+  const { data: article } = await supabase
+    .from("articles")
+    .select("*")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .single();
 
   if (!article) {
-    return (
-      <Container py="xl">
-        <Stack align="center" gap="md">
-          <Text size="xl" fw={600}>
-            Article not found
-          </Text>
-          <Text c="dimmed">
-            This article may have been removed or doesn&apos;t exist
-          </Text>
-        </Stack>
-      </Container>
-    );
+    return {
+      title: "Article Not Found | MagicSAK",
+      description: "This article could not be found.",
+    };
   }
 
-  return (
-    <Container size="md" py="xl">
-      <Stack gap="xl">
-        {/* Featured Image */}
-        {article.featured_image && (
-          <Image
-            src={article.featured_image}
-            radius="md"
-            alt={article.title}
-            style={{ maxHeight: 500, objectFit: "cover" }}
-          />
-        )}
+  const title = article.meta_title || article.title;
+  const description =
+    article.meta_description ||
+    article.excerpt ||
+    `Read ${article.title} on MagicSAK - Your ultimate Archenemy deck building and strategy resource for Magic: The Gathering.`;
+  const imageUrl =
+    article.og_image_url ||
+    article.featured_image ||
+    "https://magicsak.com/og-default.png";
+  const publishedTime = new Date(article.published_at).toISOString();
+  const modifiedTime = new Date(article.updated_at).toISOString();
 
-        {/* Title */}
-        <div>
-          <Title order={1} size="2.5rem" style={{ lineHeight: 1.2 }}>
-            {article.title}
-          </Title>
-          {article.subtitle && (
-            <Text size="xl" c="dimmed" mt="md">
-              {article.subtitle}
-            </Text>
-          )}
-        </div>
+  return {
+    title: `${title} | MagicSAK`,
+    description,
+    keywords: article.meta_keywords || [],
+    authors: [{ name: "MagicSAK Team" }],
 
-        {/* Meta Info */}
-        <Group gap="md">
-          <Group gap="xs">
-            <IconClock size={16} />
-            <Text size="sm" c="dimmed">
-              {article.published_at &&
-                new Date(article.published_at).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-            </Text>
-          </Group>
-          <Group gap="xs">
-            <IconEye size={16} />
-            <Text size="sm" c="dimmed">
-              {article.view_count} views
-            </Text>
-          </Group>
-        </Group>
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      url: `https://magicsak.com/articles/${article.slug}`,
+      siteName: "MagicSAK",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: article.title,
+        },
+      ],
+      publishedTime,
+      modifiedTime,
+      authors: ["MagicSAK Team"],
+      tags: article.meta_keywords || [],
+    },
 
-        {/* Tags */}
-        {article.tags && article.tags.length > 0 && (
-          <Group gap="xs">
-            {article.tags.map((tag: ArticleTag) => (
-              <Badge key={tag.tag_id} variant="light" size="lg">
-                {tag.tag?.name}
-              </Badge>
-            ))}
-          </Group>
-        )}
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
 
-        <Divider />
+    alternates: {
+      canonical:
+        article.canonical_url ||
+        `https://magicsak.com/articles/${article.slug}`,
+    },
 
-        {/* Article Content */}
-        <div className="article-content">
-          <ReactMarkdown>{article.content}</ReactMarkdown>
-        </div>
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
 
-        {/* Linked Cards Section */}
-        {article.article_cards && article.article_cards.length > 0 && (
-          <>
-            <Divider label="Featured Cards" labelPosition="center" my="xl" />
-            <Paper p="md" withBorder>
-              <Text size="sm" c="dimmed">
-                This article references {article.article_cards.length} card(s)
-                from the Archenemy format
-              </Text>
-            </Paper>
-          </>
-        )}
+    other: {
+      "article:published_time": publishedTime,
+      "article:modified_time": modifiedTime,
+      "article:author": "MagicSAK Team",
+    },
+  };
+}
 
-        {/* Linked Decks Section */}
-        {article.article_decks && article.article_decks.length > 0 && (
-          <>
-            <Divider label="Featured Decks" labelPosition="center" my="xl" />
-            <Paper p="md" withBorder>
-              <Text size="sm" c="dimmed">
-                This article references {article.article_decks.length} deck(s)
-              </Text>
-            </Paper>
-          </>
-        )}
+// Removed generateStaticParams - articles will be generated on-demand
 
-        {/* Comments Section (Optional - for future) */}
-        <Divider my="xl" />
-        <Paper p="md" withBorder>
-          <Text c="dimmed" size="sm">
-            Comments coming soon...
-          </Text>
-        </Paper>
-      </Stack>
-    </Container>
-  );
+export default async function ArticlePage({ params }: ArticlePageProps) {
+  const { slug } = await params;
+  const supabase = await createServerSupabaseClient();
+
+  const { data: article } = await supabase
+    .from("articles")
+    .select("*")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .single();
+
+  if (!article) {
+    notFound();
+  }
+
+  // Increment view count (fire and forget)
+  supabase
+    .from("articles")
+    .update({ view_count: (article.view_count || 0) + 1 })
+    .eq("id", article.id)
+    .then(() => {});
+  // .catch(() => {});
+
+  return <ArticlePageClient article={article} />;
 }

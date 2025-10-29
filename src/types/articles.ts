@@ -17,6 +17,14 @@ export interface Article {
   view_count: number;
   subtitle: string;
 
+  // SEO fields
+  meta_title?: string | null; // Max 60 chars
+  meta_description?: string | null; // Max 160 chars
+  meta_keywords?: string[] | null;
+  og_image_url?: string | null;
+  canonical_url?: string | null;
+  read_time?: number | null; // Reading time in minutes
+
   // Relations (if you're joining these)
   author?: {
     id: string;

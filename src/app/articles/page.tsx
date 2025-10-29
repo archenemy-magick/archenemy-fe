@@ -24,20 +24,20 @@ export default function ArticlesPage() {
 
   // TODO: remember to go through here and look for commented out code once articles work
 
-  // useEffect(() => {
-  //   const fetchArticles = async () => {
-  //     try {
-  //       const data = await getPublishedArticles();
-  //       setArticles(data);
-  //     } catch (error) {
-  //       console.error("Failed to load articles:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const data = await getPublishedArticles();
+        setArticles(data);
+      } catch (error) {
+        console.error("Failed to load articles:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  //   fetchArticles();
-  // }, []);
+    fetchArticles();
+  }, []);
 
   if (loading) {
     return (

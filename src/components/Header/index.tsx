@@ -44,13 +44,13 @@ const Header = ({
           >
             Home
           </LinkButton>
-          {/* <LinkButton
+          <LinkButton
             variant="transparent"
             className={classes.control}
             href="/articles"
           >
             Articles
-          </LinkButton> */}
+          </LinkButton>
           <LinkButton
             variant="transparent"
             className={classes.control}
