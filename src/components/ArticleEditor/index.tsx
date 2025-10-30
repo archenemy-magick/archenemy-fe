@@ -348,13 +348,6 @@ export default function ArticleEditor({
                       value={keywordInput}
                       onChange={(e) => setKeywordInput(e.currentTarget.value)}
                       onKeyDown={(e) => {
-                        console.log(
-                          "e.key:",
-                          e.key,
-                          "keywordInput:",
-                          keywordInput
-                        );
-
                         if (e.key === "Enter" && keywordInput.trim()) {
                           e.preventDefault();
                           const newKeyword = keywordInput.toLowerCase().trim();

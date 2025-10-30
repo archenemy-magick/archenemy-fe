@@ -101,6 +101,7 @@ export default function ArticlePageClient({ article }: ArticlePageClientProps) {
           style={{
             fontSize: "1.1rem",
             lineHeight: 1.8,
+            textAlign: "left",
           }}
         >
           <ReactMarkdown
@@ -138,7 +139,7 @@ export default function ArticlePageClient({ article }: ArticlePageClientProps) {
                   <span
                     style={{
                       display: "block",
-                      textAlign: "center",
+                      textAlign: "left",
                       margin: "1.5rem 0",
                     }}
                   >
@@ -177,6 +178,42 @@ export default function ArticlePageClient({ article }: ArticlePageClientProps) {
                   <div className={className} {...props}>
                     {children}
                   </div>
+                );
+              },
+              a: ({ href, children }) => {
+                const isExternal =
+                  href?.startsWith("http") || href?.startsWith("//");
+                const isInternal =
+                  href?.startsWith("/") || href?.startsWith("#");
+
+                if (isExternal) {
+                  // External links open in new tab
+                  return (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: "var(--mantine-color-blue-6)",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      {children}
+                    </a>
+                  );
+                }
+
+                // Internal links stay in same tab
+                return (
+                  <a
+                    href={href}
+                    style={{
+                      color: "var(--mantine-color-blue-6)",
+                      textDecoration: "underline",
+                    }}
+                  >
+                    {children}
+                  </a>
                 );
               },
             }}

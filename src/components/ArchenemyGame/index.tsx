@@ -238,7 +238,7 @@ const ArchenemyGame = () => {
       <Grid gutter="md">
         {/* LEFT COLUMN - Current Scheme & Controls */}
         <Grid.Col span={{ base: 12, md: 4 }}>
-          <GamePageAd slot="1234567890" position="top" />
+          {/* <GamePageAd slot="1234567890" position="top" /> */}
           <Stack gap="md">
             {/* Stats Card */}
             <Paper p="md" withBorder>
