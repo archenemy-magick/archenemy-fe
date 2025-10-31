@@ -13,6 +13,7 @@ import {
   useMantineColorScheme,
   Alert,
   Loader,
+  Checkbox,
 } from "@mantine/core";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "~/store/configureStore";
@@ -34,6 +35,7 @@ export function SignUpForm() {
   const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false); // NEW
 
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
@@ -129,6 +131,18 @@ export function SignUpForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(clearError());
+
+    // Check if user agreed to terms
+    if (!agreedToTerms) {
+      notifications.show({
+        title: "Terms Required",
+        message:
+          "You must agree to the Terms of Service and Privacy Policy to continue.",
+        color: "red",
+        icon: <IconAlertCircle />,
+      });
+      return;
+    }
 
     // Final username validation
     const usernameValidation = validateUsername(username);
@@ -270,6 +284,7 @@ export function SignUpForm() {
                     setLastName("");
                     setUsernameAvailable(null);
                     setTouched(false);
+                    setAgreedToTerms(false);
                   }}
                   style={{ cursor: "pointer" }}
                 >
@@ -294,6 +309,7 @@ export function SignUpForm() {
             <Stack gap="md">
               <TextInput
                 label="Username"
+                name="username"
                 placeholder="archenemy_master"
                 required
                 value={username}
@@ -323,6 +339,7 @@ export function SignUpForm() {
                 label="Email"
                 placeholder="you@example.com"
                 type="email"
+                name="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -382,6 +399,25 @@ export function SignUpForm() {
                 }}
               />
 
+              {/* NEW: Terms & Privacy Checkbox */}
+              <Checkbox
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.currentTarget.checked)}
+                label={
+                  <Text size="sm" c={isDark ? "gray.4" : "dark.4"}>
+                    I agree to the{" "}
+                    <Anchor href="/terms" target="_blank" c="pink" fw={500}>
+                      Terms of Service
+                    </Anchor>{" "}
+                    and{" "}
+                    <Anchor href="/privacy" target="_blank" c="pink" fw={500}>
+                      Privacy Policy
+                    </Anchor>
+                  </Text>
+                }
+                required
+              />
+
               {error && !usernameError && (
                 <Alert icon={<IconAlertCircle />} color="red" variant="light">
                   {error}
@@ -395,7 +431,8 @@ export function SignUpForm() {
                 disabled={
                   checkingUsername ||
                   usernameAvailable === false ||
-                  !!usernameError
+                  !!usernameError ||
+                  !agreedToTerms // NEW: Disable if not agreed
                 }
                 size="lg"
                 mt="sm"
