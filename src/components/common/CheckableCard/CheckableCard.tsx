@@ -1,82 +1,124 @@
-// ============================================
-// Improved CheckableCard - Remove weird corner brackets
-// src/components/common/CheckableCard/CheckableCard.tsx
-// ============================================
-
-import { Box, Image } from "@mantine/core";
-import { IconCheck } from "@tabler/icons-react";
+import { Card, Image, Badge, Stack, Tooltip, ActionIcon } from "@mantine/core";
+import { IconEye } from "@tabler/icons-react";
 import { CustomArchenemyCard } from "~/types";
+import { useMediaQuery } from "@mantine/hooks";
 
 interface CheckableCardProps {
   card: CustomArchenemyCard;
   onClick: () => void;
+  onPreview?: () => void;
   cardSelected: boolean;
 }
 
-const CheckableCard = ({ card, onClick, cardSelected }: CheckableCardProps) => {
-  return (
-    <Box
-      onClick={onClick}
-      style={{
-        position: "relative",
-        borderRadius: "var(--mantine-radius-md)",
-        overflow: "hidden",
-        cursor: "pointer",
-        transition: "all 0.2s ease",
-        ...(cardSelected && {
-          boxShadow:
-            "0 0 0 3px var(--mantine-color-magenta-5), 0 8px 24px rgba(132, 94, 247, 0.4)",
-          transform: "translateY(-4px)",
-        }),
-      }}
-      className="card-hover"
-    >
-      <Image
-        src={card.border_crop_image || card.normal_image}
-        alt={card.name}
-        style={{
-          display: "block",
-          width: "100%",
-          height: "auto",
-        }}
-      />
+export default function CheckableCard({
+  card,
+  onClick,
+  onPreview,
+  cardSelected,
+}: CheckableCardProps) {
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
-      {/* Selection Indicator */}
-      {cardSelected && (
-        <Box
+  const handleClick = (e: React.MouseEvent) => {
+    if ((e.ctrlKey || e.metaKey) && !isMobile) {
+      e.preventDefault();
+      onPreview?.();
+    } else {
+      onClick();
+    }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onPreview?.();
+  };
+
+  const handlePreviewClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card selection
+    onPreview?.();
+  };
+
+  const cardContent = (
+    <Card
+      shadow="sm"
+      padding="lg"
+      radius="md"
+      withBorder
+      onClick={handleClick}
+      onContextMenu={handleContextMenu}
+      style={{
+        cursor: "pointer",
+        border: cardSelected
+          ? "2px solid var(--mantine-color-blue-6)"
+          : undefined,
+        transition: "all 0.2s ease",
+        position: "relative",
+      }}
+    >
+      {/* Mobile Preview Button */}
+      {isMobile && (
+        <ActionIcon
+          variant="filled"
+          color="blue"
+          size="lg"
+          radius="xl"
           style={{
             position: "absolute",
             top: 8,
             right: 8,
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            background: "var(--mantine-color-magenta-6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
+            zIndex: 10,
           }}
+          onClick={handlePreviewClick}
         >
-          <IconCheck size={20} color="white" stroke={3} />
-        </Box>
+          <IconEye size={18} />
+        </ActionIcon>
       )}
 
-      {/* Hover Overlay */}
-      <Box
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: cardSelected
-            ? "rgba(132, 94, 247, 0.15)"
-            : "rgba(0, 0, 0, 0)",
-          transition: "background 0.2s ease",
-          pointerEvents: "none",
-        }}
-        className="card-overlay"
-      />
-    </Box>
-  );
-};
+      <Card.Section>
+        <Image
+          src={card.border_crop_image || card.normal_image}
+          alt={card.name}
+          height={280}
+          fit="contain"
+        />
+      </Card.Section>
 
-export default CheckableCard;
+      <Stack gap="xs" mt="md">
+        <Badge variant={cardSelected ? "filled" : "light"}>
+          {card.type_line}
+        </Badge>
+      </Stack>
+    </Card>
+  );
+
+  // Desktop: Show tooltip on hover
+  if (!isMobile) {
+    return (
+      <Tooltip
+        label={
+          <Image
+            src={card.border_crop_image || card.normal_image}
+            alt={card.name}
+            width={300}
+            style={{ borderRadius: 8 }}
+          />
+        }
+        position="right"
+        withArrow
+        openDelay={300}
+        closeDelay={100}
+        transitionProps={{ transition: "fade", duration: 200 }}
+        styles={{
+          tooltip: {
+            padding: 0,
+            background: "transparent",
+            border: "none",
+          },
+        }}
+      >
+        {cardContent}
+      </Tooltip>
+    );
+  }
+
+  return cardContent;
+}

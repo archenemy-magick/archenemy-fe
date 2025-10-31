@@ -47,6 +47,7 @@ import { CustomArchenemyCard } from "~/types";
 import { notifications } from "@mantine/notifications";
 import { getDeckById } from "~/lib/api/decks";
 import { ScrollToTop } from "~/components/ScrollToTop";
+import { CardPreviewModal } from "~/components/CardPreviewModal";
 
 const DeckBuilder = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -74,6 +75,16 @@ const DeckBuilder = () => {
   const [sortOption, setSortOption] = useState<string>("name-asc");
   const [selectedCardsSortOption, setSelectedCardsSortOption] =
     useState<string>("name-asc");
+
+  const [previewCard, setPreviewCard] = useState<CustomArchenemyCard | null>(
+    null
+  );
+  const [previewOpened, setPreviewOpened] = useState(false);
+
+  const handlePreviewCard = (card: CustomArchenemyCard) => {
+    setPreviewCard(card);
+    setPreviewOpened(true);
+  };
 
   // Get unique card types from the card pool
   const cardTypes = useMemo(() => {
@@ -348,6 +359,11 @@ const DeckBuilder = () => {
 
   return (
     <Container size="xl" p="md">
+      <CardPreviewModal
+        card={previewCard}
+        opened={previewOpened}
+        onClose={() => setPreviewOpened(false)}
+      />
       <Stack gap="xl" pb="xl">
         <SaveDeckModal
           open={saveDeckModalOpened}
@@ -570,6 +586,7 @@ const DeckBuilder = () => {
                       card={card}
                       onClick={() => dispatch(removeCard(card))}
                       cardSelected={true}
+                      onPreview={() => handlePreviewCard(card)}
                     />
                   </Box>
                 </Grid.Col>
@@ -616,6 +633,7 @@ const DeckBuilder = () => {
                       card={card}
                       onClick={() => dispatch(addCard(card))}
                       cardSelected={false}
+                      onPreview={() => handlePreviewCard(card)}
                     />
                   </Box>
                 </Grid.Col>
