@@ -15,6 +15,7 @@ import {
   Select,
   Menu,
   Container,
+  MultiSelect,
 } from "@mantine/core";
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -65,11 +66,12 @@ const DeckBuilder = () => {
 
   const [deckIsSaving, setDeckIsSaving] = useState(false);
   const [isLoadingDeck, setIsLoadingDeck] = useState(false);
-  const [editingDeckIsPublic, setEditingDeckIsPublic] = useState(false); // NEW
+  const [editingDeckIsPublic, setEditingDeckIsPublic] = useState(false);
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [setFilter, setSetFilter] = useState<string[]>([]); // NEW - Multi-select for sets
 
   // Sort state
   const [sortOption, setSortOption] = useState<string>("name-asc");
@@ -90,7 +92,6 @@ const DeckBuilder = () => {
   const cardTypes = useMemo(() => {
     const types = new Set<string>();
     cardPool.forEach((card) => {
-      // Extract type from type_line (e.g., "Ongoing Scheme" or "Scheme")
       if (card.type_line) {
         types.add(card.type_line);
       }
@@ -98,13 +99,37 @@ const DeckBuilder = () => {
     return Array.from(types).sort();
   }, [cardPool]);
 
-  // Filter cards based on search query and type filter
+  // NEW - Get unique sets from the card pool with set names
+  const cardSets = useMemo(() => {
+    const setsMap = new Map<string, { code: string; name: string }>();
+    cardPool.forEach((card) => {
+      if (card.set && card.set_name) {
+        setsMap.set(card.set, {
+          code: card.set,
+          name: card.set_name,
+        });
+      }
+    });
+
+    return Array.from(setsMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+  }, [cardPool]);
+
+  // Filter cards based on search query, type filter, and set filter
   const filteredCardPool = useMemo(() => {
     let filtered = cardPool;
 
     // Apply type filter
     if (typeFilter !== "all") {
       filtered = filtered.filter((card) => card.type_line === typeFilter);
+    }
+
+    // NEW - Apply set filter
+    if (setFilter.length > 0) {
+      filtered = filtered.filter((card) =>
+        card.set ? setFilter.includes(card.set) : false
+      );
     }
 
     // Apply search query
@@ -118,9 +143,9 @@ const DeckBuilder = () => {
     }
 
     return filtered;
-  }, [cardPool, searchQuery, typeFilter]);
+  }, [cardPool, searchQuery, typeFilter, setFilter]);
 
-  // Sort function
+  // Sort function - UPDATED with release date sorting
   const sortCards = (
     cards: CustomArchenemyCard[],
     sortBy: string
@@ -152,6 +177,36 @@ const DeckBuilder = () => {
           const typeCompare = typeB.localeCompare(typeA);
           return typeCompare !== 0
             ? typeCompare
+            : (a.name || "").localeCompare(b.name || "");
+        });
+      case "release-asc": // NEW
+        return sorted.sort((a, b) => {
+          const dateA = a.released_at ? new Date(a.released_at).getTime() : 0;
+          const dateB = b.released_at ? new Date(b.released_at).getTime() : 0;
+          return dateA - dateB;
+        });
+      case "release-desc": // NEW
+        return sorted.sort((a, b) => {
+          const dateA = a.released_at
+            ? new Date(a.released_at).getTime()
+            : Infinity;
+          const dateB = b.released_at
+            ? new Date(b.released_at).getTime()
+            : Infinity;
+          return dateB - dateA;
+        });
+      case "set-asc": // NEW
+        return sorted.sort((a, b) => {
+          const setCompare = (a.set_name || "").localeCompare(b.set_name || "");
+          return setCompare !== 0
+            ? setCompare
+            : (a.name || "").localeCompare(b.name || "");
+        });
+      case "set-desc": // NEW
+        return sorted.sort((a, b) => {
+          const setCompare = (b.set_name || "").localeCompare(a.set_name || "");
+          return setCompare !== 0
+            ? setCompare
             : (a.name || "").localeCompare(b.name || "");
         });
       default:
@@ -199,7 +254,7 @@ const DeckBuilder = () => {
               cards: deck.deck_cards,
             })
           );
-          setEditingDeckIsPublic(deck.is_public || false); // NEW - load privacy setting
+          setEditingDeckIsPublic(deck.is_public || false);
         } catch (error) {
           notifications.show({
             title: "Error",
@@ -232,12 +287,12 @@ const DeckBuilder = () => {
     deckName,
     description,
     cards,
-    isPublic, // NEW
+    isPublic,
   }: {
     deckName: string;
     description?: string;
     cards: CustomArchenemyCard[];
-    isPublic: boolean; // NEW
+    isPublic: boolean;
   }) => {
     setDeckIsSaving(true);
 
@@ -250,7 +305,7 @@ const DeckBuilder = () => {
             deckName,
             description,
             selectedCards: cards,
-            isPublic, // NEW
+            isPublic,
           })
         ).unwrap();
 
@@ -268,7 +323,7 @@ const DeckBuilder = () => {
             deckName,
             description,
             selectedCards: cards,
-            isPublic, // NEW
+            isPublic,
           })
         ).unwrap();
 
@@ -340,14 +395,24 @@ const DeckBuilder = () => {
   const clearFilters = () => {
     setSearchQuery("");
     setTypeFilter("all");
+    setSetFilter([]); // NEW
   };
 
+  // UPDATED - Added release date and set sorting options
   const sortOptions = [
     { label: "Name (A-Z)", value: "name-asc" },
     { label: "Name (Z-A)", value: "name-desc" },
     { label: "Type (A-Z)", value: "type-asc" },
     { label: "Type (Z-A)", value: "type-desc" },
+    { label: "Release Date (Oldest)", value: "release-asc" },
+    { label: "Release Date (Newest)", value: "release-desc" },
+    { label: "Set (A-Z)", value: "set-asc" },
+    { label: "Set (Z-A)", value: "set-desc" },
   ];
+
+  const handleSetFilterChange = (values: string[]) => {
+    setSetFilter(values);
+  };
 
   if (isLoadingDeck) {
     return (
@@ -373,7 +438,7 @@ const DeckBuilder = () => {
           deckIsSaving={deckIsSaving}
           initialName={editingDeckName}
           initialDescription={editingDeckDescription}
-          initialIsPublic={editingDeckIsPublic} // NEW
+          initialIsPublic={editingDeckIsPublic}
           isEditing={!!editingDeckId}
         />
 
@@ -447,13 +512,27 @@ const DeckBuilder = () => {
               ]}
             />
 
+            <MultiSelect
+              placeholder="Filter by set..."
+              value={setFilter}
+              onChange={handleSetFilterChange}
+              data={cardSets.map((set) => ({
+                value: set.code,
+                label: `${set.name} (${set.code.toUpperCase()})`,
+              }))}
+              searchable
+              clearable
+              style={{ minWidth: 250 }}
+              maxDropdownHeight={300}
+            />
+
             <Select
               placeholder="Sort by..."
               leftSection={<IconSortAscending size={16} />}
               value={sortOption}
               onChange={(value) => setSortOption(value || "name-asc")}
               data={sortOptions}
-              style={{ minWidth: 160 }}
+              style={{ minWidth: 200 }}
             />
 
             <Menu shadow="md" width={220}>
@@ -517,7 +596,7 @@ const DeckBuilder = () => {
               </Menu.Dropdown>
             </Menu>
 
-            {(searchQuery || typeFilter !== "all") && (
+            {(searchQuery || typeFilter !== "all" || setFilter.length > 0) && (
               <Button
                 variant="subtle"
                 color="gray"
@@ -537,9 +616,15 @@ const DeckBuilder = () => {
             <Badge variant="light" color="gray" size="lg">
               {filteredCardPool.length} cards shown
             </Badge>
-            {(searchQuery || typeFilter !== "all") && (
+            {(searchQuery || typeFilter !== "all" || setFilter.length > 0) && (
               <Badge variant="light" color="blue" size="lg">
                 {cardPool.length} total cards
+              </Badge>
+            )}
+            {/* NEW - Show active set filters */}
+            {setFilter.length > 0 && (
+              <Badge variant="light" color="violet" size="lg">
+                {setFilter.length} set{setFilter.length > 1 ? "s" : ""} filtered
               </Badge>
             )}
           </Group>
@@ -563,7 +648,7 @@ const DeckBuilder = () => {
                     }
                     data={sortOptions}
                     size="xs"
-                    style={{ minWidth: 140 }}
+                    style={{ minWidth: 180 }}
                   />
                 </Group>
               }
