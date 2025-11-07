@@ -1,58 +1,52 @@
 "use client";
 
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import CardCard from "../common/SchemeCard";
+import { Carousel } from "@mantine/carousel";
 import {
+  Badge,
   Box,
   Button,
-  Grid,
-  Title,
-  Stack,
   Center,
-  Modal,
+  Grid,
   Group,
   Image,
-  lighten,
-  Badge,
-  Text,
-  Divider,
-  ActionIcon,
-  Tooltip,
-  ScrollArea,
-  Progress,
-  SimpleGrid,
+  Modal,
   Paper,
+  Progress,
+  ScrollArea,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+  Tooltip,
 } from "@mantine/core";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  chooseSingleCard,
-  abandonScheme,
-  startGame,
-  selectDeck,
-  endGame,
-  undoLastCard,
-  shuffleCardPool,
-  saveGameState,
-  loadGameState,
-  clearSavedGame,
-} from "~/store/reducers";
-import { Carousel } from "@mantine/carousel";
-import type { RootState } from "~/store";
-import type { AppDispatch } from "~/store/configureStore";
-import DeckSelectorModal from "~/components/DeckSelectorModal";
-import CardSlot from "../common/CardSlot";
-import fetchAllArchenemyDecks from "~/store/thunks/fetchAllDecks";
-import { CustomArchenemyCard } from "~/types";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import {
   IconArrowBack,
   IconArrowsShuffle,
+  IconCards,
   IconDeviceFloppy,
   IconHistory,
-  IconCards,
 } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
-import { GamePageAd } from "~/components/ads/GamePageAd";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import DeckSelectorModal from "~/components/DeckSelectorModal";
+import type { RootState } from "~/store";
+import type { AppDispatch } from "~/store/configureStore";
+import {
+  abandonScheme,
+  chooseSingleCard,
+  clearSavedGame,
+  endGame,
+  loadGameState,
+  saveGameState,
+  selectDeck,
+  shuffleCardPool,
+  startGame,
+  undoLastCard,
+} from "~/store/reducers";
+import fetchAllArchenemyDecks from "~/store/thunks/fetchAllDecks";
+import { CustomArchenemyCard } from "~/types";
 
 const ArchenemyGame = () => {
   const dispatch = useDispatch<AppDispatch>();

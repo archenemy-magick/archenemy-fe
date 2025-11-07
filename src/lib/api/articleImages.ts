@@ -76,19 +76,6 @@ export async function uploadArticleImage(
 }
 
 /**
- * Upload multiple images at once
- */
-export async function uploadMultipleImages(
-  files: File[],
-  articleId?: string
-): Promise<{ url: string; record: ArticleImage }[]> {
-  const results = await Promise.all(
-    files.map((file) => uploadArticleImage(file, articleId))
-  );
-  return results;
-}
-
-/**
  * Delete an image
  */
 export async function deleteArticleImage(imageId: string): Promise<void> {
@@ -153,21 +140,6 @@ export async function getUserImages(): Promise<ArticleImage[]> {
 }
 
 /**
- * Update image alt text
- */
-export async function updateImageAltText(
-  imageId: string,
-  altText: string
-): Promise<void> {
-  const { error } = await supabase
-    .from("article_images")
-    .update({ alt_text: altText })
-    .eq("id", imageId);
-
-  if (error) throw error;
-}
-
-/**
  * Generate markdown for an image
  */
 export function generateImageMarkdown(
@@ -175,16 +147,4 @@ export function generateImageMarkdown(
   altText: string = "Image"
 ): string {
   return `![${altText}](${url})`;
-}
-
-/**
- * Generate HTML img tag for an image
- */
-export function generateImageHtml(
-  url: string,
-  altText: string = "Image",
-  width?: number
-): string {
-  const widthAttr = width ? ` width="${width}"` : "";
-  return `<img src="${url}" alt="${altText}"${widthAttr} />`;
 }

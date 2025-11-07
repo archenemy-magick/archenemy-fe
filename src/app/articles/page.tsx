@@ -1,21 +1,20 @@
 "use client";
 
 import {
-  Container,
-  Title,
-  Text,
-  Stack,
-  Card,
-  Group,
-  Badge,
-  Image,
-  Grid,
   Button,
+  Card,
+  Container,
+  Grid,
+  Group,
+  Image,
+  Stack,
+  Text,
+  Title,
 } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { IconArrowRight, IconClock, IconEye } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import { getPublishedArticles, Article } from "~/lib/api/articles";
-import { IconClock, IconEye, IconArrowRight } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { Article, getPublishedArticles } from "~/lib/api/articles";
 
 export default function ArticlesPage() {
   const router = useRouter();
