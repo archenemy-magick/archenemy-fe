@@ -1,7 +1,7 @@
-import { Card, Image, Badge, Stack, Tooltip, ActionIcon } from "@mantine/core";
+import { ActionIcon, Badge, Card, Image, Stack, Tooltip } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { IconEye } from "@tabler/icons-react";
 import { CustomArchenemyCard } from "~/types";
-import { useMediaQuery } from "@mantine/hooks";
 
 interface CheckableCardProps {
   card: CustomArchenemyCard;
