@@ -8,8 +8,6 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   return (
     <Stack gap="sm" m="sm">
-      <Title order={1}>Archenemy</Title>
-
       <main>{children}</main>
     </Stack>
   );
