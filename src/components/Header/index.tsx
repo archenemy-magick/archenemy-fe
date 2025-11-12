@@ -61,6 +61,13 @@ const Header = ({
           <LinkButton
             variant="transparent"
             className={classes.control}
+            href="/game/dungeons"
+          >
+            Dungeon Tracker
+          </LinkButton>
+          <LinkButton
+            variant="transparent"
+            className={classes.control}
             href="/popular-cards"
           >
             Popular Cards

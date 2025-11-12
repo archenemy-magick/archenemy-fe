@@ -133,10 +133,17 @@ const AppShellLayout = ({ children }: { children: React.ReactNode }) => {
           {/* Main Navigation */}
           <Stack gap={4} style={{ flex: 1 }}>
             <NavLink
-              label="Game"
+              label="Archenemy Game"
               leftSection={<IconPlayerPlay size={20} />}
               onClick={() => handleNavigation("/game/archenemy")}
               active={pathname === "/game/archenemy"}
+              variant="subtle"
+            />
+            <NavLink
+              label="Dungeon Tracker"
+              leftSection={<IconPlayerPlay size={20} />}
+              onClick={() => handleNavigation("/game/dungeons")}
+              active={pathname === "/game/dungeons"}
               variant="subtle"
             />
 
