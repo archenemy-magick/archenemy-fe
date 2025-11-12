@@ -48,7 +48,7 @@ interface DungeonTrackerProps {
   // onComplete?: () => void;
 }
 
-const DEFAULT_COLORS = ["#ff0000", "#00ff00", "#0000ff", "#ffff00"];
+const DEFAULT_COLORS = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b"];
 const DEFAULT_NAMES = ["Player 1", "Player 2", "Player 3", "Player 4"];
 
 // Canvas dimensions
@@ -427,9 +427,9 @@ DungeonTrackerProps) => {
                     return room ? [room.position.x, room.position.y] : [];
                   })}
                   stroke={selectedPlayer.color}
-                  strokeWidth={2}
-                  opacity={0.3}
-                  dash={[5, 5]}
+                  strokeWidth={3} // Slightly thicker
+                  opacity={0.4} // Slightly more visible
+                  dash={[8, 4]} // Longer dashes
                   listening={false}
                 />
               )}
@@ -448,10 +448,11 @@ DungeonTrackerProps) => {
                       targetRoom.position.x,
                       targetRoom.position.y,
                     ]}
-                    stroke={selectedPlayer?.color || "#ffd700"}
-                    strokeWidth={3}
-                    opacity={0.6}
-                    dash={[10, 5]}
+                    stroke={selectedPlayer?.color || "#facc15"} // Use player color or gold
+                    strokeWidth={4} // Thicker lines
+                    opacity={0.7} // More visible
+                    dash={[10, 6]} // More pronounced dashes
+                    listening={false}
                   />
                 );
               })}
@@ -484,30 +485,30 @@ DungeonTrackerProps) => {
                     radius={25}
                     fill={
                       isCurrentRoom
-                        ? `${selectedPlayer?.color}80`
+                        ? `${selectedPlayer?.color}60` // Less opaque for better visibility
                         : canDropHere
                         ? isConnected
-                          ? "rgba(255, 215, 0, 0.5)"
-                          : "rgba(255, 165, 0, 0.5)"
+                          ? "rgba(250, 204, 21, 0.5)" // Brighter gold for forward moves
+                          : "rgba(251, 146, 60, 0.5)" // Brighter orange for backward moves
                         : isVisited
-                        ? "rgba(100, 100, 255, 0.3)"
-                        : "rgba(200, 200, 200, 0.2)"
+                        ? "rgba(147, 197, 253, 0.35)" // Softer blue for visited
+                        : "rgba(156, 163, 175, 0.25)" // Subtle gray for unvisited
                     }
                     stroke={
                       isCurrentRoom
                         ? selectedPlayer?.color
                         : canDropHere
                         ? isConnected
-                          ? "#ffd700"
-                          : "#ffa500"
+                          ? "#facc15" // Brighter gold
+                          : "#fb923c" // Brighter orange
                         : isConnected
                         ? selectedPlayer?.color
                         : isVisited
-                        ? "#6666ff"
-                        : "#cccccc"
+                        ? "#60a5fa" // Lighter blue
+                        : "#9ca3af" // Medium gray
                     }
                     strokeWidth={canDropHere ? 4 : isHovered ? 4 : 2}
-                    opacity={isHovered || canDropHere ? 1 : 0.8}
+                    opacity={isHovered || canDropHere ? 1 : 0.85}
                     onMouseEnter={() => setHoveredRoom(room.name)}
                     onMouseLeave={() => setHoveredRoom(null)}
                     onClick={() => handleRoomClick(room.name)}
@@ -540,12 +541,12 @@ DungeonTrackerProps) => {
                     <Circle
                       x={actualPosition.x}
                       y={actualPosition.y}
-                      radius={12}
+                      radius={14} // Slightly larger
                       fill={player.color}
                       stroke="#ffffff"
                       strokeWidth={
-                        isSelected ? 3 : hoveredPlayerId === player.id ? 2.5 : 2
-                      }
+                        isSelected ? 4 : hoveredPlayerId === player.id ? 3 : 2.5
+                      } // Thicker borders
                       draggable={true}
                       onClick={() => {
                         if (!isDragging) {
@@ -579,19 +580,19 @@ DungeonTrackerProps) => {
                       }
                       shadowBlur={
                         isDragging && isSelected
-                          ? 10
+                          ? 12
                           : hoveredPlayerId === player.id
-                          ? 5
+                          ? 8
                           : 0
                       }
                       shadowOpacity={
                         isDragging && isSelected
-                          ? 0.6
+                          ? 0.7
                           : hoveredPlayerId === player.id
-                          ? 0.3
+                          ? 0.4
                           : 0
                       }
-                      opacity={isDragging && isSelected ? 0.8 : 1}
+                      opacity={1} // Full opacity for player tokens
                       onMouseEnter={(e) => {
                         setHoveredPlayerId(player.id);
                         const container = e.target.getStage()?.container();
@@ -609,10 +610,10 @@ DungeonTrackerProps) => {
                     />
 
                     <Text
-                      x={actualPosition.x - 4}
-                      y={actualPosition.y - 6}
+                      x={actualPosition.x - 5} // Adjusted for larger circle
+                      y={actualPosition.y - 7} // Adjusted for larger circle
                       text={player.id.toUpperCase().replace("P", "")}
-                      fontSize={12}
+                      fontSize={14} // Slightly larger text
                       fill="#ffffff"
                       fontStyle="bold"
                       listening={false}
