@@ -313,9 +313,9 @@ DungeonTrackerProps) => {
       <Group justify="space-between" wrap="wrap">
         <div>
           <Title order={2}>{dungeon.name}</Title>
-          <MantineText size="sm" c="dimmed">
+          {/* <MantineText size="sm" c="dimmed">
             Local Multiplayer
-          </MantineText>
+          </MantineText> */}
         </div>
         <Group gap="xs">
           <Button

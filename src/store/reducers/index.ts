@@ -1,36 +1,37 @@
 export {
-  gameSlice,
-  endGame,
-  selectDeck,
-  startGame,
   abandonScheme,
   chooseSingleCard,
   clearSavedGame,
+  endGame,
+  gameSlice,
   loadGameState,
   saveGameState,
+  selectDeck,
+  selectDungeon,
   shuffleCardPool,
+  startGame,
   undoLastCard,
+  clearDungeonSelection,
 } from "./gameReducer";
-export type { InitialGameState } from "./gameReducer";
-export type { InitialCardsState } from "./gameReducer";
+export type { InitialCardsState, InitialGameState } from "./gameReducer";
 
 export {
-  deckBuilderSlice,
   addCard,
-  removeCard,
   clearSelectedCards,
+  deckBuilderSlice,
+  removeCard,
   setDeckName,
 } from "./deckBuilderReducer";
 export type { InitialDeckBuilderState } from "./deckBuilderReducer";
 
 export {
-  userSlice,
-  setUser,
+  checkAuth,
   clearError,
-  signUp,
+  setUser,
   signIn,
   signOut,
-  checkAuth,
+  signUp,
   updateUserAvatar,
+  userSlice,
 } from "./userReducer";
 export type { InitialUserState } from "./userReducer";

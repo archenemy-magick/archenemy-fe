@@ -23,6 +23,7 @@ export type InitialGameState = {
     action: "played" | "abandoned" | "undone";
     timestamp: number;
   }[];
+  dungeonId?: string;
 };
 
 export const initialGameState: InitialGameState = {
@@ -37,6 +38,7 @@ export const initialGameState: InitialGameState = {
   },
   decks: [],
   gameHistory: [],
+  dungeonId: undefined,
 };
 
 // Helper function to shuffle array
@@ -197,6 +199,22 @@ const gameSliceReducer = {
       localStorage.removeItem("archenemyGameState");
     }
   },
+
+  selectDungeon(
+    state: InitialGameState,
+    action: { payload: { dungeonId: string } }
+  ) {
+    console.log(
+      "In the reducer, selecting dungeon ID:",
+      action.payload.dungeonId
+    );
+
+    state.dungeonId = action.payload.dungeonId;
+  },
+
+  clearDungeonSelection(state: InitialGameState) {
+    state.dungeonId = undefined;
+  },
 };
 
 export const gameSlice = createSlice({
@@ -226,4 +244,6 @@ export const {
   saveGameState,
   loadGameState,
   clearSavedGame,
+  selectDungeon,
+  clearDungeonSelection,
 } = gameSlice.actions;

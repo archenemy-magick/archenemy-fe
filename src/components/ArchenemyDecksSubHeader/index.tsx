@@ -3,6 +3,7 @@
 import { Tabs, Group, Title, Text, Box } from "@mantine/core";
 import { useRouter, usePathname } from "next/navigation";
 import { IconPlus, IconWorld, IconCards } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 
 interface DecksSubHeaderProps {
   title?: string;
@@ -14,17 +15,23 @@ const DecksSubHeader = ({ title, subtitle }: DecksSubHeaderProps) => {
   const pathname = usePathname();
 
   const getActiveTab = () => {
-    if (pathname === "/decks") return "my-decks";
-    if (pathname === "/decks/public") return "public";
-    if (pathname.startsWith("/decks/builder")) return "builder";
+    if (pathname === "/archenemy/decks") return "my-decks";
+    if (pathname === "/archenemy/decks/public") return "public";
+    if (pathname.startsWith("/archenemy/decks/builder")) return "builder";
     return "my-decks";
   };
 
   const handleTabChange = (value: string | null) => {
-    if (value === "my-decks") router.push("/decks");
-    if (value === "public") router.push("/decks/public");
-    if (value === "builder") router.push("/decks/builder");
+    if (value === "my-decks") router.push("/archenemy/decks");
+    if (value === "public") router.push("/archenemy/decks/public");
+    if (value === "builder") router.push("/archenemy/decks/builder");
   };
+
+  // const [tab, setTab] = useState<string>(getActiveTab());
+
+  // useEffect(() => {
+  //   setTab(getActiveTab());
+  // }, [pathname]);
 
   return (
     <Box

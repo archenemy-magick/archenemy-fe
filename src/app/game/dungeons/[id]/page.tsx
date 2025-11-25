@@ -3,18 +3,19 @@
 
 import { useEffect, useState } from "react";
 import { Container, Stack, Button, Group } from "@mantine/core";
-import { useParams, useRouter } from "next/navigation";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { getDungeonById } from "~/lib/api/dungeons";
 import { DungeonCard } from "~/types/dungeon";
 import { DungeonTracker } from "~/components/DungeonTracker";
 import { notifications } from "@mantine/notifications";
 
-export default function DungeonGameInstancePage() {
-  const params = useParams();
-  const router = useRouter();
-  const dungeonId = params.id as string;
-
+export default function DungeonGameInstancePage({
+  dungeonId,
+  handleBackToDungeonSelection,
+}: {
+  dungeonId: string;
+  handleBackToDungeonSelection: () => void;
+}) {
   const [dungeon, setDungeon] = useState<DungeonCard | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -38,14 +39,6 @@ export default function DungeonGameInstancePage() {
     }
   };
 
-  // const handleComplete = () => {
-  //   notifications.show({
-  //     title: "Dungeon Completed!",
-  //     message: `You've conquered ${dungeon?.name}!`,
-  //     color: "green",
-  //   });
-  // };
-
   if (loading) {
     return (
       <Container>
@@ -63,23 +56,23 @@ export default function DungeonGameInstancePage() {
   }
 
   return (
-    <Container size="lg" py="xl">
-      <Stack gap="xl">
-        <Group>
-          <Button
-            leftSection={<IconArrowLeft size={16} />}
-            variant="subtle"
-            onClick={() => router.push("/game/dungeons")}
-          >
-            Back to Dungeon Selection
-          </Button>
-        </Group>
+    // <Container size="lg" py="xl">
+    <Stack gap="xl">
+      <Group>
+        <Button
+          leftSection={<IconArrowLeft size={16} />}
+          variant="subtle"
+          onClick={() => handleBackToDungeonSelection()}
+        >
+          Back to Dungeon Selection
+        </Button>
+      </Group>
 
-        <DungeonTracker
-          dungeon={dungeon}
-          // onComplete={handleComplete}
-        />
-      </Stack>
-    </Container>
+      <DungeonTracker
+        dungeon={dungeon}
+        // onComplete={handleComplete}
+      />
+    </Stack>
+    // </Container>
   );
 }

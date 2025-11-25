@@ -9,6 +9,41 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: false,
   },
+  async redirects() {
+    return [
+      // Redirect old deck builder to new Archenemy decks section
+      {
+        source: "/decks/builder",
+        destination: "/archenemy/decks/builder",
+        permanent: true, // 301 redirect
+      },
+      {
+        source: "/decks/builder/:path*",
+        destination: "/archenemy/decks/builder/:path*",
+        permanent: true,
+      },
+
+      // Redirect old popular cards to new Archenemy section
+      {
+        source: "/popular-cards",
+        destination: "/archenemy/decks/popular",
+        permanent: true,
+      },
+
+      // Redirect old /decks to new structure
+      // This should come AFTER the /decks/builder redirect to avoid conflicts
+      {
+        source: "/decks",
+        destination: "/archenemy/decks",
+        permanent: true,
+      },
+      {
+        source: "/decks/:path*",
+        destination: "/archenemy/decks/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withPWA({

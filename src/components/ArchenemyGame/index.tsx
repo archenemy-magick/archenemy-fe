@@ -30,7 +30,7 @@ import {
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import DeckSelectorModal from "~/components/DeckSelectorModal";
+import ArchenemyDeckSelectorModal from "~/components/ArchenemyDeckSelectorModal";
 import type { RootState } from "~/store";
 import type { AppDispatch } from "~/store/configureStore";
 import {
@@ -159,7 +159,7 @@ const ArchenemyGame = () => {
       }}
     >
       {decks?.length > 0 && (
-        <DeckSelectorModal
+        <ArchenemyDeckSelectorModal
           open={!gameStarted && !deckSelected}
           onClose={closeDeckModal}
           onSelectDeck={handleSelectDeck}
