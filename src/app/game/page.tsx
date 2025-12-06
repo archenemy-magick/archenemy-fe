@@ -10,12 +10,19 @@ import {
   Box,
   ActionIcon,
   Group,
+  Button,
 } from "@mantine/core";
 import {
   IconSword,
   IconMapSearch,
   IconHeart,
   IconPlus,
+
+  //   sad;lfkja;dflkas;dlkjf;aslkdjf;lasdf;lasdf
+
+  // NEED TO UPDATE THIS SO THAT ROUTES DON'T AUTO LINK TO ARCHENEMY, AND WE CAN START WITH NO "TABS" OPENEDx
+
+  //   ad;flkasd;lkjas;dlkjfsdf
   IconX,
 } from "@tabler/icons-react";
 import ArchenemyGame from "../../components/ArchenemyGame";
@@ -129,35 +136,35 @@ export default function GamePage() {
             </div>
             <Group gap="xs">
               {!openUtilities.has("archenemy") && (
-                <ActionIcon
+                <Button
                   variant="light"
                   size="lg"
                   onClick={() => addTab("archenemy")}
                   title="Add Archenemy"
                 >
-                  <IconSword size={18} />
-                </ActionIcon>
+                  <IconSword size={18} /> &nbsp; Archenemy
+                </Button>
               )}
               {!openUtilities.has("dungeons") && (
-                <ActionIcon
+                <Button
                   variant="light"
                   size="lg"
                   onClick={() => addTab("dungeons")}
                   title="Add Dungeon Tracker"
                 >
-                  <IconMapSearch size={18} />
-                </ActionIcon>
+                  <IconMapSearch size={18} /> &nbsp; Dungeons
+                </Button>
               )}
-              {!openUtilities.has("life-tracker") && (
-                <ActionIcon
+              {/* {!openUtilities.has("life-tracker") && (
+                <Button
                   variant="light"
                   size="lg"
                   onClick={() => addTab("life-tracker")}
                   title="Add Life Tracker"
                 >
                   <IconHeart size={18} />
-                </ActionIcon>
-              )}
+                </Button>
+              )} */}
             </Group>
           </Group>
         </Box>

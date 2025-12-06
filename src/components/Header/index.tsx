@@ -54,7 +54,7 @@ const Header = ({
           <LinkButton
             variant="transparent"
             className={classes.control}
-            href="/game/archenemy"
+            href="/game"
           >
             Game
           </LinkButton>
