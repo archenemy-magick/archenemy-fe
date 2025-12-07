@@ -1,28 +1,34 @@
 // lib/utils/dungeonParser.ts
 import { DungeonRoom } from "~/types/dungeon";
+import { dungeonConnections } from "./dungeonConnections";
 
 /**
  * Parse dungeon oracle text into structured room data
+ * Now combines oracle text effects with manual connection data
  */
-export function parseDungeonRooms(oracleText: string): DungeonRoom[] {
+export function parseDungeonRooms(
+  oracleText: string,
+  dungeonName: string
+): DungeonRoom[] {
   const rooms: DungeonRoom[] = [];
+  const connections = dungeonConnections[dungeonName] || {};
 
   // Split by lines and process each room
   const lines = oracleText.split("\n").filter((line) => line.trim());
 
   for (const line of lines) {
-    // Match pattern: "Room Name — Effect (Leads to: Room1, Room2)"
-    const match = line.match(
-      /^([^—]+)\s*—\s*([^(]+)(?:\(Leads to:\s*([^)]+)\))?/
-    );
+    // Match pattern: "Room Name — Effect"
+    // The oracle text from Scryfall doesn't include (Leads to: ...) so we use manual data
+    const match = line.match(/^([^—]+)\s*—\s*(.+)$/);
 
     if (match) {
-      const [, name, effect, leadsTo] = match;
+      const [, name, effect] = match;
+      const roomName = name.trim();
 
       rooms.push({
-        name: name.trim(),
+        name: roomName,
         effect: effect.trim(),
-        leadsTo: leadsTo ? leadsTo.split(",").map((s) => s.trim()) : [],
+        leadsTo: connections[roomName] || [], // Get connections from manual data
         position: { x: 0, y: 0 }, // Will be set by layout data
       });
     }

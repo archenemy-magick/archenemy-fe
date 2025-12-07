@@ -1,34 +1,29 @@
 "use client";
 
-import { useState } from "react";
 import {
-  Container,
-  Tabs,
-  Title,
-  Text,
-  Stack,
-  Box,
   ActionIcon,
-  Group,
+  Box,
   Button,
+  Container,
+  Group,
+  Stack,
+  Tabs,
+  Text,
+  Title,
 } from "@mantine/core";
 import {
-  IconSword,
-  IconMapSearch,
   IconHeart,
-  IconPlus,
-
+  IconMapSearch,
+  IconSword,
   //   sad;lfkja;dflkas;dlkjf;aslkdjf;lasdf;lasdf
-
   // NEED TO UPDATE THIS SO THAT ROUTES DON'T AUTO LINK TO ARCHENEMY, AND WE CAN START WITH NO "TABS" OPENEDx
-
   //   ad;flkasd;lkjas;dlkjfsdf
   IconX,
 } from "@tabler/icons-react";
+import { useState } from "react";
 import ArchenemyGame from "../../components/ArchenemyGame";
-import { DungeonGameSelector } from "~/components/DungeonGameSelector";
-import DungeonGameInstancePage from "./dungeons/[id]/page";
-import DungeonGamePage from "./dungeons/page";
+// import { DungeonGameSelector } from "~/components/DungeonGameSelector";
+import DungeonContainer from "~/components/DungeonContainer";
 
 // import { DungeonTracker } from '~/components/game/DungeonTracker';
 // import { LifeTracker } from '~/components/game/LifeTracker';
@@ -99,7 +94,7 @@ export default function GamePage() {
           <Box p="md">
             {/* <DungeonGameSelector /> */}
             {/* <DungeonGameInstancePage /> */}
-            <DungeonGamePage />
+            <DungeonContainer />
           </Box>
         );
       case "life-tracker":

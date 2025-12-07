@@ -83,7 +83,7 @@ DungeonTrackerProps) => {
 
   // Parse and layout rooms
   const rooms = useMemo(() => {
-    const parsed = parseDungeonRooms(dungeon.oracle_text);
+    const parsed = parseDungeonRooms(dungeon.oracle_text, dungeon.name);
     return applyLayoutToRooms(dungeon.name, parsed);
   }, [dungeon.oracle_text, dungeon.name]);
 
