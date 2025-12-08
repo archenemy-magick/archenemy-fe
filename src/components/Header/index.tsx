@@ -54,9 +54,16 @@ const Header = ({
           <LinkButton
             variant="transparent"
             className={classes.control}
-            href="/game/archenemy"
+            href="/game"
           >
-            Archenemy Game
+            Game
+          </LinkButton>
+          <LinkButton
+            variant="transparent"
+            className={classes.control}
+            href="/archenemy"
+          >
+            Archenemy
           </LinkButton>
           <LinkButton
             variant="transparent"
@@ -77,7 +84,7 @@ const Header = ({
             className={classes.control}
             href="/decks"
           >
-            Decks
+            Archenemy Decks
           </LinkButton>
         </Group>
       </Group>

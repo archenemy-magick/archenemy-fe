@@ -51,37 +51,22 @@ export const dungeonLayouts: Record<
   },
 
   "Baldur's Gate Wilderness": {
-    // Row 1: 1 room (centered, top)
     "Crash Landing": { x: 250, y: 125 },
-
-    // Row 2: 3 rooms
     "Goblin Camp": { x: 115, y: 185 },
     "Emerald Grove": { x: 250, y: 185 },
     "Auntie's Teahouse": { x: 385, y: 185 },
-
-    // Row 3: 2 rooms
     "Defiled Temple": { x: 165, y: 245 },
     "Mountain Pass": { x: 335, y: 245 },
-
-    // Row 4: 3 rooms
     "Ebonlake Grotto": { x: 115, y: 300 },
     Grymforge: { x: 250, y: 300 },
     "Githyanki Crèche": { x: 385, y: 300 },
-
-    // Row 5: 2 rooms
     "Last Light Inn": { x: 165, y: 375 },
     "Reithwin Tollhouse": { x: 335, y: 375 },
-
-    // Row 6: 3 rooms
     "Moonrise Towers": { x: 115, y: 435 },
     "Gauntlet of Shar": { x: 250, y: 435 },
     "Balthazar's Lab": { x: 385, y: 435 },
-
-    // Row 7: 2 rooms
     "Circus of the Last Days": { x: 165, y: 495 },
     "Undercity Ruins": { x: 335, y: 495 },
-
-    // Row 8: 3 rooms (final row, bottom)
     "Steel Watch Foundry": { x: 115, y: 570 },
     "Ansur's Sanctum": { x: 250, y: 570 },
     "Temple of Bhaal": { x: 385, y: 570 },

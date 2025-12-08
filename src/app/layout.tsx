@@ -22,7 +22,8 @@ export const metadata: Metadata = {
     template: "%s | MagicSAK",
   },
   description:
-    "Build and play Magic: The Gathering Archenemy scheme decks and use other MTG tools. Create powerful decks, play with friends, and join a growing community.",
+    "Essential utilities for Magic: The Gathering. Track games, build decks, and enhance your MTG experience.",
+
   keywords: [
     "Magic The Gathering",
     "MTG",

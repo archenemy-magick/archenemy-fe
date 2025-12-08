@@ -83,7 +83,7 @@ DungeonTrackerProps) => {
 
   // Parse and layout rooms
   const rooms = useMemo(() => {
-    const parsed = parseDungeonRooms(dungeon.oracle_text);
+    const parsed = parseDungeonRooms(dungeon.oracle_text, dungeon.name);
     return applyLayoutToRooms(dungeon.name, parsed);
   }, [dungeon.oracle_text, dungeon.name]);
 
@@ -313,9 +313,9 @@ DungeonTrackerProps) => {
       <Group justify="space-between" wrap="wrap">
         <div>
           <Title order={2}>{dungeon.name}</Title>
-          <MantineText size="sm" c="dimmed">
+          {/* <MantineText size="sm" c="dimmed">
             Local Multiplayer
-          </MantineText>
+          </MantineText> */}
         </div>
         <Group gap="xs">
           <Button

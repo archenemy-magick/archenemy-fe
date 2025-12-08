@@ -14,18 +14,18 @@ import {
   Paper,
   Transition,
 } from "@mantine/core";
-import { useRouter } from "next/navigation";
 import { useMediaQuery } from "@mantine/hooks"; // ADD THIS
 import { getAllDungeons } from "~/lib/api/dungeons";
 import { DungeonCard } from "~/types/dungeon";
+import { selectDungeon } from "~/store/reducers";
+import { useDispatch } from "react-redux";
 
 export function DungeonGameSelector() {
-  const router = useRouter();
   const [dungeons, setDungeons] = useState<DungeonCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDungeon, setSelectedDungeon] = useState<string | null>(null);
+  const dispatch = useDispatch();
 
-  // NEW: Check if mobile
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   useEffect(() => {
@@ -45,7 +45,9 @@ export function DungeonGameSelector() {
 
   const handleStartDungeon = () => {
     if (selectedDungeon) {
-      router.push(`/game/dungeons/${selectedDungeon}`);
+      console.log("Starting dungeon with ID:", selectedDungeon);
+
+      dispatch(selectDungeon({ dungeonId: selectedDungeon }));
     }
   };
 

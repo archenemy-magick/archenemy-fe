@@ -27,8 +27,8 @@ import {
   IconWand,
   IconChevronDown,
 } from "@tabler/icons-react";
-import CheckableCard from "../../../components/common/CheckableCard/CheckableCard";
-import type { AppDispatch, RootState } from "../../../store";
+import CheckableCard from "~/components/common/CheckableCard/CheckableCard";
+import type { AppDispatch, RootState } from "~/store";
 import {
   addCard,
   removeCard,
@@ -36,14 +36,14 @@ import {
   clearEditingDeck,
   addCards,
   clearSelectedCards,
-} from "../../../store/reducers/deckBuilderReducer";
+} from "~/store/reducers/deckBuilderReducer";
 import {
   fetchAllArchenemyCards,
   saveArchenemyDeck,
   updateArchenemyDeck,
 } from "~/store/thunks";
 import { useDisclosure } from "@mantine/hooks";
-import SaveDeckModal from "../../../components/SaveDeckModal";
+import SaveDeckModal from "~/components/SaveDeckModal";
 import { CustomArchenemyCard } from "~/types";
 import { notifications } from "@mantine/notifications";
 import { getDeckById } from "~/lib/api/decks";
