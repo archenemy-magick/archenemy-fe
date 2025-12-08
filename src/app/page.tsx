@@ -183,7 +183,7 @@ const HomePage = () => {
             </Title>
             <Text size="lg" c="dimmed" maw={600}>
               Run multiple game utilities simultaneously. Switch between formats
-              without losing your state. True power at your fingertips.
+              without losing your game state. True power at your fingertips.
             </Text>
           </Stack>
 
@@ -211,7 +211,7 @@ const HomePage = () => {
               </ThemeIcon>
               <Box style={{ flex: 1 }}>
                 <Text fw={700} size="xl" mb="xs">
-                  Tabbed Interface
+                  Utilities{" "}
                 </Text>
                 <Text c="dimmed" size="lg">
                   Track Archenemy schemes in one tab, navigate dungeons in
