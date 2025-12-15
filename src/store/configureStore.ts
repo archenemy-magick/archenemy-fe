@@ -4,13 +4,19 @@ import {
   InitialDeckBuilderState,
   InitialGameState,
   InitialUserState,
+  lifeTrackerSlice,
   userSlice,
 } from "./reducers";
 
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 
-import { persistStore, persistReducer } from "redux-persist";
+import { persistReducer, persistStore } from "redux-persist";
 import createWebStorage from "redux-persist/lib/storage/createWebStorage";
+import { InitialLifeTrackerState } from "./reducers/lifeTrackerReducer";
+import {
+  gameTabsSlice,
+  InitialGameTabsState,
+} from "./reducers/gameTabsReducer";
 
 const createNoopStorage = () => {
   return {
@@ -63,6 +69,8 @@ const reducers = combineReducers({
   game: persistedGameReducer,
   deckBuilder: persistedDeckBuilderReducer,
   user: persistedUserReducer,
+  lifeTracker: lifeTrackerSlice.reducer,
+  gameTabs: gameTabsSlice.reducer,
 });
 
 const persistedReducer = persistReducer(persistRootConfig, reducers);
@@ -84,5 +92,7 @@ export type RootState = {
   game: InitialGameState;
   deckBuilder: InitialDeckBuilderState;
   user: InitialUserState;
+  lifeTracker: InitialLifeTrackerState;
+  gameTabs: InitialGameTabsState;
 };
 export type AppDispatch = typeof store.dispatch;

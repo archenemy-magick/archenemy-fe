@@ -48,7 +48,7 @@ import {
 import fetchAllArchenemyDecks from "~/store/thunks/fetchAllDecks";
 import { CustomArchenemyCard } from "~/types";
 
-const ArchenemyGame = () => {
+const ArchenemyGame = ({ tabId = "default" }: { tabId?: string }) => {
   const dispatch = useDispatch<AppDispatch>();
 
   const handleSelectDeck = (deckId: string) => {

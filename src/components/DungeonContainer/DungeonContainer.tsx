@@ -12,7 +12,11 @@ import { clearDungeonSelection } from "~/store/reducers/gameReducer";
 import { DungeonCard } from "~/types/dungeon";
 import { DungeonGameSelector } from "../DungeonGameSelector";
 
-export default function DungeonGameInstancePage() {
+export default function DungeonGameInstancePage({
+  tabId = "default",
+}: {
+  tabId?: string;
+}) {
   const dispatch = useDispatch();
   const [dungeon, setDungeon] = useState<DungeonCard | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,11 +26,6 @@ export default function DungeonGameInstancePage() {
     dispatch(clearDungeonSelection());
     setDungeon(null);
   };
-
-  useEffect(() => {
-    console.log("dungeonId", dungeonId);
-    console.log("dungeon", dungeon);
-  }, [dungeonId, dungeon]);
 
   useEffect(() => {
     loadDungeon();

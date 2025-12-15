@@ -22,7 +22,6 @@ import {
   Badge,
   Select,
 } from "@mantine/core";
-import { IconArrowBack, IconPlus, IconMinus } from "@tabler/icons-react";
 import { useMediaQuery } from "@mantine/hooks"; // ADD THIS IMPORT
 import { DungeonCard, DungeonRoom } from "~/types/dungeon";
 import {
@@ -33,6 +32,7 @@ import {
 } from "~/lib/utils/dungeonParser";
 import { applyLayoutToRooms } from "~/lib/data/dungeonLayouts";
 import type { KonvaEventObject } from "konva/lib/Node";
+import DungeonActionsMenu from "./DungeonActionsMenu";
 
 interface Player {
   id: string;
@@ -116,8 +116,6 @@ DungeonTrackerProps) => {
     : null;
   const finalRooms = getFinalRooms(rooms);
 
-  const canUndo = selectedPlayer && selectedPlayer.visitedRooms.length > 1;
-
   // Add player
   const handleAddPlayer = () => {
     if (players.length >= 4) {
@@ -139,12 +137,12 @@ DungeonTrackerProps) => {
   };
 
   // Remove player
-  const handleRemovePlayer = () => {
+  const handleRemovePlayer = (playerId: string) => {
     if (players.length <= 1) {
       return;
     }
 
-    const remainingPlayers = players.filter((p) => p.id !== selectedPlayerId);
+    const remainingPlayers = players.filter((p) => p.id !== playerId);
     setPlayers(remainingPlayers);
     setSelectedPlayerId(remainingPlayers[0].id);
   };
@@ -192,27 +190,6 @@ DungeonTrackerProps) => {
         )
       );
     }
-  };
-
-  // Undo player move
-  const handleUndo = () => {
-    if (!canUndo || !selectedPlayer) return;
-
-    setPlayers((prev) =>
-      prev.map((p) => {
-        if (p.id === selectedPlayerId) {
-          const newVisited = p.visitedRooms.slice(0, -1);
-          const previousRoom = newVisited[newVisited.length - 1];
-          return {
-            ...p,
-            currentRoom: previousRoom,
-            visitedRooms: newVisited,
-            completed: false,
-          };
-        }
-        return p;
-      })
-    );
   };
 
   // Reset all players
@@ -304,97 +281,51 @@ DungeonTrackerProps) => {
     };
   };
 
+  // if (!dungeon) {
+  //   return <MantineText>Error: Dungeon data not found</MantineText>;
+  // }
+
   if (!currentRoom) {
     return <MantineText>Error: Could not parse dungeon rooms</MantineText>;
   }
 
   return (
-    <Stack gap="md">
-      <Group justify="space-between" wrap="wrap">
+    <Stack>
+      <Group justify="space-between" wrap="wrap" mx="md">
         <div>
           <Title order={2}>{dungeon.name}</Title>
           {/* <MantineText size="sm" c="dimmed">
             Local Multiplayer
           </MantineText> */}
         </div>
-        <Group gap="xs">
-          <Button
-            size="xs"
-            variant="light"
-            leftSection={<IconPlus size={14} />}
-            onClick={handleAddPlayer}
-            disabled={players.length >= 4}
-          >
-            {isMobile ? "+" : "Add Player"}
-          </Button>
-          <Button
-            size="xs"
-            variant="light"
-            color="red"
-            leftSection={<IconMinus size={14} />}
-            onClick={handleRemovePlayer}
-            disabled={players.length <= 1}
-          >
-            {isMobile ? "-" : "Remove"}
-          </Button>
-          <Button size="xs" variant="light" onClick={handleReset}>
-            Reset
-          </Button>
-        </Group>
+        <DungeonActionsMenu
+          onAddPlayer={handleAddPlayer}
+          onRemovePlayer={handleRemovePlayer}
+          onReset={handleReset}
+          // onBack={handleBackToSelection}
+          players={players}
+          maxPlayers={9}
+        />
       </Group>
 
       {/* Player selector and controls */}
-      <Card withBorder>
-        <Stack gap="md">
-          <Group wrap="wrap">
-            <Select
-              label="Active Player"
-              value={selectedPlayerId}
-              onChange={(value) => value && setSelectedPlayerId(value)}
-              data={players.map((p) => ({
-                value: p.id,
-                label: `${p.name} ${p.completed ? "✓" : ""}`,
-              }))}
-              style={{ flex: 1, minWidth: 150 }}
-            />
-
-            <div style={{ marginTop: isMobile ? 0 : "auto" }}>
-              <Badge
-                size="lg"
-                color={selectedPlayer?.completed ? "green" : "blue"}
-                leftSection={
-                  <div
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      backgroundColor: selectedPlayer?.color,
-                    }}
-                  />
-                }
-              >
-                {selectedPlayer?.completed
-                  ? "Done!"
-                  : `${selectedPlayer?.visitedRooms.length}/${rooms.length}`}
-              </Badge>
-            </div>
-
-            <Button
-              size="xs"
-              variant="light"
-              color="orange"
-              leftSection={<IconArrowBack size={14} />}
-              onClick={handleUndo}
-              disabled={!canUndo}
-            >
-              Undo
-            </Button>
-          </Group>
-        </Stack>
-      </Card>
+      <Stack mx="md">
+        <Group wrap="wrap">
+          <Select
+            label="Active Player"
+            value={selectedPlayerId}
+            onChange={(value) => value && setSelectedPlayerId(value)}
+            data={players.map((p) => ({
+              value: p.id,
+              label: `${p.name} ${p.completed ? "✓" : ""}`,
+            }))}
+            style={{ flex: 1, minWidth: 150 }}
+          />
+        </Group>
+      </Stack>
 
       {/* Canvas with dungeon visualization - NEW: Scaled and responsive */}
-      <Card withBorder p={0} style={{ overflow: "hidden" }} ref={containerRef}>
+      <Card p={0} style={{ overflow: "hidden" }} ref={containerRef}>
         <div
           style={{
             width: "100%",
@@ -485,27 +416,27 @@ DungeonTrackerProps) => {
                     radius={25}
                     fill={
                       isCurrentRoom
-                        ? `${selectedPlayer?.color}60` // Less opaque for better visibility
+                        ? `${selectedPlayer?.color}60`
                         : canDropHere
                         ? isConnected
-                          ? "rgba(250, 204, 21, 0.5)" // Brighter gold for forward moves
-                          : "rgba(251, 146, 60, 0.5)" // Brighter orange for backward moves
+                          ? "rgba(250, 204, 21, 0.5)"
+                          : "rgba(251, 146, 60, 0.5)"
                         : isVisited
-                        ? "rgba(147, 197, 253, 0.35)" // Softer blue for visited
-                        : "rgba(156, 163, 175, 0.25)" // Subtle gray for unvisited
+                        ? "rgba(147, 197, 253, 0.35)"
+                        : "rgba(156, 163, 175, 0.25)"
                     }
                     stroke={
                       isCurrentRoom
                         ? selectedPlayer?.color
                         : canDropHere
                         ? isConnected
-                          ? "#facc15" // Brighter gold
-                          : "#fb923c" // Brighter orange
+                          ? "#facc15"
+                          : "#fb923c"
                         : isConnected
                         ? selectedPlayer?.color
                         : isVisited
-                        ? "#60a5fa" // Lighter blue
-                        : "#9ca3af" // Medium gray
+                        ? "#60a5fa"
+                        : "#9ca3af"
                     }
                     strokeWidth={canDropHere ? 4 : isHovered ? 4 : 2}
                     opacity={isHovered || canDropHere ? 1 : 0.85}
@@ -625,88 +556,6 @@ DungeonTrackerProps) => {
           </Stage>
         </div>
       </Card>
-
-      {/* Current room info */}
-      <Card withBorder>
-        <Stack gap="xs">
-          <Group justify="space-between">
-            <Title order={4}>{currentRoom.name}</Title>
-            {selectedPlayer?.completed && (
-              <Badge color="green">Final Room!</Badge>
-            )}
-          </Group>
-          <MantineText size="sm">{currentRoom.effect}</MantineText>
-
-          {currentRoom.leadsTo.length > 0 && (
-            <div>
-              <MantineText size="xs" c="dimmed" fw={600}>
-                Available paths:
-              </MantineText>
-              <Group gap="xs" mt={4}>
-                {currentRoom.leadsTo.map((roomName) => (
-                  <Badge key={roomName} size="sm" variant="light">
-                    {roomName}
-                  </Badge>
-                ))}
-              </Group>
-            </div>
-          )}
-        </Stack>
-      </Card>
-
-      {/* All players status */}
-      <Card withBorder>
-        <Stack gap="xs">
-          <Title order={5}>All Players</Title>
-          {players.map((player) => {
-            const playerRoom = findRoomByName(rooms, player.currentRoom);
-            return (
-              <Group key={player.id} justify="space-between" wrap="wrap">
-                <Group gap="xs">
-                  <div
-                    style={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: "50%",
-                      backgroundColor: player.color,
-                      border:
-                        player.id === selectedPlayerId
-                          ? "2px solid white"
-                          : "none",
-                    }}
-                  />
-                  <MantineText
-                    size="sm"
-                    fw={player.id === selectedPlayerId ? 600 : 400}
-                  >
-                    {player.name}
-                  </MantineText>
-                </Group>
-                <Group gap="xs">
-                  <MantineText size="xs" c="dimmed">
-                    {playerRoom?.name}
-                  </MantineText>
-                  {player.completed && (
-                    <Badge size="xs" color="green">
-                      ✓
-                    </Badge>
-                  )}
-                </Group>
-              </Group>
-            );
-          })}
-        </Stack>
-      </Card>
-
-      {/* Hovered room info */}
-      {hoveredRoomData && hoveredRoomData.name !== currentRoom.name && (
-        <Card withBorder style={{ opacity: 0.8 }}>
-          <Stack gap="xs">
-            <Title order={5}>{hoveredRoomData.name}</Title>
-            <MantineText size="sm">{hoveredRoomData.effect}</MantineText>
-          </Stack>
-        </Card>
-      )}
     </Stack>
   );
 };

@@ -1,211 +1,226 @@
+// app/game/page.tsx - Mobile-friendly with prominent buttons
 "use client";
 
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "~/store";
 import {
+  Container,
+  Title,
+  Text,
+  Button,
+  Stack,
+  Card,
+  Group,
+  Tabs,
   ActionIcon,
   Box,
-  Button,
-  Container,
-  Group,
-  Stack,
-  Tabs,
-  Text,
-  Title,
+  Menu,
 } from "@mantine/core";
 import {
-  IconHeart,
-  IconMapSearch,
   IconSword,
-  //   sad;lfkja;dflkas;dlkjf;aslkdjf;lasdf;lasdf
-  // NEED TO UPDATE THIS SO THAT ROUTES DON'T AUTO LINK TO ARCHENEMY, AND WE CAN START WITH NO "TABS" OPENEDx
-  //   ad;flkasd;lkjas;dlkjfsdf
+  IconMapSearch,
+  IconHeart,
   IconX,
+  IconPlus,
 } from "@tabler/icons-react";
-import { useState } from "react";
-import ArchenemyGame from "../../components/ArchenemyGame";
-// import { DungeonGameSelector } from "~/components/DungeonGameSelector";
+import {
+  addTab,
+  removeTab,
+  setActiveTab,
+} from "~/store/reducers/gameTabsReducer";
+import ArchenemyGame from "~/components/ArchenemyGame";
 import DungeonContainer from "~/components/DungeonContainer";
-
-// import { DungeonTracker } from '~/components/game/DungeonTracker';
-// import { LifeTracker } from '~/components/game/LifeTracker';
-
-type GameUtility = "archenemy" | "dungeons" | "life-tracker";
-
-interface GameTab {
-  id: string;
-  type: GameUtility;
-  label: string;
-  icon: React.ReactNode;
-}
-
-const utilityConfig: Record<
-  GameUtility,
-  { label: string; icon: React.ReactNode }
-> = {
-  archenemy: { label: "Archenemy", icon: <IconSword size={16} /> },
-  dungeons: { label: "Dungeons", icon: <IconMapSearch size={16} /> },
-  "life-tracker": { label: "Life Tracker", icon: <IconHeart size={16} /> },
-};
+import LifeTracker from "~/components/LifeTracker";
 
 export default function GamePage() {
-  const [tabs, setTabs] = useState<GameTab[]>([
-    {
-      id: "1",
-      type: "archenemy",
-      label: "Archenemy",
-      icon: <IconSword size={16} />,
-    },
-  ]);
-  const [activeTab, setActiveTab] = useState<string>("1");
-  const [nextId, setNextId] = useState(2);
+  const dispatch = useDispatch();
+  const { tabs, activeTabId } = useSelector(
+    (state: RootState) => state.gameTabs
+  );
 
-  const addTab = (type: GameUtility) => {
-    const config = utilityConfig[type];
-    const newTab: GameTab = {
-      id: String(nextId),
-      type,
-      label: config.label,
-      icon: config.icon,
-    };
-    setTabs([...tabs, newTab]);
-    setActiveTab(newTab.id);
-    setNextId(nextId + 1);
+  const handleAddArchenemy = () => {
+    dispatch(
+      addTab({
+        type: "archenemy",
+        label: "Archenemy Game",
+        config: { deckId: "placeholder" },
+      })
+    );
   };
 
-  const removeTab = (tabId: string) => {
-    const newTabs = tabs.filter((tab) => tab.id !== tabId);
-    setTabs(newTabs);
-
-    // If we removed the active tab, switch to the last remaining tab
-    if (activeTab === tabId && newTabs.length > 0) {
-      setActiveTab(newTabs[newTabs.length - 1].id);
-    }
+  const handleAddDungeon = () => {
+    dispatch(
+      addTab({
+        type: "dungeons",
+        label: "Dungeon Tracker",
+        config: { dungeonId: "placeholder" },
+      })
+    );
   };
 
-  const renderTabContent = (tab: GameTab) => {
+  const handleAddLifeTracker = () => {
+    dispatch(
+      addTab({
+        type: "life-tracker",
+        label: "Life Tracker",
+      })
+    );
+  };
+
+  const handleCloseTab = (tabId: string) => {
+    dispatch(removeTab(tabId));
+  };
+
+  const renderTabContent = (tabId: string) => {
+    const tab = tabs.find((t) => t.id === tabId);
+    if (!tab) return null;
+
     switch (tab.type) {
       case "archenemy":
-        return (
-          <Box p="md">
-            <ArchenemyGame />
-          </Box>
-        );
+        return <ArchenemyGame tabId={tab.id} />;
       case "dungeons":
-        return (
-          <Box p="md">
-            {/* <DungeonGameSelector /> */}
-            {/* <DungeonGameInstancePage /> */}
-            <DungeonContainer />
-          </Box>
-        );
+        return <DungeonContainer tabId={tab.id} />;
       case "life-tracker":
-        return (
-          <Box p="md">
-            {/* Replace this with your LifeTracker component when you build it */}
-            <Text>Life Tracker Component Goes Here</Text>
-            <Text size="sm" c="dimmed" mt="xs">
-              This will be your new life tracker utility
-            </Text>
-          </Box>
-        );
+        return <LifeTracker tabId={tab.id} />;
       default:
         return null;
     }
   };
 
-  // Check which utilities are already open
-  const openUtilities = new Set(tabs.map((tab) => tab.type));
+  const checkIfTabExists = (type: string) => {
+    return tabs.some((tab) => tab.type === type);
+  };
 
   return (
-    <Container size="100%" p={0} fluid>
-      <Stack gap={0}>
-        <Box
-          p="md"
-          style={{ borderBottom: "1px solid var(--mantine-color-gray-3)" }}
-        >
-          <Group justify="space-between">
-            <div>
-              <Title order={2}>Game Utilities</Title>
-              <Text c="dimmed" size="sm">
-                Open multiple game utilities in tabs
-              </Text>
-            </div>
-            <Group gap="xs">
-              {!openUtilities.has("archenemy") && (
-                <Button
-                  variant="light"
-                  size="lg"
-                  onClick={() => addTab("archenemy")}
-                  title="Add Archenemy"
-                >
-                  <IconSword size={18} /> &nbsp; Archenemy
-                </Button>
-              )}
-              {!openUtilities.has("dungeons") && (
-                <Button
-                  variant="light"
-                  size="lg"
-                  onClick={() => addTab("dungeons")}
-                  title="Add Dungeon Tracker"
-                >
-                  <IconMapSearch size={18} /> &nbsp; Dungeons
-                </Button>
-              )}
-              {/* {!openUtilities.has("life-tracker") && (
-                <Button
-                  variant="light"
-                  size="lg"
-                  onClick={() => addTab("life-tracker")}
-                  title="Add Life Tracker"
-                >
-                  <IconHeart size={18} />
-                </Button>
-              )} */}
-            </Group>
-          </Group>
-        </Box>
+    <Container size="xl" py="xl">
+      <Stack gap="lg">
+        {/* Header with Add Button */}
+        <Group justify="space-between" align="flex-start">
+          <div>
+            <Title order={1}>Game Utilities</Title>
+          </div>
 
-        <Tabs
-          value={activeTab}
-          onChange={(value) => value && setActiveTab(value)}
-          style={{ flex: 1, display: "flex", flexDirection: "column" }}
-        >
-          <Tabs.List>
-            {tabs.map((tab) => (
-              <Tabs.Tab
-                key={tab.id}
-                value={tab.id}
-                leftSection={tab.icon}
-                rightSection={
-                  tabs.length > 1 ? (
-                    <ActionIcon
-                      size="xs"
-                      variant="subtle"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeTab(tab.id);
-                      }}
-                      title="Close tab"
-                    >
-                      <IconX size={12} />
-                    </ActionIcon>
-                  ) : null
-                }
+          {/* Add Utility Menu */}
+          <Menu shadow="md" width={200}>
+            <Menu.Target>
+              <Button
+                leftSection={<IconPlus size={18} />}
+                variant="light"
+                color="grape"
+                size="sm"
               >
-                {tab.label}
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
+                New Utility
+              </Button>
+            </Menu.Target>
 
-          {tabs.map((tab) => (
-            <Tabs.Panel
-              key={tab.id}
-              value={tab.id}
-              style={{ flex: 1, overflow: "auto" }}
+            <Menu.Dropdown>
+              <Menu.Label>Select Utility</Menu.Label>
+              <Menu.Item
+                leftSection={<IconSword size={16} />}
+                onClick={handleAddArchenemy}
+                disabled={checkIfTabExists("archenemy")}
+                color="violet"
+              >
+                Archenemy
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconMapSearch size={16} />}
+                onClick={handleAddDungeon}
+                disabled={checkIfTabExists("dungeons")}
+                color="blue"
+              >
+                Dungeons
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconHeart size={16} />}
+                onClick={handleAddLifeTracker}
+                disabled={checkIfTabExists("life-tracker")}
+                color="red"
+              >
+                Life Tracker
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Group>
+
+        {tabs.length === 0 ? (
+          /* Empty State */
+          <Card withBorder p="xl">
+            <Box ta="center">
+              <Title order={3} mb="xs">
+                No Active Tabs
+              </Title>
+              <Text c="dimmed">
+                Click &quot;New Utility&quot; above to get started
+              </Text>
+            </Box>
+          </Card>
+        ) : (
+          /* Tabs Interface */
+          <Card withBorder p={0}>
+            <Tabs
+              value={activeTabId}
+              onChange={(value) => value && dispatch(setActiveTab(value))}
+              variant="default"
             >
-              {renderTabContent(tab)}
-            </Tabs.Panel>
-          ))}
-        </Tabs>
+              <Tabs.List style={{ flexWrap: "nowrap", overflowX: "auto" }}>
+                {tabs.map((tab) => (
+                  <Tabs.Tab
+                    key={tab.id}
+                    value={tab.id}
+                    leftSection={
+                      tab.type === "archenemy" ? (
+                        <IconSword size={16} />
+                      ) : tab.type === "dungeons" ? (
+                        <IconMapSearch size={16} />
+                      ) : (
+                        <IconHeart size={16} />
+                      )
+                    }
+                    rightSection={
+                      <Box
+                        component="span"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 16,
+                          height: 16,
+                          cursor: "pointer",
+                          opacity: 0.6,
+                          transition: "opacity 0.15s ease",
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCloseTab(tab.id);
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLElement).style.opacity = "1";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLElement).style.opacity =
+                            "0.6";
+                        }}
+                      >
+                        <IconX size={12} />
+                      </Box>
+                    }
+                  >
+                    {tab.label}
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+
+              {tabs.map((tab) => (
+                <Tabs.Panel key={tab.id} value={tab.id} pt="md">
+                  {/* Only render content if this is the active tab */}
+                  {activeTabId === tab.id && renderTabContent(tab.id)}
+                </Tabs.Panel>
+              ))}
+            </Tabs>
+          </Card>
+        )}
       </Stack>
     </Container>
   );
