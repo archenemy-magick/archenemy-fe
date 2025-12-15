@@ -8,6 +8,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import { gameSlice } from "~/store/reducers/gameReducer";
 import { deckBuilderSlice } from "~/store/reducers/deckBuilderReducer";
 import { userSlice } from "~/store/reducers/userReducer";
+import { lifeTrackerSlice } from "~/store/reducers/lifeTrackerReducer";
+import { gameTabsSlice } from "~/store/reducers/gameTabsReducer";
 import type { RootState } from "~/store";
 
 // Create a mock store with initial state
@@ -17,6 +19,8 @@ export function createMockStore(initialState?: Partial<RootState>) {
       game: gameSlice.reducer,
       deckBuilder: deckBuilderSlice.reducer,
       user: userSlice.reducer,
+      lifeTracker: lifeTrackerSlice.reducer,
+      gameTabs: gameTabsSlice.reducer,
     },
     preloadedState: initialState as RootState,
   });

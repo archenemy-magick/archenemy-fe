@@ -35,3 +35,17 @@ export {
   userSlice,
 } from "./userReducer";
 export type { InitialUserState } from "./userReducer";
+
+export {
+  lifeTrackerSlice,
+  initializeGame,
+  newGame,
+  addPlayer,
+  removePlayer,
+  adjustLife,
+  updateCommanderDamage,
+  resetAllPlayers,
+  updatePlayer,
+  updateDefaultStartingLife,
+  clearGame,
+} from "./lifeTrackerReducer";
