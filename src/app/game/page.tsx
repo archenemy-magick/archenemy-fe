@@ -43,7 +43,7 @@ export default function GamePage() {
     dispatch(
       addTab({
         type: "archenemy",
-        label: "Archenemy Game",
+        label: "Archenemy",
         config: { deckId: "placeholder" },
       })
     );
@@ -53,7 +53,7 @@ export default function GamePage() {
     dispatch(
       addTab({
         type: "dungeons",
-        label: "Dungeon Tracker",
+        label: "Dungeons",
         config: { dungeonId: "placeholder" },
       })
     );

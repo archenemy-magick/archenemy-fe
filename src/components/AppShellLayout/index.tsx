@@ -133,49 +133,42 @@ const AppShellLayout = ({ children }: { children: React.ReactNode }) => {
           {/* Main Navigation */}
           <Stack gap={4} style={{ flex: 1 }}>
             <NavLink
-              label="Archenemy Game"
+              label="Game Utilities"
               leftSection={<IconPlayerPlay size={20} />}
-              onClick={() => handleNavigation("/game/archenemy")}
-              active={pathname === "/game/archenemy"}
-              variant="subtle"
-            />
-            <NavLink
-              label="Dungeon Tracker"
-              leftSection={<IconPlayerPlay size={20} />}
-              onClick={() => handleNavigation("/game/dungeons")}
-              active={pathname === "/game/dungeons"}
+              onClick={() => handleNavigation("/game")}
+              active={pathname === "/game"}
               variant="subtle"
             />
 
             <NavLink
               label="Popular Cards"
               leftSection={<IconTrophy size={20} />}
-              onClick={() => handleNavigation("/popular-cards")}
-              active={pathname === "/popular-cards"}
+              onClick={() => handleNavigation("/archenemy/popular-cards")}
+              active={pathname === "/archenemy/popular-cards"}
               variant="subtle"
             />
 
             <NavLink
               label="Deck Builder"
               leftSection={<IconWand size={20} />}
-              onClick={() => handleNavigation("/decks/builder")}
-              active={pathname === "/decks/builder"}
+              onClick={() => handleNavigation("/archenemy/decks/builder")}
+              active={pathname === "/archenemy/decks/builder"}
               variant="subtle"
             />
 
             <NavLink
               label="My Decks"
               leftSection={<IconCards size={20} />}
-              onClick={() => handleNavigation("/decks")}
-              active={pathname === "/decks"}
+              onClick={() => handleNavigation("/archenemy/decks")}
+              active={pathname === "/archenemy/decks"}
               variant="subtle"
             />
 
             <NavLink
               label="Public Decks"
               leftSection={<IconWorld size={20} />}
-              onClick={() => handleNavigation("/decks/public")}
-              active={pathname === "/decks/public"}
+              onClick={() => handleNavigation("/archenemy/decks/public")}
+              active={pathname === "/archenemy/decks/public"}
               variant="subtle"
             />
           </Stack>
