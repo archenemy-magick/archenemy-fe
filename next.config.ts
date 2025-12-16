@@ -23,13 +23,6 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
 
-      // Redirect old popular cards to new Archenemy section
-      {
-        source: "/popular-cards",
-        destination: "/archenemy/decks/popular",
-        permanent: true,
-      },
-
       // Redirect old /decks to new structure
       // This should come AFTER the /decks/builder redirect to avoid conflicts
       {

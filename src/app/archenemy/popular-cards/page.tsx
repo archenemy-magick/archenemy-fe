@@ -14,6 +14,7 @@ import {
   Button,
   Divider,
   Box,
+  Modal,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -45,10 +46,16 @@ const PopularCardsPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCards, setSelectedCards] = useState<CustomArchenemyCard[]>([]);
   const [deckIsSaving, setDeckIsSaving] = useState(false);
+  const [previewCard, setPreviewCard] = useState<PopularCard | null>(null);
 
   const [
     saveDeckModalOpened,
     { open: openSaveDeckModal, close: closeSaveDeckModal },
+  ] = useDisclosure(false);
+
+  const [
+    previewModalOpened,
+    { open: openPreviewModal, close: closePreviewModal },
   ] = useDisclosure(false);
 
   useEffect(() => {
@@ -80,6 +87,11 @@ const PopularCardsPage = () => {
         return [...prev, card];
       }
     });
+  };
+
+  const handlePreview = (card: PopularCard) => {
+    setPreviewCard(card);
+    openPreviewModal();
   };
 
   const handleSaveDeck = async ({
@@ -163,6 +175,88 @@ const PopularCardsPage = () => {
         deckIsSaving={deckIsSaving}
       />
 
+      {/* Card Preview Modal */}
+      <Modal
+        opened={previewModalOpened}
+        onClose={closePreviewModal}
+        size="auto"
+        centered
+        withCloseButton={false}
+        padding={0}
+        styles={{
+          body: { padding: 0 },
+          content: { background: "transparent" },
+        }}
+      >
+        {previewCard && (
+          <Stack gap="md" align="center">
+            <Image
+              src={previewCard.normal_image}
+              alt={previewCard.name}
+              w={488}
+              radius="md"
+              style={{
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.6)",
+              }}
+            />
+
+            <Paper p="md" withBorder style={{ width: "100%" }}>
+              <Stack gap="xs">
+                <Group justify="space-between">
+                  <Text fw={600} size="lg">
+                    {previewCard.name}
+                  </Text>
+                  <Badge size="lg" color="magenta">
+                    #{cards.findIndex((c) => c.id === previewCard.id) + 1}
+                  </Badge>
+                </Group>
+
+                <Text size="sm" style={{ fontStyle: "italic" }} c="dimmed">
+                  {previewCard.oracle_text}
+                </Text>
+
+                <Divider />
+
+                <Group gap="xl">
+                  <div>
+                    <Group gap="xs">
+                      <IconCards size={16} />
+                      <Text fw={600}>{previewCard.deck_count}</Text>
+                    </Group>
+                    <Text size="xs" c="dimmed">
+                      Decks
+                    </Text>
+                  </div>
+                  <div>
+                    <Group gap="xs">
+                      <IconUsers size={16} />
+                      <Text fw={600}>{previewCard.unique_users}</Text>
+                    </Group>
+                    <Text size="xs" c="dimmed">
+                      Users
+                    </Text>
+                  </div>
+                </Group>
+
+                <Button
+                  fullWidth
+                  variant={isCardSelected(previewCard.id) ? "filled" : "light"}
+                  color="magenta"
+                  onClick={() => {
+                    handleCardClick(previewCard);
+                    closePreviewModal();
+                  }}
+                >
+                  {isCardSelected(previewCard.id)
+                    ? "Remove from Selection"
+                    : "Add to Selection"}
+                </Button>
+              </Stack>
+            </Paper>
+          </Stack>
+        )}
+      </Modal>
+
       <Stack gap="xl">
         {/* Header with Selection Info */}
         <Group justify="space-between" align="flex-start">
@@ -222,89 +316,93 @@ const PopularCardsPage = () => {
             }}
             onClick={() => handleCardClick(topCard)}
           >
-            <Group align="flex-start">
-              <div style={{ position: "relative" }}>
-                <Image
-                  src={topCard.normal_image}
-                  alt={topCard.name}
-                  w={200}
-                  radius="md"
-                  style={{
-                    boxShadow: "0 4px 16px rgba(0, 0, 0, 0.4)",
-                  }}
-                />
-                {isCardSelected(topCard.id) && (
-                  <Badge
-                    size="lg"
-                    variant="filled"
-                    color="magenta"
+            <Grid grow>
+              <Grid.Col span={3}>
+                <div style={{ position: "relative" }}>
+                  <Image
+                    src={topCard.normal_image}
+                    alt={topCard.name}
+                    w={200}
+                    radius="md"
                     style={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
+                      boxShadow: "0 4px 16px rgba(0, 0, 0, 0.4)",
                     }}
-                  >
-                    ✓ Selected
-                  </Badge>
-                )}
-              </div>
-              <Stack gap="sm" style={{ flex: 1 }}>
-                <Group justify="space-between">
-                  <div>
+                  />
+                  {isCardSelected(topCard.id) && (
                     <Badge
                       size="lg"
-                      variant="gradient"
-                      gradient={{ from: "gold", to: "yellow", deg: 90 }}
-                      mb="xs"
+                      variant="filled"
+                      color="magenta"
                       style={{
-                        color: "#000",
-                        fontWeight: 700,
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
                       }}
                     >
-                      🏆 #1 Most Popular
+                      ✓ Selected
                     </Badge>
-                    <Title order={2} c="white">
-                      {topCard.name}
-                    </Title>
-                  </div>
-                </Group>
+                  )}
+                </div>
+              </Grid.Col>
+              <Grid.Col span={9}>
+                <Stack gap="sm" style={{ flex: 1 }}>
+                  <Group justify="space-between">
+                    <div>
+                      <Badge
+                        size="lg"
+                        variant="gradient"
+                        gradient={{ from: "gold", to: "yellow", deg: 90 }}
+                        mb="xs"
+                        style={{
+                          color: "#000",
+                          fontWeight: 700,
+                        }}
+                      >
+                        🏆 #1 Most Popular
+                      </Badge>
+                      <Title order={2} c="white">
+                        {topCard.name}
+                      </Title>
+                    </div>
+                  </Group>
 
-                <Text size="sm" style={{ fontStyle: "italic" }} c="gray.1">
-                  {topCard.oracle_text}
-                </Text>
+                  <Text size="sm" style={{ fontStyle: "italic" }} c="gray.1">
+                    {topCard.oracle_text}
+                  </Text>
 
-                <Group gap="xl" mt="md">
-                  <div>
-                    <Group gap="xs">
-                      <IconCards size={20} color="white" />
-                      <Text size="xl" fw={700} c="white">
-                        {topCard.deck_count}
+                  <Group gap="xl" mt="md">
+                    <div>
+                      <Group gap="xs">
+                        <IconCards size={20} color="white" />
+                        <Text size="xl" fw={700} c="white">
+                          {topCard.deck_count}
+                        </Text>
+                      </Group>
+                      <Text size="xs" c="gray.2">
+                        Decks
                       </Text>
-                    </Group>
-                    <Text size="xs" c="gray.2">
-                      Decks
-                    </Text>
-                  </div>
-                  <div>
-                    <Group gap="xs">
-                      <IconUsers size={20} color="white" />
-                      <Text size="xl" fw={700} c="white">
-                        {topCard.unique_users}
+                    </div>
+                    <div>
+                      <Group gap="xs">
+                        <IconUsers size={20} color="white" />
+                        <Text size="xl" fw={700} c="white">
+                          {topCard.unique_users}
+                        </Text>
+                      </Group>
+                      <Text size="xs" c="gray.2">
+                        Users
                       </Text>
-                    </Group>
-                    <Text size="xs" c="gray.2">
-                      Users
-                    </Text>
-                  </div>
-                </Group>
+                    </div>
+                  </Group>
 
-                <Text size="sm" c="gray.2" mt="xs">
-                  {isCardSelected(topCard.id)
-                    ? "Click to deselect"
-                    : "Click to add to your deck"}
-                </Text>
-              </Stack>
-            </Group>
+                  <Text size="sm" c="gray.2" mt="xs">
+                    {isCardSelected(topCard.id)
+                      ? "Click to deselect"
+                      : "Click to add to your deck"}
+                  </Text>
+                </Stack>
+              </Grid.Col>
+            </Grid>
           </Paper>
         )}
 
@@ -322,6 +420,7 @@ const PopularCardsPage = () => {
                   card={card}
                   onClick={() => handleCardClick(card)}
                   cardSelected={isCardSelected(card.id)}
+                  onPreview={() => handlePreview(card)}
                 />
 
                 {/* Popularity Badge - positioned on top of card */}
@@ -335,6 +434,7 @@ const PopularCardsPage = () => {
                     left: 8,
                     fontWeight: index < 3 ? 700 : 500,
                     zIndex: 10,
+                    pointerEvents: "none",
                   }}
                 >
                   #{index + 1}
@@ -352,6 +452,7 @@ const PopularCardsPage = () => {
                     backgroundColor: "rgba(0, 0, 0, 0.8)",
                     backdropFilter: "blur(8px)",
                     zIndex: 10,
+                    pointerEvents: "none",
                   }}
                 >
                   <Group gap="xs" justify="space-between">

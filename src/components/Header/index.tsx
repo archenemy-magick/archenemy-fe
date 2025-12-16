@@ -61,28 +61,14 @@ const Header = ({
           <LinkButton
             variant="transparent"
             className={classes.control}
-            href="/archenemy"
-          >
-            Archenemy
-          </LinkButton>
-          <LinkButton
-            variant="transparent"
-            className={classes.control}
-            href="/game/dungeons"
-          >
-            Dungeon Tracker
-          </LinkButton>
-          <LinkButton
-            variant="transparent"
-            className={classes.control}
-            href="/popular-cards"
+            href="/archenemy/popular-cards"
           >
             Popular Cards
           </LinkButton>
           <LinkButton
             variant="transparent"
             className={classes.control}
-            href="/decks"
+            href="/archenemy/decks"
           >
             Archenemy Decks
           </LinkButton>
