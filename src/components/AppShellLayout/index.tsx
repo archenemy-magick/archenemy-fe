@@ -24,6 +24,7 @@ import {
   IconUserPlus,
   IconWorld,
   IconPlayerPlay,
+  IconChartBar,
 } from "@tabler/icons-react";
 import Header from "../Header";
 import Footer from "~/components/Footer";
@@ -137,6 +138,16 @@ const AppShellLayout = ({ children }: { children: React.ReactNode }) => {
               leftSection={<IconPlayerPlay size={20} />}
               onClick={() => handleNavigation("/game")}
               active={pathname === "/game"}
+              variant="subtle"
+            />
+
+            <NavLink
+              label="Stats"
+              leftSection={<IconChartBar size={20} />}
+              onClick={() => handleNavigation("/stats")}
+              active={
+                pathname.startsWith("/stats") || pathname.startsWith("/games")
+              }
               variant="subtle"
             />
 

@@ -61,6 +61,13 @@ const Header = ({
           <LinkButton
             variant="transparent"
             className={classes.control}
+            href="/stats"
+          >
+            Stats
+          </LinkButton>
+          <LinkButton
+            variant="transparent"
+            className={classes.control}
             href="/archenemy/popular-cards"
           >
             Popular Cards

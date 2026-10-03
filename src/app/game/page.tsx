@@ -23,6 +23,7 @@ import {
   IconHeart,
   IconX,
   IconPlus,
+  IconCoin,
 } from "@tabler/icons-react";
 import {
   addTab,
@@ -32,6 +33,7 @@ import {
 import ArchenemyGame from "~/components/ArchenemyGame";
 import DungeonContainer from "~/components/DungeonContainer";
 import LifeTracker from "~/components/LifeTracker";
+import CoinFlipper from "~/components/CoinFlipper";
 
 export default function GamePage() {
   const dispatch = useDispatch();
@@ -39,6 +41,7 @@ export default function GamePage() {
     (state: RootState) => state.gameTabs
   );
 
+  // TODO: add utility function that handles all of these in a separate file
   const handleAddArchenemy = () => {
     dispatch(
       addTab({
@@ -68,6 +71,15 @@ export default function GamePage() {
     );
   };
 
+  const handleAddCoinFlipper = () => {
+    dispatch(
+      addTab({
+        type: "coin-flipper",
+        label: "Coin Flipper",
+      })
+    );
+  };
+
   const handleCloseTab = (tabId: string) => {
     dispatch(removeTab(tabId));
   };
@@ -83,6 +95,8 @@ export default function GamePage() {
         return <DungeonContainer tabId={tab.id} />;
       case "life-tracker":
         return <LifeTracker tabId={tab.id} />;
+      case "coin-flipper":
+        return <CoinFlipper tabId={tab.id} />;
       default:
         return null;
     }
@@ -139,6 +153,14 @@ export default function GamePage() {
                 color="red"
               >
                 Life Tracker
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconCoin size={16} />}
+                onClick={handleAddCoinFlipper}
+                disabled={checkIfTabExists("coin-flipper")}
+                color="yellow"
+              >
+                Coin Flipper
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>

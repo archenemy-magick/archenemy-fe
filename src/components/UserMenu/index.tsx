@@ -7,6 +7,7 @@ import {
   IconCards,
   IconDownload,
   IconHome,
+  IconChartBar,
 } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "~/store/configureStore";
@@ -159,6 +160,13 @@ export function UserMenu() {
           onClick={() => router.push("/decks")}
         >
           My Decks
+        </Menu.Item>
+
+        <Menu.Item
+          leftSection={<IconChartBar size={14} />}
+          onClick={() => router.push("/stats")}
+        >
+          Stats
         </Menu.Item>
 
         <Menu.Item

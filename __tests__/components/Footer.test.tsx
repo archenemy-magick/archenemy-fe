@@ -57,6 +57,7 @@ describe("Footer", () => {
       expect(screen.getByText("My Decks")).toBeInTheDocument();
       expect(screen.getByText("Popular Cards")).toBeInTheDocument();
       expect(screen.getByText("Play Game")).toBeInTheDocument();
+      expect(screen.getByText("Stats")).toBeInTheDocument();
     });
 
     it("should have correct href attributes for quick links", () => {
@@ -67,12 +68,14 @@ describe("Footer", () => {
       const myDecksLink = screen.getByText("My Decks").closest("a");
       const popularCardsLink = screen.getByText("Popular Cards").closest("a");
       const playGameLink = screen.getByText("Play Game").closest("a");
+      const statsLink = screen.getByText("Stats").closest("a");
 
       expect(homeLink).toHaveAttribute("href", "/");
       expect(deckBuilderLink).toHaveAttribute("href", "/decks/builder");
       expect(myDecksLink).toHaveAttribute("href", "/decks");
       expect(popularCardsLink).toHaveAttribute("href", "/popular-cards");
       expect(playGameLink).toHaveAttribute("href", "/game/archenemy");
+      expect(statsLink).toHaveAttribute("href", "/stats");
     });
   });
 

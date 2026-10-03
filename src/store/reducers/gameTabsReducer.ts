@@ -1,7 +1,11 @@
 // store/reducers/gameTabsReducer.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export type GameTabType = "archenemy" | "dungeons" | "life-tracker";
+export type GameTabType =
+  | "archenemy"
+  | "dungeons"
+  | "life-tracker"
+  | "coin-flipper";
 
 interface GameTabConfig {
   deckId?: string;
