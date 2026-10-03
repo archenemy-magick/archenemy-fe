@@ -15,6 +15,7 @@ import {
   TextInput,
   Title,
   ActionIcon,
+  Modal,
 } from "@mantine/core";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
@@ -26,6 +27,7 @@ import { getFriends } from "~/lib/api/friends";
 import type { PublicProfile } from "~/lib/api/publicProfiles";
 import { createRecordedGame, getRecordedGames } from "~/lib/api/recordedGames";
 import { consumeRecordGameDraft } from "~/lib/gameRecordDraft";
+import { findDuplicateCandidates } from "~/lib/gameDuplicates";
 import { sortColors } from "~/lib/mtgColors";
 import type { RootState } from "~/store";
 import {
@@ -33,6 +35,7 @@ import {
   GAME_FORMATS,
   type GameFormat,
   type MtgColor,
+  type RecordedGame,
   type RecordedGamePlayerInput,
   type WinCondition,
   WIN_CONDITION_LABELS,
@@ -72,9 +75,11 @@ function emptyPlayer(isRecorder: boolean): PlayerDraft {
 
 export function RecordGameForm() {
   const router = useRouter();
-  const { username, isAuthenticated } = useSelector(
-    (state: RootState) => state.user
-  );
+  const {
+    id: userId,
+    username,
+    isAuthenticated,
+  } = useSelector((state: RootState) => state.user);
 
   const [playedAt, setPlayedAt] = useState(
     new Date().toISOString().slice(0, 10)
@@ -92,6 +97,8 @@ export function RecordGameForm() {
   const [submitting, setSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [recentCommanders, setRecentCommanders] = useState<string[]>([]);
+  const [existingGames, setExistingGames] = useState<RecordedGame[]>([]);
+  const [duplicateMatches, setDuplicateMatches] = useState<RecordedGame[]>([]);
   const [friends, setFriends] = useState<PublicProfile[]>([]);
 
   useEffect(() => {
@@ -131,6 +138,7 @@ export function RecordGameForm() {
     getRecordedGames()
       .then((games) => {
         if (cancelled) return;
+        setExistingGames(games);
         const counts = new Map<string, number>();
         for (const game of games) {
           for (const player of game.players) {
@@ -243,7 +251,7 @@ export function RecordGameForm() {
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async ({ skipDuplicateCheck = false } = {}) => {
     const trimmed = players.map((player) => ({
       ...player,
       display_name: player.display_name.trim(),
@@ -290,10 +298,32 @@ export function RecordGameForm() {
       ending_life: player.ending_life,
     }));
 
+    const playedAtIso = new Date(`${playedAt}T12:00:00`).toISOString();
+
+    // A friend may already have recorded this game with you linked, or you
+    // may have saved it before. Ask rather than double-count it.
+    if (!skipDuplicateCheck) {
+      const matches = findDuplicateCandidates(
+        {
+          played_at: playedAtIso,
+          players: payload.map((player) => ({
+            ...player,
+            user_id: player.is_recorder ? userId : player.user_id,
+          })),
+        },
+        existingGames
+      );
+      if (matches.length > 0) {
+        setDuplicateMatches(matches);
+        return;
+      }
+    }
+    setDuplicateMatches([]);
+
     try {
       setSubmitting(true);
       await createRecordedGame({
-        played_at: new Date(`${playedAt}T12:00:00`).toISOString(),
+        played_at: playedAtIso,
         format,
         ended_on_turn:
           typeof endedOnTurn === "number"
@@ -512,10 +542,56 @@ export function RecordGameForm() {
         <Button variant="subtle" onClick={() => router.push("/stats")}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit} loading={submitting}>
+        <Button onClick={() => handleSubmit()} loading={submitting}>
           Save game
         </Button>
       </Group>
+
+      <Modal
+        opened={duplicateMatches.length > 0}
+        onClose={() => setDuplicateMatches([])}
+        title="Is this game already recorded?"
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            {duplicateMatches.length === 1
+              ? "This looks like a game that is already in your log"
+              : "This looks like games that are already in your log"}
+            . Saving it again would count it twice in your stats.
+          </Text>
+          {duplicateMatches.map((game) => {
+            const recorder = game.players.find((p) => p.is_recorder);
+            return (
+              <Card key={game.id} withBorder padding="sm">
+                <Text size="sm" fw={600}>
+                  {new Date(game.played_at).toLocaleDateString()} · recorded by{" "}
+                  {game.recorded_by === userId
+                    ? "you"
+                    : recorder?.display_name ?? "a friend"}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {game.players
+                    .map((p) => p.commander_name || p.display_name)
+                    .join(", ")}
+                </Text>
+              </Card>
+            );
+          })}
+          <Group justify="flex-end">
+            <Button
+              variant="default"
+              loading={submitting}
+              onClick={() => handleSubmit({ skipDuplicateCheck: true })}
+            >
+              Save anyway
+            </Button>
+            <Button onClick={() => router.push("/games")}>
+              Same game, don&apos;t save
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }

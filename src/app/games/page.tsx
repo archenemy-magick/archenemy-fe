@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActionIcon,
+  Alert,
   Badge,
   Button,
   Card,
@@ -12,14 +13,29 @@ import {
   Stack,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
+import {
+  IconCopy,
+  IconPlus,
+  IconTrash,
+  IconUserMinus,
+} from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import type { RootState } from "~/store";
 import { ColorPips } from "~/components/ColorIdentityPicker";
-import { deleteRecordedGame, getRecordedGames } from "~/lib/api/recordedGames";
+import {
+  deleteRecordedGame,
+  getRecordedGames,
+  unlinkMeFromRecordedGame,
+} from "~/lib/api/recordedGames";
+import { duplicatePairKey, findDuplicateGroups } from "~/lib/gameDuplicates";
+import {
+  loadDismissedPairs,
+  saveDismissedPairs,
+} from "~/lib/duplicateDismissals";
 import { gameResultFor, type GameResult } from "~/lib/gameStats";
 import { FORMAT_LABELS, type RecordedGame } from "~/types/recordedGame";
 
@@ -29,78 +45,123 @@ const RESULT_BADGE: Record<GameResult, { label: string; color: string }> = {
   D: { label: "Draw", color: "gray" },
 };
 
+type PendingAction = { kind: "delete" | "unlink"; game: RecordedGame };
+
+const ACTION_COPY = {
+  delete: {
+    title: "Delete this game?",
+    body: "It will be removed from your log and stats, and from the stats of any friends linked to it. This cannot be undone.",
+    confirm: "Delete",
+    done: "Game deleted",
+    doneMessage: "Removed from your log and stats.",
+  },
+  unlink: {
+    title: "Remove yourself from this game?",
+    body: "It will leave your log and stats. The friend who recorded it keeps their copy.",
+    confirm: "Remove me",
+    done: "Removed from game",
+    doneMessage: "It no longer counts toward your stats.",
+  },
+} as const;
+
+function recorderName(game: RecordedGame) {
+  return game.players.find((player) => player.is_recorder)?.display_name;
+}
+
 export default function GamesPage() {
   const router = useRouter();
   const userId = useSelector((state: RootState) => state.user.id);
   const [games, setGames] = useState<RecordedGame[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [confirmingGame, setConfirmingGame] = useState<RecordedGame | null>(
-    null
+  const [pending, setPending] = useState<PendingAction | null>(null);
+  const [working, setWorking] = useState(false);
+  const [dismissedPairs, setDismissedPairs] = useState<Set<string>>(
+    () => new Set()
   );
 
-  const loadGames = async () => {
-    try {
-      setLoading(true);
-      setGames(await getRecordedGames());
-    } catch (error: unknown) {
-      notifications.show({
-        title: "Could not load games",
-        message: (error as Error).message || "Try again later.",
-        color: "red",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadGames();
+    setDismissedPairs(loadDismissedPairs());
   }, []);
 
-  const handleDelete = async (gameId: string) => {
+  useEffect(() => {
+    let cancelled = false;
+    getRecordedGames()
+      .then((data) => {
+        if (!cancelled) setGames(data);
+      })
+      .catch((error: unknown) => {
+        notifications.show({
+          title: "Could not load games",
+          message: (error as Error).message || "Try again later.",
+          color: "red",
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const duplicates = useMemo(
+    () => findDuplicateGroups(games, dismissedPairs),
+    [games, dismissedPairs]
+  );
+
+  const dismissDuplicates = (game: RecordedGame) => {
+    const next = new Set(dismissedPairs);
+    for (const other of duplicates.get(game.id) ?? []) {
+      next.add(duplicatePairKey(game.id, other.id));
+    }
+    setDismissedPairs(next);
+    saveDismissedPairs(next);
+  };
+
+  const runPendingAction = async () => {
+    if (!pending) return;
+    const { kind, game } = pending;
     try {
-      setDeletingId(gameId);
-      await deleteRecordedGame(gameId);
-      setGames((current) => current.filter((game) => game.id !== gameId));
+      setWorking(true);
+      if (kind === "delete") await deleteRecordedGame(game.id);
+      else await unlinkMeFromRecordedGame(game.id);
+      setGames((current) => current.filter((g) => g.id !== game.id));
       notifications.show({
-        title: "Game deleted",
-        message: "Removed from your log and stats.",
+        title: ACTION_COPY[kind].done,
+        message: ACTION_COPY[kind].doneMessage,
         color: "orange",
       });
     } catch (error: unknown) {
       notifications.show({
-        title: "Delete failed",
+        title: "That didn't work",
         message: (error as Error).message || "Try again.",
         color: "red",
       });
     } finally {
-      setDeletingId(null);
-      setConfirmingGame(null);
+      setWorking(false);
+      setPending(null);
     }
   };
+
+  const copy = pending ? ACTION_COPY[pending.kind] : null;
 
   return (
     <Container size="lg" py="xl">
       <Modal
-        opened={confirmingGame !== null}
-        onClose={() => setConfirmingGame(null)}
-        title="Delete this game?"
+        opened={pending !== null}
+        onClose={() => setPending(null)}
+        title={copy?.title}
         centered
       >
         <Text size="sm" mb="lg">
-          It will be removed from your log and stats. This cannot be undone.
+          {copy?.body}
         </Text>
         <Group justify="flex-end">
-          <Button variant="default" onClick={() => setConfirmingGame(null)}>
+          <Button variant="default" onClick={() => setPending(null)}>
             Cancel
           </Button>
-          <Button
-            color="red"
-            loading={deletingId !== null}
-            onClick={() => confirmingGame && handleDelete(confirmingGame.id)}
-          >
-            Delete
+          <Button color="red" loading={working} onClick={runPendingAction}>
+            {copy?.confirm}
           </Button>
         </Group>
       </Modal>
@@ -108,7 +169,9 @@ export default function GamesPage() {
         <Group justify="space-between" wrap="wrap">
           <div>
             <Title order={1}>Game log</Title>
-            <Text c="dimmed">Every match you have recorded.</Text>
+            <Text c="dimmed">
+              Games you recorded, plus games friends recorded with you.
+            </Text>
           </div>
           <Group>
             <Button variant="light" onClick={() => router.push("/stats")}>
@@ -122,6 +185,14 @@ export default function GamesPage() {
             </Button>
           </Group>
         </Group>
+
+        {duplicates.size > 0 ? (
+          <Alert color="yellow" icon={<IconCopy size={18} />}>
+            Some games look like they were recorded twice, which counts them
+            twice in your stats. Delete your copy, remove yourself from a
+            friend&apos;s copy, or mark them as not duplicates.
+          </Alert>
+        ) : null}
 
         {loading ? (
           <Text c="dimmed">Loading games…</Text>
@@ -138,19 +209,26 @@ export default function GamesPage() {
               const me =
                 game.players.find((player) => player.is_viewer) ??
                 game.players.find((player) => player.is_recorder);
-              const recorder = game.players.find(
-                (player) => player.is_recorder
-              );
               const recordedByMe = game.recorded_by === userId;
               const result = gameResultFor(game) ?? "D";
+              const sameAs = duplicates.get(game.id) ?? [];
               return (
-                <Card key={game.id} withBorder padding="md">
+                <Card
+                  key={game.id}
+                  withBorder
+                  padding="md"
+                  style={
+                    sameAs.length > 0
+                      ? { borderColor: "var(--mantine-color-yellow-6)" }
+                      : undefined
+                  }
+                >
                   <Group
                     justify="space-between"
                     align="flex-start"
                     wrap="nowrap"
                   >
-                    <Stack gap={6} style={{ flex: 1 }}>
+                    <Stack gap={6} style={{ flex: 1, minWidth: 0 }}>
                       <Group gap="xs">
                         <Badge variant="light">
                           {FORMAT_LABELS[game.format] ?? game.format}
@@ -183,23 +261,64 @@ export default function GamesPage() {
                           )
                           .join(", ")}
                       </Text>
-                      {!recordedByMe && recorder ? (
+                      {!recordedByMe ? (
                         <Text size="xs" c="dimmed">
-                          Recorded by {recorder.display_name}
+                          Recorded by {recorderName(game) ?? "a friend"}
                         </Text>
+                      ) : null}
+                      {sameAs.length > 0 ? (
+                        <Group gap="xs" mt={4}>
+                          <Badge
+                            color="yellow"
+                            variant="light"
+                            leftSection={<IconCopy size={12} />}
+                          >
+                            Possible duplicate
+                          </Badge>
+                          <Text size="xs" c="dimmed">
+                            Also recorded
+                            {sameAs
+                              .map((other) =>
+                                other.recorded_by === userId
+                                  ? " by you"
+                                  : ` by ${recorderName(other) ?? "a friend"}`
+                              )
+                              .join(",")}
+                          </Text>
+                          <Button
+                            size="compact-xs"
+                            variant="subtle"
+                            color="gray"
+                            onClick={() => dismissDuplicates(game)}
+                          >
+                            Not a duplicate
+                          </Button>
+                        </Group>
                       ) : null}
                     </Stack>
                     {recordedByMe ? (
-                      <ActionIcon
-                        color="red"
-                        variant="subtle"
-                        aria-label="Delete game"
-                        loading={deletingId === game.id}
-                        onClick={() => setConfirmingGame(game)}
-                      >
-                        <IconTrash size={16} />
-                      </ActionIcon>
-                    ) : null}
+                      <Tooltip label="Delete game" withArrow>
+                        <ActionIcon
+                          color="red"
+                          variant="subtle"
+                          aria-label="Delete game"
+                          onClick={() => setPending({ kind: "delete", game })}
+                        >
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip label="Remove me from this game" withArrow>
+                        <ActionIcon
+                          color="gray"
+                          variant="subtle"
+                          aria-label="Remove me from this game"
+                          onClick={() => setPending({ kind: "unlink", game })}
+                        >
+                          <IconUserMinus size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
                   </Group>
                 </Card>
               );
