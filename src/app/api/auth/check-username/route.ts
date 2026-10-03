@@ -32,12 +32,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createServerSupabaseClient();
 
-    // Check if username exists (case-insensitive)
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("username")
-      .ilike("username", normalizedUsername)
-      .maybeSingle();
+    // profiles is not readable before sign-in; this RPC only answers yes/no.
+    const { data, error } = await supabase.rpc("is_username_available", {
+      p_username: normalizedUsername,
+    });
 
     if (error) {
       console.error("Error checking username:", error);
@@ -47,8 +45,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // If data exists, username is taken
-    const available = !data;
+    const available = data === true;
 
     return NextResponse.json({ available }, { status: 200 });
   } catch (error) {

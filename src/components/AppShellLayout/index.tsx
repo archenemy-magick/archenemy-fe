@@ -25,6 +25,7 @@ import {
   IconWorld,
   IconPlayerPlay,
   IconChartBar,
+  IconUsers,
 } from "@tabler/icons-react";
 import Header from "../Header";
 import Footer from "~/components/Footer";
@@ -148,6 +149,14 @@ const AppShellLayout = ({ children }: { children: React.ReactNode }) => {
               active={
                 pathname.startsWith("/stats") || pathname.startsWith("/games")
               }
+              variant="subtle"
+            />
+
+            <NavLink
+              label="Friends"
+              leftSection={<IconUsers size={20} />}
+              onClick={() => handleNavigation("/friends")}
+              active={pathname.startsWith("/friends")}
               variant="subtle"
             />
 

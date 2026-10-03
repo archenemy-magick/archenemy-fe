@@ -56,6 +56,12 @@ export type RecordedGamePlayer = {
   seat_order: number;
   ending_life: number | null;
   created_at: string;
+  /**
+   * Derived on the client: this seat belongs to the signed-in user. Differs
+   * from is_recorder when a friend recorded the game. Falls back to the
+   * recorder seat when absent.
+   */
+  is_viewer?: boolean;
 };
 
 export type RecordedGame = {

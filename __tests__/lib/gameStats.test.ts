@@ -251,4 +251,48 @@ describe("computeUserGameStats", () => {
     expect(stats.streaks.current).toEqual({ result: "D", length: 1 });
     expect(stats.streaks.longestWin).toBe(1);
   });
+
+  it("uses the viewer's seat for games a friend recorded", () => {
+    const friendRecorded = game({
+      id: "g4",
+      recorded_by: "friend-1",
+      players: [
+        player({
+          id: "p8",
+          game_id: "g4",
+          user_id: "friend-1",
+          display_name: "Sam",
+          is_recorder: true,
+          commander_name: "Krenko, Mob Boss",
+          colors: ["R"],
+          is_winner: false,
+        }),
+        player({
+          id: "p9",
+          game_id: "g4",
+          user_id: "user-1",
+          display_name: "Me",
+          is_viewer: true,
+          commander_name: "Yuriko, the Tiger's Shadow",
+          colors: ["U", "B"],
+          is_winner: true,
+          seat_order: 1,
+        }),
+      ],
+    });
+
+    const stats = computeUserGameStats(
+      [friendRecorded],
+      DEFAULT_STATS_FILTERS,
+      now
+    );
+
+    expect(stats.wins).toBe(1);
+    expect(stats.winningestDecks[0].commanderName).toBe(
+      "Yuriko, the Tiger's Shadow"
+    );
+    expect(stats.opponents).toEqual([
+      expect.objectContaining({ key: "friend-1", name: "Sam", theirWins: 0 }),
+    ]);
+  });
 });

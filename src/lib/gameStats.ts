@@ -104,12 +104,18 @@ function startOfPreset(preset: StatsDatePreset, now: Date): Date | null {
   return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 }
 
-function recorderSeat(game: RecordedGame) {
-  return game.players.find((player) => player.is_recorder) ?? null;
+// The signed-in user's seat. For games a friend recorded this is not the
+// recorder seat.
+function viewerSeat(game: RecordedGame) {
+  return (
+    game.players.find((player) => player.is_viewer) ??
+    game.players.find((player) => player.is_recorder) ??
+    null
+  );
 }
 
 export function gameResultFor(game: RecordedGame): GameResult | null {
-  const me = recorderSeat(game);
+  const me = viewerSeat(game);
   if (!me) return null;
   const winnerCount = game.players.filter((p) => p.is_winner).length;
   if (winnerCount !== 1) return "D";
@@ -185,7 +191,7 @@ export function filterRecordedGames(
       return false;
     }
 
-    const me = recorderSeat(game);
+    const me = viewerSeat(game);
     if (!me) return false;
 
     if (filters.colors.length > 0) {
@@ -247,7 +253,7 @@ export function computeUserGameStats(
   }
 
   for (const game of filteredGames) {
-    const me = recorderSeat(game);
+    const me = viewerSeat(game);
     if (!me) continue;
 
     const result = gameResultFor(game);
@@ -271,7 +277,7 @@ export function computeUserGameStats(
     winConditionMap.set(conditionKey, conditionEntry);
 
     for (const opponent of game.players) {
-      if (opponent.is_recorder) continue;
+      if (opponent === me) continue;
       const opponentKey = opponentKeyFor(opponent);
       const entry = opponentMap.get(opponentKey) ?? {
         name: opponent.display_name.trim(),

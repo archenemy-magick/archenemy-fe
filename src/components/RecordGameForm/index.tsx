@@ -22,6 +22,8 @@ import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { ColorIdentityPicker } from "~/components/ColorIdentityPicker";
 import { CommanderAutocomplete } from "~/components/CommanderAutocomplete";
+import { getFriends } from "~/lib/api/friends";
+import type { PublicProfile } from "~/lib/api/publicProfiles";
 import { createRecordedGame, getRecordedGames } from "~/lib/api/recordedGames";
 import { consumeRecordGameDraft } from "~/lib/gameRecordDraft";
 import { sortColors } from "~/lib/mtgColors";
@@ -36,10 +38,16 @@ import {
   WIN_CONDITION_LABELS,
   WIN_CONDITIONS,
 } from "~/types/recordedGame";
+import {
+  FriendNameAutocomplete,
+  findFriendByName,
+} from "./FriendNameAutocomplete";
 
 type PlayerDraft = {
   key: string;
   display_name: string;
+  /** Linked friend's account; null for players without one. */
+  user_id: string | null;
   is_recorder: boolean;
   commander_name: string;
   deck_name: string;
@@ -52,6 +60,7 @@ function emptyPlayer(isRecorder: boolean): PlayerDraft {
   return {
     key: `${Date.now()}-${Math.random()}`,
     display_name: "",
+    user_id: null,
     is_recorder: isRecorder,
     commander_name: "",
     deck_name: "",
@@ -83,6 +92,37 @@ export function RecordGameForm() {
   const [submitting, setSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [recentCommanders, setRecentCommanders] = useState<string[]>([]);
+  const [friends, setFriends] = useState<PublicProfile[]>([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    getFriends()
+      .then((list) => {
+        if (!cancelled) setFriends(list);
+      })
+      .catch(() => {
+        // Without friends the name fields are plain text inputs.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
+
+  // Link seats whose names (e.g. from the Life Tracker) match a friend.
+  useEffect(() => {
+    if (!hydrated || friends.length === 0) return;
+    setPlayers((current) => {
+      const taken = new Set(current.map((p) => p.user_id).filter(Boolean));
+      return current.map((player) => {
+        if (player.is_recorder || player.user_id) return player;
+        const friend = findFriendByName(friends, player.display_name);
+        if (!friend || taken.has(friend.id)) return player;
+        taken.add(friend.id);
+        return { ...player, user_id: friend.id };
+      });
+    });
+  }, [hydrated, friends]);
 
   // Offer commanders from past games first, most frequent first.
   useEffect(() => {
@@ -172,6 +212,8 @@ export function RecordGameForm() {
       current.map((player) => ({
         ...player,
         is_recorder: player.key === key,
+        // Your own seat is linked to your account, not a friend's.
+        user_id: player.key === key ? null : player.user_id,
       }))
     );
   };
@@ -236,7 +278,8 @@ export function RecordGameForm() {
     }
 
     const payload: RecordedGamePlayerInput[] = trimmed.map((player, index) => ({
-      user_id: null,
+      // The API links the recorder seat to the signed-in user.
+      user_id: player.is_recorder ? null : player.user_id,
       display_name: player.display_name,
       is_recorder: player.is_recorder,
       commander_name: player.commander_name || null,
@@ -353,6 +396,8 @@ export function RecordGameForm() {
       <Text size="sm" c="dimmed">
         Mark yourself, pick a winner (or leave it as a draw), and log each
         commander. Picking a suggested commander fills in its color identity.
+        Pick a friend from the name list and the game is added to their stats
+        too.
       </Text>
 
       <Stack gap="md">
@@ -372,17 +417,32 @@ export function RecordGameForm() {
                 </ActionIcon>
               </Group>
               <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
-                <TextInput
-                  label="Name"
-                  placeholder="Player name"
-                  value={player.display_name}
-                  onChange={(event) =>
-                    updatePlayer(player.key, {
-                      display_name: event.currentTarget.value,
-                    })
-                  }
-                  required
-                />
+                {player.is_recorder ? (
+                  <TextInput
+                    label="Name"
+                    placeholder="Your name"
+                    value={player.display_name}
+                    onChange={(event) =>
+                      updatePlayer(player.key, {
+                        display_name: event.currentTarget.value,
+                      })
+                    }
+                    required
+                  />
+                ) : (
+                  <FriendNameAutocomplete
+                    value={player.display_name}
+                    linkedFriendId={player.user_id}
+                    friends={friends}
+                    takenFriendIds={players
+                      .filter((other) => other.key !== player.key)
+                      .map((other) => other.user_id)
+                      .filter((id): id is string => id !== null)}
+                    onChange={(display_name, user_id) =>
+                      updatePlayer(player.key, { display_name, user_id })
+                    }
+                  />
+                )}
                 <CommanderAutocomplete
                   value={player.commander_name}
                   onChange={(commander_name) =>
