@@ -36,8 +36,6 @@ export function DungeonActionsMenu({
 }: DungeonActionsMenuProps) {
   const currentPlayerCount = players.length;
 
-  console.log("players", players);
-
   return (
     <Menu shadow="md" width={200} position="bottom-end">
       <Menu.Target>

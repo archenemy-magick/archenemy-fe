@@ -44,6 +44,7 @@ const Footer = () => {
     { label: "My Decks", href: "/decks" },
     { label: "Popular Cards", href: "/popular-cards" },
     { label: "Play Game", href: "/game/archenemy" },
+    { label: "Stats", href: "/stats" },
   ];
 
   return (

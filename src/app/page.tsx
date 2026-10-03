@@ -60,6 +60,7 @@ const HomePage = () => {
       "Life Counter",
       "Community Deck Sharing",
       "Popular Cards Tracking",
+      "Commander game recording and statistics",
     ],
   };
 

@@ -200,6 +200,8 @@ export async function middleware(request: NextRequest) {
     "/decks",
     "/archenemy",
     "/game",
+    "/games",
+    "/stats",
     "/profile",
     "/deck-builder",
     "/popular-cards",

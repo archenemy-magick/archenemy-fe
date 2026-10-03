@@ -31,6 +31,7 @@ import {
   IconHeartBroken,
   IconReload,
   IconUser,
+  IconClipboardList,
 } from "@tabler/icons-react";
 import {
   initializeGame,
@@ -44,6 +45,8 @@ import {
   updateDefaultStartingLife as updateDefaultStartingLifeAction,
 } from "~/store/reducers";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { saveRecordGameDraft } from "~/lib/gameRecordDraft";
 
 interface Player {
   id: string;
@@ -71,6 +74,8 @@ const PRESET_STARTING_LIFE = [20, 30, 40];
 
 export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
   const dispatch = useDispatch();
+  const router = useRouter();
+  const username = useSelector((state: RootState) => state.user.username);
 
   // Get game state from Redux
   const game = useSelector(
@@ -144,6 +149,26 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
 
   const handleNewGame = () => {
     dispatch(newGame(tabId));
+  };
+
+  const handleRecordGame = () => {
+    const normalizedUsername = username?.trim().toLowerCase();
+    const matchingIndex = players.findIndex(
+      (player) =>
+        !!normalizedUsername &&
+        player.name.trim().toLowerCase() === normalizedUsername
+    );
+    const recorderIndex = matchingIndex >= 0 ? matchingIndex : 0;
+
+    saveRecordGameDraft({
+      format: defaultStartingLife >= 40 ? "commander" : "other",
+      players: players.map((player, index) => ({
+        displayName: player.name,
+        endingLife: player.life,
+        isRecorder: index === recorderIndex,
+      })),
+    });
+    router.push("/games/record");
   };
 
   const handleUpdatePlayer = (updatedPlayer: Player) => {
@@ -409,6 +434,14 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                 color="orange"
               >
                 New Game
+              </Menu.Item>
+
+              <Menu.Item
+                leftSection={<IconClipboardList size={16} />}
+                onClick={handleRecordGame}
+                color="grape"
+              >
+                Record Game
               </Menu.Item>
 
               <Menu.Divider />
