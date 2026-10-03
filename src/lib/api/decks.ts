@@ -5,6 +5,7 @@ import {
 } from "~/types";
 import { createClient } from "../supabase/client";
 import { flattenDeck } from "~/util";
+import { getPublicProfiles } from "./publicProfiles";
 
 const supabase = createClient();
 
@@ -205,9 +206,6 @@ export async function getPublicDecks() {
     .select(
       `
       *,
-      profiles:user_id (
-        username
-      ),
       deck_cards:archenemy_deck_cards (
         archenemy_cards (
           id,
@@ -227,7 +225,12 @@ export async function getPublicDecks() {
     throw error;
   }
 
-  return (data as unknown as SupabaseDeckResponse[]).map(flattenDeck);
+  const decks = (data as unknown as SupabaseDeckResponse[]).map(flattenDeck);
+  const authors = await getPublicProfiles(decks.map((deck) => deck.user_id));
+  return decks.map((deck) => {
+    const author = authors.get(deck.user_id);
+    return author ? { ...deck, profiles: { username: author.username } } : deck;
+  });
 }
 
 export async function cloneDeck(deckId: string) {
@@ -411,9 +414,6 @@ export async function getUserLikedDecks() {
       created_at,
       deck:archenemy_decks (
         *,
-        profiles:user_id (
-          username
-        ),
         deck_cards:archenemy_deck_cards (
           archenemy_cards (
             id,
@@ -436,10 +436,18 @@ export async function getUserLikedDecks() {
     deck: SupabaseDeckResponse;
   };
 
-  return (data as unknown as LikeResponse[]).map((like) => ({
-    ...flattenDeck(like.deck),
-    liked_at: like.created_at,
-  }));
+  const likes = data as unknown as LikeResponse[];
+  const authors = await getPublicProfiles(
+    likes.map((like) => like.deck.user_id)
+  );
+  return likes.map((like) => {
+    const author = authors.get(like.deck.user_id);
+    return {
+      ...flattenDeck(like.deck),
+      ...(author ? { profiles: { username: author.username } } : {}),
+      liked_at: like.created_at,
+    };
+  });
 }
 
 /**
@@ -502,10 +510,6 @@ export async function getTopPublicDecks(
       *,
       deck_cards:archenemy_deck_cards(
         card:archenemy_cards(*)
-      ),
-      user_profile:profiles(
-        username,
-        avatar_url
       )
     `
     )
@@ -518,10 +522,21 @@ export async function getTopPublicDecks(
     throw new Error("Failed to fetch top public decks");
   }
 
+  const authors = await getPublicProfiles(
+    (data || []).map((deck) => deck.user_id)
+  );
+
   // Transform the data to match CustomArchenemyDeck type
-  return (data || []).map((deck) => ({
-    ...deck,
-    deck_cards:
-      deck.deck_cards?.map((junction: DeckCardJunction) => junction.card) || [],
-  }));
+  return (data || []).map((deck) => {
+    const author = authors.get(deck.user_id);
+    return {
+      ...deck,
+      deck_cards:
+        deck.deck_cards?.map((junction: DeckCardJunction) => junction.card) ||
+        [],
+      user_profile: author
+        ? { username: author.username, avatar_url: author.avatar_url }
+        : undefined,
+    };
+  });
 }

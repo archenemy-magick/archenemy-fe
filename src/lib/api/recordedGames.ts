@@ -20,12 +20,14 @@ type PlayerRow = Omit<RecordedGamePlayer, "colors"> & {
 };
 
 function normalizeGame(
-  row: GameRow & { players?: PlayerRow[] | null }
+  row: GameRow & { players?: PlayerRow[] | null },
+  viewerId: string
 ): RecordedGame {
   const players = (row.players ?? [])
     .map((player) => ({
       ...player,
       colors: sortColors(player.colors ?? []),
+      is_viewer: player.user_id === viewerId,
     }))
     .sort((a, b) => a.seat_order - b.seat_order);
 
@@ -44,6 +46,8 @@ export async function getRecordedGames(): Promise<RecordedGame[]> {
 
   if (!user) throw new Error("Not authenticated");
 
+  // RLS returns games the user recorded plus games a friend recorded with
+  // them linked to a seat.
   const { data, error } = await supabase
     .from("recorded_games")
     .select(
@@ -52,13 +56,12 @@ export async function getRecordedGames(): Promise<RecordedGame[]> {
       players:recorded_game_players(*)
     `
     )
-    .eq("recorded_by", user.id)
     .order("played_at", { ascending: false });
 
   if (error) throw error;
 
-  return ((data ?? []) as (GameRow & { players?: PlayerRow[] })[]).map(
-    normalizeGame
+  return ((data ?? []) as (GameRow & { players?: PlayerRow[] })[]).map((row) =>
+    normalizeGame(row, user.id)
   );
 }
 
@@ -77,6 +80,15 @@ export async function createRecordedGame(
   }
   if (input.players.length < 2) {
     throw new Error("A game needs at least two players");
+  }
+  const linkedIds = input.players
+    .filter((p) => !p.is_recorder && p.user_id)
+    .map((p) => p.user_id);
+  if (linkedIds.includes(user.id)) {
+    throw new Error("You can only be in one seat");
+  }
+  if (new Set(linkedIds).size !== linkedIds.length) {
+    throw new Error("Each friend can only be in one seat");
   }
 
   const { data: game, error: gameError } = await supabase
@@ -117,10 +129,13 @@ export async function createRecordedGame(
     throw playersError;
   }
 
-  return normalizeGame({
-    ...(game as GameRow),
-    players: (players ?? []) as PlayerRow[],
-  });
+  return normalizeGame(
+    {
+      ...(game as GameRow),
+      players: (players ?? []) as PlayerRow[],
+    },
+    user.id
+  );
 }
 
 export async function deleteRecordedGame(gameId: string): Promise<void> {

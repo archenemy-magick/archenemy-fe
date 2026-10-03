@@ -6,6 +6,7 @@ export { default as AuthProvider } from "./AuthProvider";
 export { ColorIdentityPicker, ColorPips } from "./ColorIdentityPicker";
 export { CommanderAutocomplete } from "./CommanderAutocomplete";
 export { default as DeckCard } from "./DeckCard";
+export { FriendsManager } from "./FriendsManager";
 export { default as Header } from "./Header";
 export { default as MantineProvider } from "./MantineProvider";
 export { Providers } from "./Providers";

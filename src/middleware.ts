@@ -202,6 +202,7 @@ export async function middleware(request: NextRequest) {
     "/game",
     "/games",
     "/stats",
+    "/friends",
     "/profile",
     "/deck-builder",
     "/popular-cards",

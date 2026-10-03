@@ -16,6 +16,8 @@ import {
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import type { RootState } from "~/store";
 import { ColorPips } from "~/components/ColorIdentityPicker";
 import { deleteRecordedGame, getRecordedGames } from "~/lib/api/recordedGames";
 import { gameResultFor, type GameResult } from "~/lib/gameStats";
@@ -29,6 +31,7 @@ const RESULT_BADGE: Record<GameResult, { label: string; color: string }> = {
 
 export default function GamesPage() {
   const router = useRouter();
+  const userId = useSelector((state: RootState) => state.user.id);
   const [games, setGames] = useState<RecordedGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -132,7 +135,13 @@ export default function GamesPage() {
         ) : (
           <Stack gap="md">
             {games.map((game) => {
-              const me = game.players.find((player) => player.is_recorder);
+              const me =
+                game.players.find((player) => player.is_viewer) ??
+                game.players.find((player) => player.is_recorder);
+              const recorder = game.players.find(
+                (player) => player.is_recorder
+              );
+              const recordedByMe = game.recorded_by === userId;
               const result = gameResultFor(game) ?? "D";
               return (
                 <Card key={game.id} withBorder padding="md">
@@ -167,23 +176,30 @@ export default function GamesPage() {
                       <Text size="sm" c="dimmed">
                         vs{" "}
                         {game.players
-                          .filter((player) => !player.is_recorder)
+                          .filter((player) => player !== me)
                           .map(
                             (player) =>
                               player.commander_name || player.display_name
                           )
                           .join(", ")}
                       </Text>
+                      {!recordedByMe && recorder ? (
+                        <Text size="xs" c="dimmed">
+                          Recorded by {recorder.display_name}
+                        </Text>
+                      ) : null}
                     </Stack>
-                    <ActionIcon
-                      color="red"
-                      variant="subtle"
-                      aria-label="Delete game"
-                      loading={deletingId === game.id}
-                      onClick={() => setConfirmingGame(game)}
-                    >
-                      <IconTrash size={16} />
-                    </ActionIcon>
+                    {recordedByMe ? (
+                      <ActionIcon
+                        color="red"
+                        variant="subtle"
+                        aria-label="Delete game"
+                        loading={deletingId === game.id}
+                        onClick={() => setConfirmingGame(game)}
+                      >
+                        <IconTrash size={16} />
+                      </ActionIcon>
+                    ) : null}
                   </Group>
                 </Card>
               );

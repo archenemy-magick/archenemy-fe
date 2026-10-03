@@ -8,6 +8,7 @@ import {
   IconDownload,
   IconHome,
   IconChartBar,
+  IconUsers,
 } from "@tabler/icons-react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "~/store/configureStore";
@@ -167,6 +168,13 @@ export function UserMenu() {
           onClick={() => router.push("/stats")}
         >
           Stats
+        </Menu.Item>
+
+        <Menu.Item
+          leftSection={<IconUsers size={14} />}
+          onClick={() => router.push("/friends")}
+        >
+          Friends
         </Menu.Item>
 
         <Menu.Item
