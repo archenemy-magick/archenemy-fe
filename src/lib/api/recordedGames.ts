@@ -153,3 +153,12 @@ export async function deleteRecordedGame(gameId: string): Promise<void> {
 
   if (error) throw error;
 }
+
+/** Remove yourself from a game a friend recorded; their copy is kept. */
+export async function unlinkMeFromRecordedGame(gameId: string): Promise<void> {
+  const { error } = await supabase.rpc("unlink_me_from_recorded_game", {
+    p_game_id: gameId,
+  });
+
+  if (error) throw error;
+}

@@ -652,6 +652,7 @@ export function StatsDashboard({
               <Card
                 withBorder
                 padding="sm"
+                className="card-hover"
                 style={{
                   outline:
                     filters.playerCount === entry.playerCount

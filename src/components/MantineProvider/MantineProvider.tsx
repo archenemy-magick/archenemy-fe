@@ -1,6 +1,6 @@
 "use client";
 
-import { MantineProvider, type MantineTheme } from "@mantine/core";
+import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 
 import AppShellLayout from "../AppShellLayout";
@@ -141,16 +141,9 @@ export default function CustomMantineProvider({
               radius: "lg",
               shadow: "sm",
             },
-            styles: (theme: MantineTheme) => ({
-              root: {
-                borderLeft: "3px solid transparent",
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  borderLeftColor: "#e91e8c",
-                  boxShadow: "0 8px 24px rgba(233, 30, 140, 0.15)",
-                },
-              },
-            }),
+            // Interactive cards opt into hover effects with the .card-hover
+            // class in globals.css. Don't add borders here: they override
+            // withBorder on one side and break the rounded corners.
           },
           Paper: {
             defaultProps: {
