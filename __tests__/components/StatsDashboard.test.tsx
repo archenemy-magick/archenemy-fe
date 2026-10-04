@@ -89,7 +89,8 @@ describe("StatsDashboard", () => {
     expect(screen.getByText("67%")).toBeInTheDocument();
     expect(screen.getByText("2W / 1L / 0D")).toBeInTheDocument();
     expect(screen.getByText("Head-to-head")).toBeInTheDocument();
-    expect(screen.getByText("Usually Krenko, Mob Boss")).toBeInTheDocument();
+    expect(screen.getByText("Sam")).toBeInTheDocument();
+    expect(screen.queryByText(/Usually/)).not.toBeInTheDocument();
     expect(screen.getByText("Yuriko, the Tiger's Shadow")).toBeInTheDocument();
   });
 
@@ -128,5 +129,55 @@ describe("StatsDashboard", () => {
     expect(onFiltersChange).toHaveBeenCalledWith(
       expect.objectContaining({ deckKey: expect.stringContaining("atraxa") })
     );
+  });
+
+  it("shows the top 5 opponents, with the rest in a Show all modal", async () => {
+    const names = ["Ava", "Ben", "Cy", "Dee", "Eli", "Fay", "Gus"];
+    // Ava plays 7 games, Ben 6, ... Gus 1, so the order is deterministic.
+    const manyOpponents = names.flatMap((name, i) =>
+      Array.from({ length: names.length - i }, (_, n) => ({
+        ...game(`${name}-${n}`, true, "Yuriko, the Tiger's Shadow"),
+        players: [
+          game("x", true, "Yuriko, the Tiger's Shadow").players[0],
+          seat({
+            id: `${name}-${n}-opp`,
+            display_name: name,
+            user_id: name === "Ava" ? "friend-ava" : null,
+          }),
+        ],
+      }))
+    );
+
+    render(
+      <StatsDashboard
+        games={manyOpponents}
+        filters={DEFAULT_STATS_FILTERS}
+        onFiltersChange={jest.fn()}
+        profileUsernames={new Map([["friend-ava", "ava_the_great"]])}
+      />
+    );
+
+    const link = screen.getByRole("link", { name: "ava_the_great" });
+    expect(link).toHaveAttribute("href", "/profile/ava_the_great");
+    expect(screen.getByText("Eli")).toBeInTheDocument();
+    expect(screen.queryByText("Fay")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Show all 7 opponents"));
+    expect(await screen.findByText("Gus")).toBeInTheDocument();
+  });
+
+  it("words stats for a friend's profile", () => {
+    render(
+      <StatsDashboard
+        games={games}
+        filters={DEFAULT_STATS_FILTERS}
+        onFiltersChange={jest.fn()}
+        subjectName="Rocco"
+      />
+    );
+    expect(screen.getByText("Rocco's wins")).toBeInTheDocument();
+    expect(
+      screen.getByText("Rocco's colors (must include)")
+    ).toBeInTheDocument();
   });
 });

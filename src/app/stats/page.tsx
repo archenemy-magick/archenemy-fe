@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { notifications } from "@mantine/notifications";
 import { StatsDashboard } from "~/components/StatsDashboard";
 import { getRecordedGames } from "~/lib/api/recordedGames";
+import { getFriends } from "~/lib/api/friends";
 import { DEFAULT_STATS_FILTERS, type GameStatsFilters } from "~/lib/gameStats";
 import type { RecordedGame } from "~/types/recordedGame";
 
@@ -26,6 +27,25 @@ export default function StatsPage() {
   const router = useRouter();
   const [games, setGames] = useState<RecordedGame[]>([]);
   const [loading, setLoading] = useState(true);
+  const [friendUsernames, setFriendUsernames] = useState<
+    ReadonlyMap<string, string>
+  >(new Map());
+
+  // Friends' names in Head-to-head link to their profiles.
+  useEffect(() => {
+    let cancelled = false;
+    getFriends()
+      .then((friends) => {
+        if (cancelled) return;
+        setFriendUsernames(new Map(friends.map((f) => [f.id, f.username])));
+      })
+      .catch(() => {
+        // Without friends the names are plain text.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [filters, setFilters] = useState<GameStatsFilters>(
     DEFAULT_STATS_FILTERS
   );
@@ -97,6 +117,7 @@ export default function StatsPage() {
             games={games}
             filters={filters}
             onFiltersChange={setFilters}
+            profileUsernames={friendUsernames}
           />
         )}
       </Stack>

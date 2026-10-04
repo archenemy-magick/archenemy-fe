@@ -217,7 +217,6 @@ describe("computeUserGameStats", () => {
       games: 2,
       yourWins: 1,
       theirWins: 0,
-      favoriteCommander: "Krenko, Mob Boss",
     });
     expect(alex).toMatchObject({ games: 1, yourWins: 0, theirWins: 1 });
   });

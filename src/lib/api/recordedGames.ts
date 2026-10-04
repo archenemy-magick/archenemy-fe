@@ -221,3 +221,21 @@ export async function unlinkMeFromRecordedGame(gameId: string): Promise<void> {
 
   if (error) throw error;
 }
+
+/**
+ * A friend's games, for their profile page. Seats are marked from the
+ * friend's point of view, so stats computed from these are the friend's.
+ */
+export async function getFriendRecordedGames(
+  friendId: string
+): Promise<RecordedGame[]> {
+  const { data, error } = await supabase.rpc("get_friend_recorded_games", {
+    p_friend_id: friendId,
+  });
+
+  if (error) throw error;
+
+  return ((data ?? []) as (GameRow & { players?: PlayerRow[] })[]).map((row) =>
+    normalizeGame(row, friendId)
+  );
+}

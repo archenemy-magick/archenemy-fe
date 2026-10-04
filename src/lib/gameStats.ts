@@ -69,7 +69,6 @@ export type OpponentStat = {
   yourWins: number;
   /** Games this opponent won. */
   theirWins: number;
-  favoriteCommander: string | null;
 };
 
 export type WinConditionStat = {
@@ -251,7 +250,6 @@ export function computeUserGameStats(
       games: number;
       yourWins: number;
       theirWins: number;
-      commanders: Map<string, number>;
     }
   >();
 
@@ -291,18 +289,10 @@ export function computeUserGameStats(
         games: 0,
         yourWins: 0,
         theirWins: 0,
-        commanders: new Map<string, number>(),
       };
       entry.games += 1;
       if (won) entry.yourWins += 1;
       if (result === "L" && opponent.is_winner) entry.theirWins += 1;
-      const commander = opponent.commander_name?.trim();
-      if (commander) {
-        entry.commanders.set(
-          commander,
-          (entry.commanders.get(commander) ?? 0) + 1
-        );
-      }
       opponentMap.set(opponentKey, entry);
     }
 
@@ -425,24 +415,7 @@ export function computeUserGameStats(
     }));
 
   const opponents: OpponentStat[] = Array.from(opponentMap.entries())
-    .map(([key, value]) => {
-      let favoriteCommander: string | null = null;
-      let favoriteCount = 0;
-      for (const [commander, count] of value.commanders) {
-        if (count > favoriteCount) {
-          favoriteCommander = commander;
-          favoriteCount = count;
-        }
-      }
-      return {
-        key,
-        name: value.name,
-        games: value.games,
-        yourWins: value.yourWins,
-        theirWins: value.theirWins,
-        favoriteCommander,
-      };
-    })
+    .map(([key, value]) => ({ key, ...value }))
     .sort((a, b) => b.games - a.games || a.name.localeCompare(b.name));
 
   const winConditions: WinConditionStat[] = Array.from(
