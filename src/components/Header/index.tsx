@@ -65,19 +65,13 @@ const Header = ({
           >
             Stats
           </LinkButton>
+          {/* Popular Cards and the deck pages live on the Archenemy hub. */}
           <LinkButton
             variant="transparent"
             className={classes.control}
-            href="/archenemy/popular-cards"
+            href="/archenemy"
           >
-            Popular Cards
-          </LinkButton>
-          <LinkButton
-            variant="transparent"
-            className={classes.control}
-            href="/archenemy/decks"
-          >
-            Archenemy Decks
+            Archenemy
           </LinkButton>
         </Group>
       </Group>
