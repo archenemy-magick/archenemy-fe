@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { Container, Box } from "@mantine/core";
 import { SignInForm } from "~/components/SignInForm";
 
@@ -16,7 +17,11 @@ const SignInPage = () => {
       }}
     >
       <Container size="xs" style={{ width: "100%" }}>
-        <SignInForm />
+        {/* SignInForm reads ?redirectTo= with useSearchParams, which needs a
+            Suspense boundary now that this page is prerendered. */}
+        <Suspense fallback={null}>
+          <SignInForm />
+        </Suspense>
       </Container>
     </Box>
   );

@@ -92,12 +92,12 @@ const Footer = () => {
                   backgroundClip: "text",
                 }}
               >
-                Archenemy
+                MagicSAK
               </Title>
             </Group>
             <Text size="sm" c="dimmed" style={{ maxWidth: 250 }}>
-              Build legendary scheme decks, unleash villainous strategies, and
-              dominate the battlefield.
+              Game utilities and stats for every Magic table. Play your games,
+              record them, and see what&apos;s really winning.
             </Text>
             <Text
               size="xs"
@@ -106,7 +106,7 @@ const Footer = () => {
               tt="uppercase"
               style={{ letterSpacing: 1 }}
             >
-              Embrace the Chaos
+              MTG&apos;s Swiss Army Knife
             </Text>
           </Stack>
 
@@ -239,7 +239,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <Group justify="space-between" align="center" wrap="wrap" gap="md">
           <Text size="sm" c="dimmed">
-            © {currentYear} Archenemy. All rights reserved.
+            © {currentYear} MagicSAK. All rights reserved.
           </Text>
           <Group gap="md">
             <Anchor

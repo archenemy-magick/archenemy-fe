@@ -21,24 +21,24 @@ import Footer from "~/components/Footer";
 
 describe("Footer", () => {
   describe("Branding Section", () => {
-    it("should display the Archenemy title", () => {
+    it("should display the MagicSAK title", () => {
       render(<Footer />);
 
-      expect(screen.getByText("Archenemy")).toBeInTheDocument();
+      expect(screen.getByText("MagicSAK")).toBeInTheDocument();
     });
 
     it("should display the tagline", () => {
       render(<Footer />);
 
       expect(
-        screen.getByText(/Build legendary scheme decks/i)
+        screen.getByText(/Game utilities and stats for every Magic table/i)
       ).toBeInTheDocument();
     });
 
     it("should display the brand motto", () => {
       render(<Footer />);
 
-      expect(screen.getByText("Embrace the Chaos")).toBeInTheDocument();
+      expect(screen.getByText("MTG's Swiss Army Knife")).toBeInTheDocument();
     });
   });
 
@@ -182,7 +182,7 @@ describe("Footer", () => {
 
       const currentYear = new Date().getFullYear();
       expect(
-        screen.getByText(`© ${currentYear} Archenemy. All rights reserved.`)
+        screen.getByText(`© ${currentYear} MagicSAK. All rights reserved.`)
       ).toBeInTheDocument();
     });
 
@@ -224,7 +224,7 @@ describe("Footer", () => {
       expect(screen.getByText("Quick Links")).toBeInTheDocument();
       expect(screen.getByText("Community")).toBeInTheDocument();
       expect(screen.getByText("Connect")).toBeInTheDocument();
-      expect(screen.getByText("Archenemy")).toBeInTheDocument();
+      expect(screen.getByText("MagicSAK")).toBeInTheDocument();
     });
   });
 
@@ -242,7 +242,7 @@ describe("Footer", () => {
       render(<Footer />);
 
       // The main title should be an h3
-      const mainTitle = screen.getByText("Archenemy");
+      const mainTitle = screen.getByText("MagicSAK");
       expect(mainTitle.tagName).toBe("H3");
     });
   });
@@ -252,7 +252,7 @@ describe("Footer", () => {
       render(<Footer />);
 
       // Logo & Tagline
-      expect(screen.getByText("Archenemy")).toBeInTheDocument();
+      expect(screen.getByText("MagicSAK")).toBeInTheDocument();
 
       // Quick Links
       expect(screen.getByText("Quick Links")).toBeInTheDocument();

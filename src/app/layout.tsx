@@ -22,11 +22,15 @@ export const metadata: Metadata = {
     template: "%s | MagicSAK",
   },
   description:
-    "Essential utilities for Magic: The Gathering. Track games, build decks, and enhance your MTG experience.",
+    "Game utilities and stats for Magic: The Gathering. Track life totals, run Archenemy and dungeons, record your Commander games, and see your win rate, best decks, and colors.",
 
   keywords: [
     "Magic The Gathering",
     "MTG",
+    "MTG Life Counter",
+    "Commander Stats",
+    "MTG Win Rate",
+    "Game Tracker",
     "Archenemy",
     "Scheme Decks",
     "Deck Builder",
@@ -52,7 +56,7 @@ export const metadata: Metadata = {
     siteName: "MagicSAK",
     title: "MagicSAK - The Swiss Army Knife for Magic: The Gathering",
     description:
-      "Build and play Magic: The Gathering Archenemy scheme decks and use other MTG tools.",
+      "Game utilities and stats for Magic: The Gathering. Track life totals, run Archenemy and dungeons, record your Commander games, and see your win rate, best decks, and colors.",
     images: [
       {
         url: "/og-image.png",
@@ -66,7 +70,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "MagicSAK - The Swiss Army Knife for Magic: The Gathering",
     description:
-      "Build and play Magic: The Gathering Archenemy scheme decks and use other MTG tools.",
+      "Game utilities and stats for Magic: The Gathering. Track life totals, run Archenemy and dungeons, record your Commander games, and see your win rate, best decks, and colors.",
     images: ["/og-image.png"],
   },
   robots: {
