@@ -67,6 +67,25 @@ const gameSliceReducer = {
     state.cards.previousCards = [];
     state.gameHistory = [];
   },
+  // Start a game from a deck that may not be in state.decks (e.g. someone
+  // else's public deck opened from its page).
+  startGameWithDeck(
+    state: InitialGameState,
+    action: { payload: CustomArchenemyDeck }
+  ) {
+    const deck = action.payload;
+    state.deckSelected = true;
+    state.selectedDeckId = deck.id;
+    state.gameStarted = true;
+    state.gameEnded = false;
+    state.gameHistory = [];
+    state.cards = {
+      currentCard: null,
+      cardPool: [...deck.deck_cards],
+      ongoingCards: [],
+      previousCards: [],
+    };
+  },
   selectDeck(state: InitialGameState, action: { payload: { deckId: string } }) {
     const selectedDeck = state.decks.find(
       (deck) => deck.id === action.payload.deckId
@@ -237,6 +256,7 @@ export const {
   startGame,
   endGame,
   selectDeck,
+  startGameWithDeck,
   abandonScheme,
   chooseSingleCard,
   undoLastCard,

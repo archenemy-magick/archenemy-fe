@@ -25,21 +25,60 @@ import {
   IconPlus,
   IconCoin,
 } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
 import {
   addTab,
   removeTab,
   setActiveTab,
+  updateTabConfig,
+  type GameTabType,
 } from "~/store/reducers/gameTabsReducer";
+import { parseGameUtilityParams } from "~/lib/gameLinks";
 import ArchenemyGame from "~/components/ArchenemyGame";
 import DungeonContainer from "~/components/DungeonContainer";
 import LifeTracker from "~/components/LifeTracker";
 import CoinFlipper from "~/components/CoinFlipper";
 
+const TAB_LABELS: Record<GameTabType, string> = {
+  archenemy: "Archenemy",
+  dungeons: "Dungeons",
+  "life-tracker": "Life Tracker",
+  "coin-flipper": "Coin Flipper",
+};
+
 export default function GamePage() {
   const dispatch = useDispatch();
+  const router = useRouter();
   const { tabs, activeTabId } = useSelector(
     (state: RootState) => state.gameTabs
   );
+
+  // Links like /game?utility=archenemy&deck=<id> open (or focus) that tab.
+  // Read once on mount, then drop the params so a refresh doesn't repeat it.
+  // window.location instead of useSearchParams avoids a Suspense boundary.
+  useEffect(() => {
+    const { utility, deckId } = parseGameUtilityParams(window.location.search);
+    if (!utility) return;
+
+    const existing = tabs.find((tab) => tab.type === utility);
+    if (existing) {
+      dispatch(setActiveTab(existing.id));
+      if (deckId) {
+        dispatch(updateTabConfig({ tabId: existing.id, config: { deckId } }));
+      }
+    } else {
+      dispatch(
+        addTab({
+          type: utility,
+          label: TAB_LABELS[utility],
+          config: deckId ? { deckId } : undefined,
+        })
+      );
+    }
+    router.replace("/game");
+    // Mount only: tabs are read once to decide between focus and create.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // TODO: add utility function that handles all of these in a separate file
   const handleAddArchenemy = () => {

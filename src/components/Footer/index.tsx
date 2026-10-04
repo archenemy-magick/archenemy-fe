@@ -38,13 +38,17 @@ const Footer = () => {
     { icon: IconMail, label: "Email", href: "mailto:contact@magicsak.com" },
   ];
 
+  // Game Utilities (/game) holds Archenemy, Dungeons, the Life Tracker, and
+  // the Coin Flipper, so those don't need their own links here.
   const quickLinks = [
     { label: "Home", href: "/" },
-    { label: "Deck Builder", href: "/decks/builder" },
-    { label: "My Decks", href: "/decks" },
-    { label: "Popular Cards", href: "/popular-cards" },
-    { label: "Play Game", href: "/game/archenemy" },
+    { label: "Game Utilities", href: "/game" },
+    { label: "Archenemy Deck Builder", href: "/archenemy/decks/builder" },
+    { label: "My Decks", href: "/archenemy/decks" },
+    { label: "Popular Cards", href: "/archenemy/popular-cards" },
     { label: "Stats", href: "/stats" },
+    { label: "Game Log", href: "/games" },
+    { label: "Friends", href: "/friends" },
   ];
 
   return (

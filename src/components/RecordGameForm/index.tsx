@@ -25,7 +25,11 @@ import { ColorIdentityPicker } from "~/components/ColorIdentityPicker";
 import { CommanderAutocomplete } from "~/components/CommanderAutocomplete";
 import { getFriends } from "~/lib/api/friends";
 import type { PublicProfile } from "~/lib/api/publicProfiles";
-import { createRecordedGame, getRecordedGames } from "~/lib/api/recordedGames";
+import {
+  createRecordedGame,
+  getRecordedGames,
+  updateRecordedGame,
+} from "~/lib/api/recordedGames";
 import { consumeRecordGameDraft } from "~/lib/gameRecordDraft";
 import { findDuplicateCandidates } from "~/lib/gameDuplicates";
 import { sortColors } from "~/lib/mtgColors";
@@ -59,6 +63,28 @@ type PlayerDraft = {
   ending_life: number | null;
 };
 
+// <input type="date"> wants the local calendar date; toISOString() would
+// give tomorrow's date on a US evening.
+function toLocalDateInput(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function seatToDraft(seat: RecordedGame["players"][number]): PlayerDraft {
+  return {
+    key: seat.id,
+    display_name: seat.display_name,
+    user_id: seat.is_recorder ? null : seat.user_id,
+    is_recorder: seat.is_recorder,
+    commander_name: seat.commander_name ?? "",
+    deck_name: seat.deck_name ?? "",
+    colors: seat.colors,
+    is_winner: seat.is_winner,
+    ending_life: seat.ending_life,
+  };
+}
+
 function emptyPlayer(isRecorder: boolean): PlayerDraft {
   return {
     key: `${Date.now()}-${Math.random()}`,
@@ -73,7 +99,12 @@ function emptyPlayer(isRecorder: boolean): PlayerDraft {
   };
 }
 
-export function RecordGameForm() {
+type RecordGameFormProps = {
+  /** When set, the form edits this game instead of recording a new one. */
+  game?: RecordedGame;
+};
+
+export function RecordGameForm({ game }: RecordGameFormProps = {}) {
   const router = useRouter();
   const {
     id: userId,
@@ -81,9 +112,7 @@ export function RecordGameForm() {
     isAuthenticated,
   } = useSelector((state: RootState) => state.user);
 
-  const [playedAt, setPlayedAt] = useState(
-    new Date().toISOString().slice(0, 10)
-  );
+  const [playedAt, setPlayedAt] = useState(() => toLocalDateInput(new Date()));
   const [format, setFormat] = useState<GameFormat>("commander");
   const [endedOnTurn, setEndedOnTurn] = useState<number | string>("");
   const [winCondition, setWinCondition] = useState<WinCondition | "">("");
@@ -116,9 +145,10 @@ export function RecordGameForm() {
     };
   }, [isAuthenticated]);
 
-  // Link seats whose names (e.g. from the Life Tracker) match a friend.
+  // Link seats whose names (e.g. from the Life Tracker) match a friend. Not
+  // when editing: a friend may have deliberately unlinked themselves.
   useEffect(() => {
-    if (!hydrated || friends.length === 0) return;
+    if (game || !hydrated || friends.length === 0) return;
     setPlayers((current) => {
       const taken = new Set(current.map((p) => p.user_id).filter(Boolean));
       return current.map((player) => {
@@ -129,7 +159,7 @@ export function RecordGameForm() {
         return { ...player, user_id: friend.id };
       });
     });
-  }, [hydrated, friends]);
+  }, [game, hydrated, friends]);
 
   // Offer commanders from past games first, most frequent first.
   useEffect(() => {
@@ -161,6 +191,18 @@ export function RecordGameForm() {
   }, [isAuthenticated]);
 
   useEffect(() => {
+    if (!game) return;
+    setPlayedAt(toLocalDateInput(new Date(game.played_at)));
+    setFormat(game.format);
+    setEndedOnTurn(game.ended_on_turn ?? "");
+    setWinCondition(game.win_condition ?? "");
+    setNotes(game.notes ?? "");
+    setPlayers(game.players.map(seatToDraft));
+    setHydrated(true);
+  }, [game]);
+
+  useEffect(() => {
+    if (game) return;
     const draft = consumeRecordGameDraft();
     if (draft) {
       setFormat(draft.format);
@@ -187,7 +229,7 @@ export function RecordGameForm() {
       );
     }
     setHydrated(true);
-  }, [username]);
+  }, [game, username]);
 
   const formatOptions = useMemo(
     () =>
@@ -311,7 +353,7 @@ export function RecordGameForm() {
             user_id: player.is_recorder ? userId : player.user_id,
           })),
         },
-        existingGames
+        existingGames.filter((other) => other.id !== game?.id)
       );
       if (matches.length > 0) {
         setDuplicateMatches(matches);
@@ -320,25 +362,37 @@ export function RecordGameForm() {
     }
     setDuplicateMatches([]);
 
+    const input = {
+      played_at: playedAtIso,
+      format,
+      ended_on_turn:
+        typeof endedOnTurn === "number"
+          ? endedOnTurn
+          : Number(endedOnTurn) || null,
+      win_condition: winCondition || null,
+      notes: notes.trim() || null,
+      players: payload,
+    };
+
     try {
       setSubmitting(true);
-      await createRecordedGame({
-        played_at: playedAtIso,
-        format,
-        ended_on_turn:
-          typeof endedOnTurn === "number"
-            ? endedOnTurn
-            : Number(endedOnTurn) || null,
-        win_condition: winCondition || null,
-        notes: notes.trim() || null,
-        players: payload,
-      });
-      notifications.show({
-        title: "Game recorded",
-        message: "Stats are updated.",
-        color: "green",
-      });
-      router.push("/stats");
+      if (game) {
+        await updateRecordedGame(game.id, input);
+        notifications.show({
+          title: "Game updated",
+          message: "Stats are updated.",
+          color: "green",
+        });
+        router.push("/games");
+      } else {
+        await createRecordedGame(input);
+        notifications.show({
+          title: "Game recorded",
+          message: "Stats are updated.",
+          color: "green",
+        });
+        router.push("/stats");
+      }
     } catch (error: unknown) {
       notifications.show({
         title: "Could not save game",
@@ -425,9 +479,9 @@ export function RecordGameForm() {
 
       <Text size="sm" c="dimmed">
         Mark yourself, pick a winner (or leave it as a draw), and log each
-        commander. Picking a suggested commander fills in its color identity.
-        Pick a friend from the name list and the game is added to their stats
-        too.
+        commander. Picking a suggested commander fills in its color identity; C
+        means a colorless deck. Pick a friend from the name list and the game is
+        added to their stats too.
       </Text>
 
       <Stack gap="md">
@@ -512,6 +566,10 @@ export function RecordGameForm() {
                 <ColorIdentityPicker
                   value={player.colors}
                   onChange={(colors) => updatePlayer(player.key, { colors })}
+                  colorless={{
+                    selected: player.colors.length === 0,
+                    onSelect: () => updatePlayer(player.key, { colors: [] }),
+                  }}
                 />
               </Stack>
               <Group>
@@ -539,11 +597,14 @@ export function RecordGameForm() {
       </Stack>
 
       <Group justify="flex-end">
-        <Button variant="subtle" onClick={() => router.push("/stats")}>
+        <Button
+          variant="subtle"
+          onClick={() => router.push(game ? "/games" : "/stats")}
+        >
           Cancel
         </Button>
         <Button onClick={() => handleSubmit()} loading={submitting}>
-          Save game
+          {game ? "Save changes" : "Save game"}
         </Button>
       </Group>
 
@@ -587,7 +648,7 @@ export function RecordGameForm() {
               Save anyway
             </Button>
             <Button onClick={() => router.push("/games")}>
-              Same game, don&apos;t save
+              {game ? "Discard my changes" : "Same game, don't save"}
             </Button>
           </Group>
         </Stack>

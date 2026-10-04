@@ -27,6 +27,7 @@ import {
   IconPlayerPlay,
   IconX,
 } from "@tabler/icons-react";
+import { playArchenemyDeckHref } from "~/lib/gameLinks";
 
 interface DeckWithCards {
   id: string;
@@ -78,7 +79,7 @@ const DeckDetailPage = () => {
   };
 
   const handlePlayDeck = () => {
-    router.push(`/game/archenemy?deck=${deckId}`);
+    router.push(playArchenemyDeckHref(deckId));
   };
 
   const handleEditDeck = () => {
