@@ -86,7 +86,22 @@ export const store = configureStore({
     }),
 });
 
-export const persistor = persistStore(store);
+// Rehydration is started by startPersistence() after the first render, so
+// server HTML and the first client render both use the initial state and
+// hydrate without mismatches. `manualPersist` is supported at runtime but
+// missing from redux-persist 6's types.
+export const persistor = persistStore(store, {
+  manualPersist: true,
+} as Parameters<typeof persistStore>[1]);
+
+let persistenceStarted = false;
+
+/** Idempotent: safe under React StrictMode's double effects. */
+export function startPersistence() {
+  if (persistenceStarted) return;
+  persistenceStarted = true;
+  persistor.persist();
+}
 
 export type RootState = {
   game: InitialGameState;

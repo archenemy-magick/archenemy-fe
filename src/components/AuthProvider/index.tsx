@@ -5,11 +5,16 @@ import { createClient } from "~/lib/supabase/client";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "~/store/configureStore";
 import { setUser, checkAuth } from "~/store/reducers";
+import { usePersistRehydrated } from "~/lib/hooks/usePersistRehydrated";
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch<AppDispatch>();
+  // Public pages render before saved state is restored. Wait for it, or the
+  // restored (possibly stale) user would overwrite this fresh auth check.
+  const rehydrated = usePersistRehydrated();
 
   useEffect(() => {
+    if (!rehydrated) return;
     const supabase = createClient();
 
     // Check initial auth state
@@ -37,7 +42,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [dispatch]);
+  }, [dispatch, rehydrated]);
 
   return <>{children}</>;
 };
