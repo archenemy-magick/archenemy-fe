@@ -35,6 +35,7 @@ import {
 } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { cloneDeck, updateDeck } from "~/lib/api/decks";
+import { playArchenemyDeckHref } from "~/lib/gameLinks";
 
 const DecksPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -328,7 +329,7 @@ const DecksPage = () => {
                         leftSection={<IconPlayerPlay size={16} />}
                         onClick={(e) => {
                           e.stopPropagation();
-                          router.push(`/game/archenemy?deck=${deck.id}`);
+                          router.push(playArchenemyDeckHref(deck.id));
                         }}
                         style={{ flex: 1 }}
                       >

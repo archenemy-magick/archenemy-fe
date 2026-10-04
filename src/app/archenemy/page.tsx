@@ -17,6 +17,7 @@ import {
   IconPlayCard,
 } from "@tabler/icons-react";
 import Link from "next/link";
+import { gameUtilityHref } from "~/lib/gameLinks";
 
 export default function ArchenemyPage() {
   return (
@@ -44,7 +45,7 @@ export default function ArchenemyPage() {
             </Text>
             <Button
               component={Link}
-              href="/game/archenemy"
+              href={gameUtilityHref("archenemy")}
               variant="filled"
               fullWidth
             >

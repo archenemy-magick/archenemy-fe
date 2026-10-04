@@ -12,7 +12,10 @@ export type GameStatsFilters = {
   format: string;
   playerCount: number | "all";
   datePreset: StatsDatePreset;
+  /** Decks must include all of these colors. */
   colors: MtgColor[];
+  /** Only colorless decks. Mutually exclusive with `colors`. */
+  colorless: boolean;
   deckKey: string | null;
 };
 
@@ -21,6 +24,7 @@ export const DEFAULT_STATS_FILTERS: GameStatsFilters = {
   playerCount: "all",
   datePreset: "all",
   colors: [],
+  colorless: false,
   deckKey: null,
 };
 
@@ -36,7 +40,8 @@ export type DeckStat = {
 };
 
 export type ColorUsage = {
-  color: MtgColor;
+  /** "C" is colorless: games played with an empty color identity. */
+  color: MtgColor | "C";
   games: number;
   wins: number;
   winRate: number;
@@ -194,6 +199,8 @@ export function filterRecordedGames(
     const me = viewerSeat(game);
     if (!me) return false;
 
+    if (filters.colorless && me.colors.length > 0) return false;
+
     if (filters.colors.length > 0) {
       const hasAll = filters.colors.every((color) => me.colors.includes(color));
       if (!hasAll) return false;
@@ -220,7 +227,7 @@ export function computeUserGameStats(
   let endingTurnSum = 0;
   let endingTurnCount = 0;
 
-  const colorMap = new Map<MtgColor, { games: number; wins: number }>();
+  const colorMap = new Map<MtgColor | "C", { games: number; wins: number }>();
   const deckMap = new Map<
     string,
     {
@@ -248,7 +255,7 @@ export function computeUserGameStats(
     }
   >();
 
-  for (const color of MTG_COLORS) {
+  for (const color of [...MTG_COLORS, "C" as const]) {
     colorMap.set(color, { games: 0, wins: 0 });
   }
 
@@ -304,7 +311,7 @@ export function computeUserGameStats(
       endingTurnCount += 1;
     }
 
-    for (const color of me.colors) {
+    for (const color of me.colors.length > 0 ? me.colors : (["C"] as const)) {
       const entry = colorMap.get(color);
       if (entry) {
         entry.games += 1;
@@ -380,15 +387,17 @@ export function computeUserGameStats(
     return b.games - a.games;
   });
 
-  const mostUsedColors: ColorUsage[] = MTG_COLORS.map((color) => {
-    const entry = colorMap.get(color)!;
-    return {
-      color,
-      games: entry.games,
-      wins: entry.wins,
-      winRate: entry.games === 0 ? 0 : entry.wins / entry.games,
-    };
-  });
+  const mostUsedColors: ColorUsage[] = [...MTG_COLORS, "C" as const].map(
+    (color) => {
+      const entry = colorMap.get(color)!;
+      return {
+        color,
+        games: entry.games,
+        wins: entry.wins,
+        winRate: entry.games === 0 ? 0 : entry.wins / entry.games,
+      };
+    }
+  );
 
   const monthly: MonthlyStat[] = Array.from(monthMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))

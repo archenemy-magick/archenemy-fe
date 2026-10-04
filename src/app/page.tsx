@@ -33,6 +33,7 @@ import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "~/store";
 import NextImage from "next/image";
+import { gameUtilityHref } from "~/lib/gameLinks";
 
 const HomePage = () => {
   const router = useRouter();
@@ -90,7 +91,7 @@ const HomePage = () => {
       icon: IconSword,
       title: "Game Interface",
       description: "Track schemes, life, and dominate your games",
-      href: "/game/archenemy",
+      href: gameUtilityHref("archenemy"),
     },
     {
       icon: IconCards,
@@ -102,7 +103,7 @@ const HomePage = () => {
       icon: IconTrophy,
       title: "Popular Cards",
       description: "Most feared schemes in the community",
-      href: "/archenemy/decks/popular",
+      href: "/archenemy/popular-cards",
     },
     {
       icon: IconUsers,

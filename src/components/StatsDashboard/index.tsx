@@ -23,7 +23,7 @@ import {
   ColorIdentityPicker,
   ColorPips,
 } from "~/components/ColorIdentityPicker";
-import { COLOR_META } from "~/lib/mtgColors";
+import { COLOR_META, COLORLESS_META } from "~/lib/mtgColors";
 import {
   computeUserGameStats,
   DEFAULT_STATS_FILTERS,
@@ -326,7 +326,18 @@ export function StatsDashboard({
             </Text>
             <ColorIdentityPicker
               value={filters.colors}
-              onChange={(colors) => onFiltersChange({ ...filters, colors })}
+              onChange={(colors) =>
+                onFiltersChange({ ...filters, colors, colorless: false })
+              }
+              colorless={{
+                selected: filters.colorless,
+                onSelect: () =>
+                  onFiltersChange({
+                    ...filters,
+                    colors: [],
+                    colorless: !filters.colorless,
+                  }),
+              }}
             />
           </Stack>
           {filters.deckKey ? (
@@ -402,34 +413,52 @@ export function StatsDashboard({
             Most used colors
           </Title>
           <Text size="sm" c="dimmed" mb="md">
-            Tap a color to filter. Bars are games you piloted with that pip.
+            Tap a color to filter. Bars are games you played with that color in
+            your deck; colorless counts decks with no colors.
           </Text>
           <Stack gap="sm">
-            {stats.mostUsedColors.map((entry) => (
-              <BarRow
-                key={entry.color}
-                label={
-                  <Group gap="xs">
-                    <ColorPips colors={[entry.color]} />
-                    <Text size="sm">{COLOR_META[entry.color].name}</Text>
-                  </Group>
+            {stats.mostUsedColors.map((entry) => {
+              const color = entry.color;
+              const meta = color === "C" ? COLORLESS_META : COLOR_META[color];
+              const active =
+                color === "C"
+                  ? filters.colorless
+                  : filters.colors.includes(color);
+              const toggle = () => {
+                if (color === "C") {
+                  onFiltersChange({
+                    ...filters,
+                    colors: [],
+                    colorless: !filters.colorless,
+                  });
+                  return;
                 }
-                value={entry.games}
-                max={maxColorGames}
-                color={COLOR_META[entry.color].fill}
-                active={filters.colors.includes(entry.color)}
-                onClick={() => {
-                  const next = filters.colors.includes(entry.color)
-                    ? filters.colors.filter((c) => c !== entry.color)
-                    : [...filters.colors, entry.color];
-                  onFiltersChange({ ...filters, colors: next });
-                }}
-                right={`${entry.games} · ${percent(entry.winRate)}`}
-                tooltip={`${entry.games} games, ${entry.wins} wins with ${
-                  COLOR_META[entry.color].name
-                }`}
-              />
-            ))}
+                const next = filters.colors.includes(color)
+                  ? filters.colors.filter((c) => c !== color)
+                  : [...filters.colors, color];
+                onFiltersChange({ ...filters, colors: next, colorless: false });
+              };
+              return (
+                <BarRow
+                  key={color}
+                  label={
+                    <Group gap="xs">
+                      <ColorPips colors={color === "C" ? [] : [color]} />
+                      <Text size="sm">{meta.name}</Text>
+                    </Group>
+                  }
+                  value={entry.games}
+                  max={maxColorGames}
+                  color={meta.fill}
+                  active={active}
+                  onClick={toggle}
+                  right={`${entry.games} · ${percent(entry.winRate)}`}
+                  tooltip={`${entry.games} games, ${
+                    entry.wins
+                  } wins with ${meta.name.toLowerCase()} decks`}
+                />
+              );
+            })}
           </Stack>
         </Card>
 

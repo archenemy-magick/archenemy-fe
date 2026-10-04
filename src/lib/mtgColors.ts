@@ -11,6 +11,14 @@ export const COLOR_META: Record<
   G: { label: "G", name: "Green", fill: "#00733E", text: "#FFFFFF" },
 };
 
+/** An empty color identity. Not a color in the data model: colors = []. */
+export const COLORLESS_META = {
+  label: "C",
+  name: "Colorless",
+  fill: "#C4C4C4",
+  text: "#222222",
+};
+
 export function sortColors(colors: readonly string[]): MtgColor[] {
   return MTG_COLORS.filter((color) => colors.includes(color));
 }

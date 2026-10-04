@@ -43,8 +43,12 @@ import {
   selectDeck,
   shuffleCardPool,
   startGame,
+  startGameWithDeck,
   undoLastCard,
 } from "~/store/reducers";
+import { updateTabConfig } from "~/store/reducers/gameTabsReducer";
+import { getDeckById } from "~/lib/api/decks";
+import { parseGameUtilityParams } from "~/lib/gameLinks";
 import fetchAllArchenemyDecks from "~/store/thunks/fetchAllDecks";
 import { CustomArchenemyCard } from "~/types";
 
@@ -70,24 +74,97 @@ const ArchenemyGame = ({ tabId = "default" }: { tabId?: string }) => {
     deckSelected,
     gameEnded,
     decks,
+    selectedDeckId,
     gameHistory = [],
   } = useSelector((state: RootState) => state.game);
 
-  // Check for saved game on mount
+  // A deck requested by a "Play" link (see lib/gameLinks). "placeholder" is
+  // what the New Utility menu sets when no deck is chosen yet.
+  const configDeckId = useSelector(
+    (state: RootState) =>
+      state.gameTabs.tabs.find((tab) => tab.id === tabId)?.config?.deckId
+  );
+  const requestedDeckId =
+    configDeckId && configDeckId !== "placeholder" ? configDeckId : null;
+  const [loadingRequestedDeck, setLoadingRequestedDeck] = useState(false);
+
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedGame = localStorage.getItem("archenemyGameState");
-      if (savedGame) {
-        const shouldResume = window.confirm(
-          "A saved game was found. Would you like to resume it?"
-        );
-        if (shouldResume) {
-          dispatch(loadGameState());
-        } else {
+    if (!requestedDeckId) return;
+    let cancelled = false;
+    const clearRequest = () =>
+      dispatch(updateTabConfig({ tabId, config: { deckId: undefined } }));
+
+    // Already playing this deck: just show it.
+    if (gameStarted && selectedDeckId === requestedDeckId) {
+      clearRequest();
+      return;
+    }
+
+    (async () => {
+      setLoadingRequestedDeck(true);
+      try {
+        // Yield once so a cancelled (StrictMode) run never reaches confirm().
+        await Promise.resolve();
+        if (cancelled) return;
+        const deck =
+          decks.find((d) => d.id === requestedDeckId) ??
+          (await getDeckById(requestedDeckId));
+        if (cancelled) return;
+
+        if (gameStarted) {
+          const replace = window.confirm(
+            `You have an Archenemy game in progress. End it and start "${deck.name}"?`
+          );
+          if (!replace) return;
+          dispatch(endGame());
           dispatch(clearSavedGame());
         }
+
+        dispatch(startGameWithDeck(deck));
+        closeDeckModal();
+      } catch {
+        if (!cancelled) {
+          notifications.show({
+            title: "Could not load deck",
+            message: "It may have been deleted or made private.",
+            color: "red",
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingRequestedDeck(false);
+          clearRequest();
+        }
       }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // Runs once per request; game state is read at that moment on purpose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedDeckId]);
+
+  // Check for saved game on mount. Skipped when a Play link chose a deck:
+  // that flow asks about any game in progress itself. The /game page
+  // applies ?deck= after this child effect runs, so check the URL too.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const deckFromUrl = parseGameUtilityParams(window.location.search).deckId;
+    if (requestedDeckId || deckFromUrl) return;
+
+    const savedGame = localStorage.getItem("archenemyGameState");
+    if (!savedGame) return;
+    const shouldResume = window.confirm(
+      "A saved game was found. Would you like to resume it?"
+    );
+    if (shouldResume) {
+      dispatch(loadGameState());
+    } else {
+      dispatch(clearSavedGame());
     }
+    // Mount only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
 
   useEffect(() => {
@@ -160,7 +237,12 @@ const ArchenemyGame = ({ tabId = "default" }: { tabId?: string }) => {
     >
       {decks?.length > 0 && (
         <ArchenemyDeckSelectorModal
-          open={!gameStarted && !deckSelected}
+          open={
+            !gameStarted &&
+            !deckSelected &&
+            !requestedDeckId &&
+            !loadingRequestedDeck
+          }
           onClose={closeDeckModal}
           onSelectDeck={handleSelectDeck}
           decks={decks}

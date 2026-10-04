@@ -10,6 +10,7 @@ export {
   selectDungeon,
   shuffleCardPool,
   startGame,
+  startGameWithDeck,
   undoLastCard,
   clearDungeonSelection,
 } from "./gameReducer";

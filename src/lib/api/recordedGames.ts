@@ -65,15 +65,32 @@ export async function getRecordedGames(): Promise<RecordedGame[]> {
   );
 }
 
-export async function createRecordedGame(
-  input: CreateRecordedGameInput
-): Promise<RecordedGame> {
+export async function getRecordedGame(
+  gameId: string
+): Promise<RecordedGame | null> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) throw new Error("Not authenticated");
 
+  const { data, error } = await supabase
+    .from("recorded_games")
+    .select(
+      `
+      *,
+      players:recorded_game_players(*)
+    `
+    )
+    .eq("id", gameId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+  return normalizeGame(data as GameRow & { players?: PlayerRow[] }, user.id);
+}
+
+function validateSeats(input: CreateRecordedGameInput, userId: string) {
   const recorderCount = input.players.filter((p) => p.is_recorder).length;
   if (recorderCount !== 1) {
     throw new Error("Mark exactly one player as you");
@@ -84,12 +101,24 @@ export async function createRecordedGame(
   const linkedIds = input.players
     .filter((p) => !p.is_recorder && p.user_id)
     .map((p) => p.user_id);
-  if (linkedIds.includes(user.id)) {
+  if (linkedIds.includes(userId)) {
     throw new Error("You can only be in one seat");
   }
   if (new Set(linkedIds).size !== linkedIds.length) {
     throw new Error("Each friend can only be in one seat");
   }
+}
+
+export async function createRecordedGame(
+  input: CreateRecordedGameInput
+): Promise<RecordedGame> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Not authenticated");
+
+  validateSeats(input, user.id);
 
   const { data: game, error: gameError } = await supabase
     .from("recorded_games")
@@ -136,6 +165,36 @@ export async function createRecordedGame(
     },
     user.id
   );
+}
+
+/**
+ * Replace a game's details and seats. Runs as one transaction in the
+ * database, so a failure leaves the original game intact.
+ */
+export async function updateRecordedGame(
+  gameId: string,
+  input: CreateRecordedGameInput
+): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Not authenticated");
+
+  validateSeats(input, user.id);
+
+  const { players, ...game } = input;
+  const { error } = await supabase.rpc("update_recorded_game", {
+    p_game_id: gameId,
+    p_game: game,
+    p_players: players.map((player, index) => ({
+      ...player,
+      colors: sortColors(player.colors),
+      seat_order: player.seat_order ?? index,
+    })),
+  });
+
+  if (error) throw error;
 }
 
 export async function deleteRecordedGame(gameId: string): Promise<void> {

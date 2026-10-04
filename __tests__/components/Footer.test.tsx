@@ -53,29 +53,31 @@ describe("Footer", () => {
       render(<Footer />);
 
       expect(screen.getByText("Home")).toBeInTheDocument();
-      expect(screen.getByText("Deck Builder")).toBeInTheDocument();
+      expect(screen.getByText("Game Utilities")).toBeInTheDocument();
+      expect(screen.getByText("Archenemy Deck Builder")).toBeInTheDocument();
       expect(screen.getByText("My Decks")).toBeInTheDocument();
       expect(screen.getByText("Popular Cards")).toBeInTheDocument();
-      expect(screen.getByText("Play Game")).toBeInTheDocument();
       expect(screen.getByText("Stats")).toBeInTheDocument();
+      expect(screen.getByText("Game Log")).toBeInTheDocument();
+      expect(screen.getByText("Friends")).toBeInTheDocument();
     });
 
     it("should have correct href attributes for quick links", () => {
       render(<Footer />);
 
-      const homeLink = screen.getByText("Home").closest("a");
-      const deckBuilderLink = screen.getByText("Deck Builder").closest("a");
-      const myDecksLink = screen.getByText("My Decks").closest("a");
-      const popularCardsLink = screen.getByText("Popular Cards").closest("a");
-      const playGameLink = screen.getByText("Play Game").closest("a");
-      const statsLink = screen.getByText("Stats").closest("a");
+      const hrefFor = (label: string) =>
+        screen.getByText(label).closest("a")?.getAttribute("href");
 
-      expect(homeLink).toHaveAttribute("href", "/");
-      expect(deckBuilderLink).toHaveAttribute("href", "/decks/builder");
-      expect(myDecksLink).toHaveAttribute("href", "/decks");
-      expect(popularCardsLink).toHaveAttribute("href", "/popular-cards");
-      expect(playGameLink).toHaveAttribute("href", "/game/archenemy");
-      expect(statsLink).toHaveAttribute("href", "/stats");
+      expect(hrefFor("Home")).toBe("/");
+      expect(hrefFor("Game Utilities")).toBe("/game");
+      expect(hrefFor("Archenemy Deck Builder")).toBe(
+        "/archenemy/decks/builder"
+      );
+      expect(hrefFor("My Decks")).toBe("/archenemy/decks");
+      expect(hrefFor("Popular Cards")).toBe("/archenemy/popular-cards");
+      expect(hrefFor("Stats")).toBe("/stats");
+      expect(hrefFor("Game Log")).toBe("/games");
+      expect(hrefFor("Friends")).toBe("/friends");
     });
   });
 

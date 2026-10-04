@@ -17,6 +17,7 @@ import {
 } from "@mantine/core";
 import {
   IconCopy,
+  IconPencil,
   IconPlus,
   IconTrash,
   IconUserMinus,
@@ -297,16 +298,29 @@ export default function GamesPage() {
                       ) : null}
                     </Stack>
                     {recordedByMe ? (
-                      <Tooltip label="Delete game" withArrow>
-                        <ActionIcon
-                          color="red"
-                          variant="subtle"
-                          aria-label="Delete game"
-                          onClick={() => setPending({ kind: "delete", game })}
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      </Tooltip>
+                      <Group gap={4} wrap="nowrap">
+                        <Tooltip label="Edit game" withArrow>
+                          <ActionIcon
+                            variant="subtle"
+                            aria-label="Edit game"
+                            onClick={() =>
+                              router.push(`/games/${game.id}/edit`)
+                            }
+                          >
+                            <IconPencil size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Delete game" withArrow>
+                          <ActionIcon
+                            color="red"
+                            variant="subtle"
+                            aria-label="Delete game"
+                            onClick={() => setPending({ kind: "delete", game })}
+                          >
+                            <IconTrash size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
                     ) : (
                       <Tooltip label="Remove me from this game" withArrow>
                         <ActionIcon

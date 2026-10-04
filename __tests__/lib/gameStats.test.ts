@@ -295,4 +295,46 @@ describe("computeUserGameStats", () => {
       expect.objectContaining({ key: "friend-1", name: "Sam", theirWins: 0 }),
     ]);
   });
+
+  describe("colorless decks", () => {
+    const colorlessGame = game({
+      id: "g5",
+      played_at: "2026-09-28T12:00:00.000Z",
+      players: [
+        player({
+          id: "p10",
+          game_id: "g5",
+          display_name: "Me",
+          is_recorder: true,
+          commander_name: "Kozilek, the Great Distortion",
+          colors: [],
+          is_winner: true,
+        }),
+        player({
+          id: "p11",
+          game_id: "g5",
+          display_name: "Sam",
+          seat_order: 1,
+        }),
+      ],
+    });
+    const games = [...sampleGames, colorlessGame];
+
+    it("counts colorless games in their own color row", () => {
+      const stats = computeUserGameStats(games, DEFAULT_STATS_FILTERS, now);
+      const colorless = stats.mostUsedColors.find((c) => c.color === "C");
+      expect(colorless).toMatchObject({ games: 1, wins: 1, winRate: 1 });
+      expect(stats.mostUsedColors.find((c) => c.color === "W")?.games).toBe(2);
+    });
+
+    it("filters to colorless decks only", () => {
+      const stats = computeUserGameStats(
+        games,
+        { ...DEFAULT_STATS_FILTERS, colorless: true },
+        now
+      );
+      expect(stats.filteredGames.map((g) => g.id)).toEqual(["g5"]);
+      expect(stats.winningestDecks[0].colorLabel).toBe("Colorless");
+    });
+  });
 });
