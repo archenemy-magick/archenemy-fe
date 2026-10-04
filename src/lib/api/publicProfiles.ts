@@ -35,6 +35,20 @@ function escapeLike(value: string) {
   return value.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
+/** Exact (case-insensitive) username lookup, for profile pages. */
+export async function getPublicProfileByUsername(
+  username: string
+): Promise<PublicProfile | null> {
+  const { data, error } = await supabase
+    .from("public_profiles")
+    .select("id, username, avatar_url")
+    .ilike("username", escapeLike(username.trim()))
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as PublicProfile | null) ?? null;
+}
+
 /** Username prefix search, excluding the signed-in user. */
 export async function searchPublicProfiles(
   query: string,

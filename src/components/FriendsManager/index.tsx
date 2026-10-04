@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  Anchor,
   Avatar,
   Badge,
   Button,
@@ -16,6 +17,8 @@ import {
 import { useDebouncedValue } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconSearch, IconUserPlus } from "@tabler/icons-react";
+import Link from "next/link";
+import { profileHref } from "~/lib/profileLinks";
 import {
   acceptFriendRequest,
   getFriendLists,
@@ -48,14 +51,22 @@ function ProfileRow({
 }) {
   return (
     <Group justify="space-between" wrap="nowrap">
-      <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
-        <Avatar src={profile.avatar_url} radius="xl" size="md">
-          {profile.username.slice(0, 2).toUpperCase()}
-        </Avatar>
-        <Text fw={600} truncate>
-          {profile.username}
-        </Text>
-      </Group>
+      <Anchor
+        component={Link}
+        href={profileHref(profile.username)}
+        underline="hover"
+        c="inherit"
+        style={{ minWidth: 0 }}
+      >
+        <Group gap="sm" wrap="nowrap">
+          <Avatar src={profile.avatar_url} radius="xl" size="md">
+            {profile.username.slice(0, 2).toUpperCase()}
+          </Avatar>
+          <Text fw={600} truncate>
+            {profile.username}
+          </Text>
+        </Group>
+      </Anchor>
       <Group gap="xs" wrap="nowrap">
         {children}
       </Group>

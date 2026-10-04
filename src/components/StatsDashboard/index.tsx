@@ -17,7 +17,12 @@ import {
   Title,
   Tooltip,
   UnstyledButton,
+  Anchor,
+  Modal,
+  ScrollArea,
 } from "@mantine/core";
+import Link from "next/link";
+import { profileHref } from "~/lib/profileLinks";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import {
   ColorIdentityPicker,
@@ -30,6 +35,7 @@ import {
   type DeckStat,
   type GameResult,
   type GameStatsFilters,
+  type OpponentStat,
   type StatsDatePreset,
 } from "~/lib/gameStats";
 import {
@@ -193,17 +199,87 @@ function SortableTh({
   );
 }
 
+const TOP_OPPONENTS = 5;
+
+function OpponentsTable({
+  opponents,
+  profileUsernames,
+  whose,
+}: {
+  opponents: OpponentStat[];
+  profileUsernames: ReadonlyMap<string, string>;
+  whose: string;
+}) {
+  return (
+    <Table.ScrollContainer minWidth={320}>
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Opponent</Table.Th>
+            <Table.Th>Games</Table.Th>
+            <Table.Th>{whose} wins</Table.Th>
+            <Table.Th>Their wins</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {opponents.map((opponent) => {
+            // Opponent keys are user ids for linked seats (see gameStats).
+            const username = profileUsernames.get(opponent.key);
+            return (
+              <Table.Tr key={opponent.key}>
+                <Table.Td>
+                  {username ? (
+                    <Anchor
+                      component={Link}
+                      href={profileHref(username)}
+                      fw={600}
+                      size="sm"
+                    >
+                      {username}
+                    </Anchor>
+                  ) : (
+                    <Text fw={600} size="sm">
+                      {opponent.name}
+                    </Text>
+                  )}
+                </Table.Td>
+                <Table.Td>{opponent.games}</Table.Td>
+                <Table.Td>{opponent.yourWins}</Table.Td>
+                <Table.Td>{opponent.theirWins}</Table.Td>
+              </Table.Tr>
+            );
+          })}
+        </Table.Tbody>
+      </Table>
+    </Table.ScrollContainer>
+  );
+}
+
 type StatsDashboardProps = {
   games: RecordedGame[];
   filters: GameStatsFilters;
   onFiltersChange: (filters: GameStatsFilters) => void;
+  /**
+   * Whose stats these are, for wording ("Rocco's wins"). Omit for the
+   * signed-in user's own stats.
+   */
+  subjectName?: string;
+  /** user id -> username for people whose names should link to a profile. */
+  profileUsernames?: ReadonlyMap<string, string>;
 };
+
+const NO_PROFILES: ReadonlyMap<string, string> = new Map();
 
 export function StatsDashboard({
   games,
   filters,
   onFiltersChange,
+  subjectName,
+  profileUsernames = NO_PROFILES,
 }: StatsDashboardProps) {
+  const who = subjectName ?? "you";
+  const whose = subjectName ? `${subjectName}'s` : "Your";
+  const [allOpponentsOpen, setAllOpponentsOpen] = useState(false);
   const stats = useMemo(
     () => computeUserGameStats(games, filters),
     [games, filters]
@@ -236,9 +312,10 @@ export function StatsDashboard({
     1,
     ...stats.mostUsedColors.map((entry) => entry.games)
   );
+  const recentMonths = stats.monthly.slice(-6);
   const maxMonthGames = Math.max(
     1,
-    ...stats.monthly.map((entry) => entry.games)
+    ...recentMonths.map((entry) => entry.games)
   );
   const maxConditionGames = Math.max(
     1,
@@ -252,12 +329,20 @@ export function StatsDashboard({
         <Title order={3} mb="xs">
           No games yet
         </Title>
-        <Text c="dimmed" mb="md">
-          Record a finished match to unlock win rate, deck, and color stats.
-        </Text>
-        <Button component="a" href="/games/record">
-          Record a game
-        </Button>
+        {subjectName ? (
+          <Text c="dimmed">
+            {subjectName} hasn&apos;t recorded any games yet.
+          </Text>
+        ) : (
+          <>
+            <Text c="dimmed" mb="md">
+              Record a finished match to unlock win rate, deck, and color stats.
+            </Text>
+            <Button component="a" href="/games/record">
+              Record a game
+            </Button>
+          </>
+        )}
       </Card>
     );
   }
@@ -322,7 +407,7 @@ export function StatsDashboard({
           </SimpleGrid>
           <Stack gap={6}>
             <Text size="sm" fw={500}>
-              Your colors (must include)
+              {whose} colors (must include)
             </Text>
             <ColorIdentityPicker
               value={filters.colors}
@@ -461,34 +546,6 @@ export function StatsDashboard({
             })}
           </Stack>
         </Card>
-
-        <Card withBorder padding="md">
-          <Title order={4} mb="md">
-            Games by month
-          </Title>
-          {stats.monthly.length === 0 ? (
-            <Text c="dimmed" size="sm">
-              No games in this range.
-            </Text>
-          ) : (
-            <Stack gap="sm">
-              {stats.monthly.map((entry) => (
-                <BarRow
-                  key={entry.month}
-                  label={<Text size="sm">{entry.label}</Text>}
-                  value={entry.games}
-                  max={maxMonthGames}
-                  color="linear-gradient(90deg, #e91e8c, #845ef7)"
-                  right={`${entry.wins}W / ${entry.games}`}
-                  tooltip={`${entry.label}: ${entry.games} games, ${entry.wins} wins`}
-                />
-              ))}
-            </Stack>
-          )}
-        </Card>
-      </SimpleGrid>
-
-      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
         <Card withBorder padding="md">
           <Title order={4} mb="md">
             How games ended
@@ -511,53 +568,149 @@ export function StatsDashboard({
                     value={entry.games}
                     max={maxConditionGames}
                     color="var(--mantine-color-grape-6)"
-                    right={`${entry.games} · you won ${entry.yourWins}`}
-                    tooltip={`${label}: ${entry.games} games, ${entry.yourWins} of them your wins`}
+                    right={`${entry.games} · ${who} won ${entry.yourWins}`}
+                    tooltip={`${label}: ${entry.games} games, ${entry.yourWins} won by ${who}`}
                   />
                 );
               })}
             </Stack>
           )}
         </Card>
+      </SimpleGrid>
 
+      <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="lg">
         <Card withBorder padding="md">
           <Title order={4} mb="xs">
             Head-to-head
           </Title>
           <Text size="sm" c="dimmed" mb="md">
-            Everyone you have sat down with, and who took the game.
+            Most frequent opponents, and who took the game.
           </Text>
           {stats.opponents.length === 0 ? (
             <Text c="dimmed" size="sm">
               No opponents in this range.
             </Text>
           ) : (
-            <Table.ScrollContainer minWidth={360}>
-              <Table>
+            <>
+              <OpponentsTable
+                opponents={stats.opponents.slice(0, TOP_OPPONENTS)}
+                profileUsernames={profileUsernames}
+                whose={whose}
+              />
+              {stats.opponents.length > TOP_OPPONENTS ? (
+                <Button
+                  variant="subtle"
+                  size="xs"
+                  mt="sm"
+                  fullWidth
+                  onClick={() => setAllOpponentsOpen(true)}
+                >
+                  Show all {stats.opponents.length} opponents
+                </Button>
+              ) : null}
+              <Modal
+                opened={allOpponentsOpen}
+                onClose={() => setAllOpponentsOpen(false)}
+                title="All opponents"
+                size="lg"
+                centered
+                scrollAreaComponent={ScrollArea.Autosize}
+              >
+                <OpponentsTable
+                  opponents={stats.opponents}
+                  profileUsernames={profileUsernames}
+                  whose={whose}
+                />
+              </Modal>
+            </>
+          )}
+        </Card>
+        <Card withBorder padding="md">
+          <Title order={4} mb="xs">
+            Winningest decks
+          </Title>
+          <Text size="sm" c="dimmed" mb="md">
+            Click a row to focus stats on that deck. Click a column to sort.
+          </Text>
+          {stats.winningestDecks.length === 0 ? (
+            <Text c="dimmed" size="sm">
+              No decks match these filters.
+            </Text>
+          ) : (
+            <Table.ScrollContainer minWidth={500}>
+              <Table highlightOnHover>
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th>Opponent</Table.Th>
-                    <Table.Th>Games</Table.Th>
-                    <Table.Th>Your wins</Table.Th>
-                    <Table.Th>Their wins</Table.Th>
+                    <SortableTh
+                      label="Commander"
+                      sortKey="commander"
+                      sort={deckSort}
+                      onSort={handleDeckSort}
+                    />
+                    <Table.Th>Colors</Table.Th>
+                    <SortableTh
+                      label="Games"
+                      sortKey="games"
+                      sort={deckSort}
+                      onSort={handleDeckSort}
+                    />
+                    <SortableTh
+                      label="Wins"
+                      sortKey="wins"
+                      sort={deckSort}
+                      onSort={handleDeckSort}
+                    />
+                    <SortableTh
+                      label="Win rate"
+                      sortKey="winRate"
+                      sort={deckSort}
+                      onSort={handleDeckSort}
+                    />
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {stats.opponents.slice(0, 10).map((opponent) => (
-                    <Table.Tr key={opponent.key}>
+                  {sortedDecks.map((deck) => (
+                    <Table.Tr
+                      key={deck.key}
+                      onClick={() =>
+                        onFiltersChange({
+                          ...filters,
+                          deckKey:
+                            filters.deckKey === deck.key ? null : deck.key,
+                        })
+                      }
+                      style={{
+                        cursor: "pointer",
+                        background:
+                          filters.deckKey === deck.key
+                            ? "rgba(132, 94, 247, 0.15)"
+                            : undefined,
+                      }}
+                    >
                       <Table.Td>
-                        <Text fw={600} size="sm">
-                          {opponent.name}
-                        </Text>
-                        {opponent.favoriteCommander ? (
+                        <Text fw={600}>{deck.commanderName}</Text>
+                        {deck.deckName ? (
                           <Text size="xs" c="dimmed">
-                            Usually {opponent.favoriteCommander}
+                            {deck.deckName}
                           </Text>
                         ) : null}
                       </Table.Td>
-                      <Table.Td>{opponent.games}</Table.Td>
-                      <Table.Td>{opponent.yourWins}</Table.Td>
-                      <Table.Td>{opponent.theirWins}</Table.Td>
+                      <Table.Td>
+                        <ColorPips colors={deck.colors} />
+                      </Table.Td>
+                      <Table.Td>{deck.games}</Table.Td>
+                      <Table.Td>{deck.wins}</Table.Td>
+                      <Table.Td>
+                        <Group gap="xs">
+                          <Progress
+                            value={deck.winRate * 100}
+                            size="sm"
+                            w={80}
+                            color="grape"
+                          />
+                          <Text size="sm">{percent(deck.winRate)}</Text>
+                        </Group>
+                      </Table.Td>
                     </Table.Tr>
                   ))}
                 </Table.Tbody>
@@ -567,137 +720,61 @@ export function StatsDashboard({
         </Card>
       </SimpleGrid>
 
-      <Card withBorder padding="md">
-        <Title order={4} mb="xs">
-          Winningest decks
-        </Title>
-        <Text size="sm" c="dimmed" mb="md">
-          Click a row to focus stats on that deck. Click a column to sort.
-        </Text>
-        {stats.winningestDecks.length === 0 ? (
-          <Text c="dimmed" size="sm">
-            No decks match these filters.
-          </Text>
-        ) : (
-          <Table.ScrollContainer minWidth={500}>
-            <Table highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <SortableTh
-                    label="Commander"
-                    sortKey="commander"
-                    sort={deckSort}
-                    onSort={handleDeckSort}
-                  />
-                  <Table.Th>Colors</Table.Th>
-                  <SortableTh
-                    label="Games"
-                    sortKey="games"
-                    sort={deckSort}
-                    onSort={handleDeckSort}
-                  />
-                  <SortableTh
-                    label="Wins"
-                    sortKey="wins"
-                    sort={deckSort}
-                    onSort={handleDeckSort}
-                  />
-                  <SortableTh
-                    label="Win rate"
-                    sortKey="winRate"
-                    sort={deckSort}
-                    onSort={handleDeckSort}
-                  />
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {sortedDecks.map((deck) => (
-                  <Table.Tr
-                    key={deck.key}
-                    onClick={() =>
-                      onFiltersChange({
-                        ...filters,
-                        deckKey: filters.deckKey === deck.key ? null : deck.key,
-                      })
-                    }
-                    style={{
-                      cursor: "pointer",
-                      background:
-                        filters.deckKey === deck.key
-                          ? "rgba(132, 94, 247, 0.15)"
-                          : undefined,
-                    }}
-                  >
-                    <Table.Td>
-                      <Text fw={600}>{deck.commanderName}</Text>
-                      {deck.deckName ? (
-                        <Text size="xs" c="dimmed">
-                          {deck.deckName}
-                        </Text>
-                      ) : null}
-                    </Table.Td>
-                    <Table.Td>
-                      <ColorPips colors={deck.colors} />
-                    </Table.Td>
-                    <Table.Td>{deck.games}</Table.Td>
-                    <Table.Td>{deck.wins}</Table.Td>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <Progress
-                          value={deck.winRate * 100}
-                          size="sm"
-                          w={80}
-                          color="grape"
-                        />
-                        <Text size="sm">{percent(deck.winRate)}</Text>
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          </Table.ScrollContainer>
-        )}
-      </Card>
+      {/* Secondary, compact row: these stay sparse for most players. */}
+      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+        <Card withBorder padding="sm">
+          <Title order={5} mb="xs">
+            Pod size
+          </Title>
+          <Group gap="xs" wrap="wrap">
+            {stats.byPlayerCount.map((entry) => {
+              const active = filters.playerCount === entry.playerCount;
+              return (
+                <Button
+                  key={entry.playerCount}
+                  size="compact-sm"
+                  variant={active ? "filled" : "default"}
+                  color="grape"
+                  onClick={() =>
+                    onFiltersChange({
+                      ...filters,
+                      playerCount: active ? "all" : entry.playerCount,
+                    })
+                  }
+                >
+                  {entry.playerCount}p · {entry.games} games ·{" "}
+                  {percent(entry.winRate)}
+                </Button>
+              );
+            })}
+          </Group>
+        </Card>
 
-      <Card withBorder padding="md">
-        <Title order={4} mb="md">
-          Pod size
-        </Title>
-        <SimpleGrid cols={{ base: 2, sm: 4 }}>
-          {stats.byPlayerCount.map((entry) => (
-            <UnstyledButton
-              key={entry.playerCount}
-              onClick={() =>
-                onFiltersChange({
-                  ...filters,
-                  playerCount:
-                    filters.playerCount === entry.playerCount
-                      ? "all"
-                      : entry.playerCount,
-                })
-              }
-            >
-              <Card
-                withBorder
-                padding="sm"
-                className="card-hover"
-                style={{
-                  outline:
-                    filters.playerCount === entry.playerCount
-                      ? "2px solid var(--mantine-color-grape-5)"
-                      : undefined,
-                }}
-              >
-                <Text fw={700}>{entry.playerCount} players</Text>
-                <Text size="sm" c="dimmed">
-                  {entry.games} games · {percent(entry.winRate)}
-                </Text>
-              </Card>
-            </UnstyledButton>
-          ))}
-        </SimpleGrid>
-      </Card>
+        <Card withBorder padding="sm">
+          <Title order={5} mb="xs">
+            Games by month
+          </Title>
+          {stats.monthly.length === 0 ? (
+            <Text c="dimmed" size="sm">
+              No games in this range.
+            </Text>
+          ) : (
+            <Stack gap={6}>
+              {recentMonths.map((entry) => (
+                <BarRow
+                  key={entry.month}
+                  label={<Text size="xs">{entry.label}</Text>}
+                  value={entry.games}
+                  max={maxMonthGames}
+                  color="linear-gradient(90deg, #e91e8c, #845ef7)"
+                  right={`${entry.wins}W / ${entry.games}`}
+                  tooltip={`${entry.label}: ${entry.games} games, ${entry.wins} wins`}
+                />
+              ))}
+            </Stack>
+          )}
+        </Card>
+      </SimpleGrid>
     </Stack>
   );
 }
