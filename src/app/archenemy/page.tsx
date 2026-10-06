@@ -13,22 +13,35 @@ import {
 } from "@mantine/core";
 import {
   IconArrowRight,
+  IconBook,
   IconCards,
+  IconLock,
   IconPlayCard,
   IconPlus,
   IconTrendingUp,
   IconUsers,
 } from "@tabler/icons-react";
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import type { RootState } from "~/store";
 import { gameUtilityHref } from "~/lib/gameLinks";
 
 const SECTIONS = [
+  {
+    icon: IconBook,
+    title: "Built-in Archenemy Decks",
+    description:
+      "Ready-to-play scheme decks, including Archenemy: Nicol Bolas.",
+    href: "/archenemy/decks/built-in",
+    requiresAccount: false,
+  },
   {
     icon: IconTrendingUp,
     title: "Popular Cards",
     description:
       "The most-liked and most-played scheme cards in the community.",
     href: "/archenemy/popular-cards",
+    requiresAccount: false,
   },
   {
     icon: IconUsers,
@@ -36,16 +49,22 @@ const SECTIONS = [
     description:
       "Browse decks other players have shared, and play one in a click.",
     href: "/archenemy/decks/public",
+    requiresAccount: false,
   },
   {
     icon: IconCards,
     title: "My Archenemy Decks",
     description: "Your scheme decks: play, edit, or build a new one.",
     href: "/archenemy/decks",
+    requiresAccount: true,
   },
 ];
 
 export default function ArchenemyPage() {
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.user.isAuthenticated
+  );
+
   return (
     <Container size="lg" py="xl">
       <Stack gap="xl">
@@ -76,7 +95,7 @@ export default function ArchenemyPage() {
           </Group>
         </Group>
 
-        <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
           {SECTIONS.map((section) => {
             const Icon = section.icon;
             return (
@@ -106,8 +125,13 @@ export default function ArchenemyPage() {
                     </Text>
                   </div>
                   <Group gap={4}>
+                    {section.requiresAccount && !isAuthenticated ? (
+                      <IconLock size={14} color="var(--mantine-color-dimmed)" />
+                    ) : null}
                     <Text size="sm" fw={600} c="magenta">
-                      Open
+                      {section.requiresAccount && !isAuthenticated
+                        ? "Sign in to open"
+                        : "Open"}
                     </Text>
                     <IconArrowRight
                       size={16}

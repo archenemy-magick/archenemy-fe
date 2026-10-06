@@ -106,7 +106,7 @@ const HomePage = () => {
       icon: IconClipboardList,
       title: "Record",
       description:
-        "When the game ends, record it in a few taps: commanders, colors, the turn it ended, and who won. Friends at the table get it in their stats too.",
+        "With a free account, record each game in a few taps: commanders, colors, the turn it ended, and who won. Friends at the table get it in their stats too.",
     },
     {
       icon: IconChartBar,
@@ -127,7 +127,8 @@ const HomePage = () => {
     {
       icon: IconSword,
       title: "Archenemy",
-      description: "Draw schemes, track ongoing ones, and play your decks",
+      description:
+        "Play built-in scheme decks or your own, and track ongoing schemes",
       color: "magenta",
       href: gameUtilityHref("archenemy"),
     },
@@ -176,13 +177,13 @@ const HomePage = () => {
   const archenemyFeatures = [
     {
       icon: IconCards,
-      title: "Deck Builder",
+      title: "Archenemy Deck Builder",
       description: "Build and customize scheme decks",
       href: "/archenemy/decks/builder",
     },
     {
       icon: IconTrophy,
-      title: "Popular Cards",
+      title: "Popular Archenemy Schemes",
       description: "The most-played schemes in the community",
       href: "/archenemy/popular-cards",
     },
@@ -233,9 +234,9 @@ const HomePage = () => {
               </Title>
 
               <Text size="xl" c="gray.2" maw={680}>
-                Game utilities for every Magic table, plus a record of every
-                game you play: your win rate, best decks, favorite colors, and
-                rivalries with friends.
+                Free game utilities for every Magic table, no account needed.
+                Sign up to keep a record of every game: your win rate, best
+                decks, favorite colors, and rivalries with friends.
               </Text>
 
               <Group gap="md" justify="center">
@@ -265,17 +266,18 @@ const HomePage = () => {
                       size="lg"
                       variant="white"
                       leftSection={<IconBolt size={20} />}
-                      onClick={() => router.push("/signup")}
+                      onClick={() => router.push(gameUtilityHref())}
                     >
-                      Get started free
+                      Open Game Utilities
                     </Button>
                     <Button
                       size="lg"
                       variant="outline"
                       color="white"
-                      onClick={() => router.push("/signin")}
+                      leftSection={<IconChartBar size={20} />}
+                      onClick={() => router.push("/signup")}
                     >
-                      Sign in
+                      Sign up to track stats
                     </Button>
                   </>
                 )}
@@ -346,8 +348,9 @@ const HomePage = () => {
                   Your command center at the table
                 </Title>
                 <Text size="lg" c="dimmed" maw={640} m="auto">
-                  Open as many utilities as you need, each in its own tab.
-                  Switch between them mid-game without losing anything.
+                  No account needed. Open as many utilities as you need, each in
+                  its own tab, and switch between them mid-game without losing
+                  anything.
                 </Text>
               </Box>
 
@@ -450,7 +453,7 @@ const HomePage = () => {
                     router.push(isAuthenticated ? "/games/record" : "/signup")
                   }
                 >
-                  {isAuthenticated ? "Record a game" : "Start tracking"}
+                  {isAuthenticated ? "Record a game" : "Create a free account"}
                 </Button>
               </Group>
             </Stack>
@@ -681,12 +684,12 @@ const HomePage = () => {
               >
                 {isAuthenticated
                   ? "Your next game is waiting"
-                  : "Start tracking your games"}
+                  : "Pull up a seat"}
               </Title>
               <Text size="lg" c="gray.2">
                 {isAuthenticated
                   ? "Open the utilities, play, and record it when you're done."
-                  : "Free to use. Bring your playgroup and see who's really the best at the table."}
+                  : "Use the utilities right now, no account needed. Sign up when you want to track your games and see who's really the best at the table."}
               </Text>
               <Group gap="md" justify="center">
                 {isAuthenticated ? (
@@ -712,17 +715,17 @@ const HomePage = () => {
                     <Button
                       size="lg"
                       variant="white"
-                      onClick={() => router.push("/signup")}
+                      onClick={() => router.push(gameUtilityHref())}
                     >
-                      Sign up free
+                      Open Game Utilities
                     </Button>
                     <Button
                       size="lg"
                       variant="outline"
                       color="white"
-                      onClick={() => router.push("/signin")}
+                      onClick={() => router.push("/signup")}
                     >
-                      Sign in
+                      Sign up free
                     </Button>
                   </>
                 )}

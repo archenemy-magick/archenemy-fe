@@ -33,6 +33,11 @@ import {
 } from "~/lib/api/decks";
 import { CustomArchenemyCard, CustomArchenemyDeck } from "~/types";
 import { IconHeart, IconHeartFilled } from "@tabler/icons-react";
+import { useSelector } from "react-redux";
+import type { RootState } from "~/store";
+import { PlayDeckButton } from "~/components/PlayDeckButton";
+import Link from "next/link";
+import { IconExternalLink } from "@tabler/icons-react";
 
 // Extend the type to include profiles for public deck view
 type PublicDeckWithProfile = CustomArchenemyDeck & {
@@ -42,8 +47,17 @@ type PublicDeckWithProfile = CustomArchenemyDeck & {
   like_count?: number;
 };
 
+const SIGN_IN_HERE = `/signin?redirectTo=${encodeURIComponent(
+  "/archenemy/decks/public"
+)}`;
+
 const PublicDecksPage = () => {
   const router = useRouter();
+  // Browsing and playing are open to everyone; liking and cloning need an
+  // account, so signed-out visitors are sent to sign in (and back here).
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.user.isAuthenticated
+  );
   const [publicDecks, setPublicDecks] = useState<PublicDeckWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -99,6 +113,10 @@ const PublicDecksPage = () => {
 
   // Clone deck handler
   const handleCloneDeck = async (deck: PublicDeckWithProfile) => {
+    if (!isAuthenticated) {
+      router.push(SIGN_IN_HERE);
+      return;
+    }
     setCloning(deck.id);
 
     try {
@@ -136,6 +154,10 @@ const PublicDecksPage = () => {
     currentlyLiked: boolean
   ) => {
     e.stopPropagation(); // Prevent card click when clicking like button
+    if (!isAuthenticated) {
+      router.push(SIGN_IN_HERE);
+      return;
+    }
     setLikingDeck(deckId);
 
     try {
@@ -202,7 +224,11 @@ const PublicDecksPage = () => {
               Discover and clone decks from the community
             </Text>
           </div>
-          <Button onClick={() => router.push("/decks")}>My Decks</Button>
+          {isAuthenticated ? (
+            <Button onClick={() => router.push("/archenemy/decks")}>
+              My Decks
+            </Button>
+          ) : null}
         </Group>
 
         {/* Search Bar */}
@@ -325,57 +351,71 @@ const PublicDecksPage = () => {
                       )}
 
                       <Group gap="xs" mb="md">
-                        <Text size="xs" c="dimmed">
-                          by {deck.profiles?.username || "Unknown"}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          •
-                        </Text>
+                        {/* Usernames are only visible when signed in. */}
+                        {deck.profiles?.username ? (
+                          <>
+                            <Text size="xs" c="dimmed">
+                              by {deck.profiles.username}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              •
+                            </Text>
+                          </>
+                        ) : null}
                         <Text size="xs" c="dimmed">
                           {new Date(deck.created_at).toLocaleDateString()}
                         </Text>
                       </Group>
                     </div>
 
-                    <Group gap="xs">
-                      <Tooltip
-                        label={likedDecks.has(deck.id) ? "Unlike" : "Like"}
-                      >
-                        <ActionIcon
-                          variant="light"
-                          size="lg"
-                          color={likedDecks.has(deck.id) ? "pink" : "gray"}
-                          onClick={(e) =>
-                            handleToggleLike(
-                              e,
-                              deck.id,
-                              likedDecks.has(deck.id)
-                            )
+                    <Stack gap="xs">
+                      <PlayDeckButton deckId={deck.id} fullWidth />
+                      <Group gap="xs">
+                        <Tooltip
+                          label={
+                            !isAuthenticated
+                              ? "Sign in to like decks"
+                              : likedDecks.has(deck.id)
+                              ? "Unlike"
+                              : "Like"
                           }
-                          loading={likingDeck === deck.id}
                         >
-                          {likedDecks.has(deck.id) ? (
-                            <IconHeartFilled size={18} />
-                          ) : (
-                            <IconHeart size={18} />
-                          )}
-                        </ActionIcon>
-                      </Tooltip>
+                          <ActionIcon
+                            variant="light"
+                            size="lg"
+                            color={likedDecks.has(deck.id) ? "pink" : "gray"}
+                            onClick={(e) =>
+                              handleToggleLike(
+                                e,
+                                deck.id,
+                                likedDecks.has(deck.id)
+                              )
+                            }
+                            loading={likingDeck === deck.id}
+                          >
+                            {likedDecks.has(deck.id) ? (
+                              <IconHeartFilled size={18} />
+                            ) : (
+                              <IconHeart size={18} />
+                            )}
+                          </ActionIcon>
+                        </Tooltip>
 
-                      <Button
-                        leftSection={<IconCopy size={16} />}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCloneDeck(deck);
-                        }}
-                        loading={cloning === deck.id}
-                        disabled={cloning !== null}
-                        fullWidth
-                        variant="light"
-                      >
-                        Clone to My Decks
-                      </Button>
-                    </Group>
+                        <Button
+                          leftSection={<IconCopy size={16} />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCloneDeck(deck);
+                          }}
+                          loading={cloning === deck.id}
+                          disabled={cloning !== null}
+                          fullWidth
+                          variant="light"
+                        >
+                          Clone to My Decks
+                        </Button>
+                      </Group>
+                    </Stack>
                   </Stack>
                 </Card>
               </Grid.Col>
@@ -415,16 +455,33 @@ const PublicDecksPage = () => {
                 </>
               )}
 
-              <div>
-                <Text size="sm" fw={500} mb="xs">
-                  Deck Creator
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {previewDeck.profiles?.username || "Unknown"}
-                </Text>
-              </div>
+              <Group gap="sm" grow>
+                <PlayDeckButton deckId={previewDeck.id} />
+                {/* The deck's own page has a link anyone can open. */}
+                <Button
+                  component={Link}
+                  href={`/archenemy/decks/${previewDeck.id}`}
+                  variant="default"
+                  leftSection={<IconExternalLink size={16} />}
+                >
+                  Open deck page
+                </Button>
+              </Group>
 
-              <Divider />
+              {previewDeck.profiles?.username ? (
+                <>
+                  <div>
+                    <Text size="sm" fw={500} mb="xs">
+                      Deck Creator
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      {previewDeck.profiles.username}
+                    </Text>
+                  </div>
+
+                  <Divider />
+                </>
+              ) : null}
 
               <div>
                 <Text size="sm" fw={500} mb="md">

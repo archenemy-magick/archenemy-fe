@@ -75,7 +75,9 @@ const PRESET_STARTING_LIFE = [20, 30, 40];
 export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
   const dispatch = useDispatch();
   const router = useRouter();
-  const username = useSelector((state: RootState) => state.user.username);
+  const { username, isAuthenticated } = useSelector(
+    (state: RootState) => state.user
+  );
 
   // Get game state from Redux
   const game = useSelector(
@@ -441,7 +443,8 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                 onClick={handleRecordGame}
                 color="grape"
               >
-                Record Game
+                {/* Signed-out users go through sign-in; the draft is kept. */}
+                {isAuthenticated ? "Record Game" : "Record Game (sign in)"}
               </Menu.Item>
 
               <Menu.Divider />

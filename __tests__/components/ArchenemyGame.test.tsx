@@ -9,6 +9,21 @@ jest.mock("~/store/thunks", () => ({
   saveArchenemyDeck: createAsyncThunk("decks/save", async () => ({})),
 }));
 
+// Built-in decks come from the card table; don't hit the network in tests.
+jest.mock("~/lib/archenemy/defaultDecks", () => ({
+  ...jest.requireActual("~/lib/archenemy/defaultDecks"),
+  getDefaultArchenemyDecks: jest.fn(async () => [
+    {
+      id: "default-test",
+      name: "Built-in Test Deck",
+      user_id: "",
+      created_at: "",
+      updated_at: "",
+      deck_cards: [],
+    },
+  ]),
+}));
+
 // NOW import everything else
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -16,6 +31,7 @@ import { render } from "~/testUtils/render";
 import ArchenemyGame from "~/components/ArchenemyGame";
 import type { CustomArchenemyCard, CustomArchenemyDeck } from "~/types";
 import { notifications } from "@mantine/notifications";
+import { initialUserState } from "~/store/reducers/userReducer";
 
 describe("ArchenemyGame", () => {
   const mockCard: CustomArchenemyCard = {
@@ -79,8 +95,9 @@ describe("ArchenemyGame", () => {
   });
 
   describe("Initial Render", () => {
-    it("should show deck selector when no deck is selected", () => {
+    it("should show deck selector when no deck is selected", async () => {
       const initialState = {
+        user: { ...initialUserState, isAuthenticated: true, loading: false },
         game: {
           gameStarted: false,
           gameEnded: false,
@@ -99,7 +116,34 @@ describe("ArchenemyGame", () => {
 
       render(<ArchenemyGame />, { initialState });
 
-      expect(screen.getByText("Test Deck")).toBeInTheDocument();
+      expect(await screen.findByText("Test Deck")).toBeInTheDocument();
+      expect(await screen.findByText("Built-in Test Deck")).toBeInTheDocument();
+    });
+
+    it("shows only built-in decks to signed-out players", async () => {
+      const initialState = {
+        game: {
+          gameStarted: false,
+          gameEnded: false,
+          deckSelected: false,
+          cards: {
+            currentCard: null,
+            previousCards: [],
+            ongoingCards: [],
+            cardPool: [],
+          },
+          // Left in storage by a previous signed-in session.
+          decks: [mockDeck],
+          selectedDeck: null,
+          gameHistory: [],
+        },
+      };
+
+      render(<ArchenemyGame />, { initialState });
+
+      expect(await screen.findByText("Built-in Test Deck")).toBeInTheDocument();
+      expect(screen.queryByText("Test Deck")).not.toBeInTheDocument();
+      expect(screen.getByText("Create a free account")).toBeInTheDocument();
     });
 
     it("should show stats card with zero cards", () => {

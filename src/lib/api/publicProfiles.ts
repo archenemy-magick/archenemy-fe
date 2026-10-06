@@ -18,6 +18,13 @@ export async function getPublicProfiles(
   const unique = Array.from(new Set(ids.filter(Boolean)));
   if (unique.length === 0) return new Map();
 
+  // public_profiles is readable only when signed in. Skip the request for
+  // signed-out visitors (e.g. browsing community decks) instead of a 401.
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) return new Map();
+
   const { data, error } = await supabase
     .from("public_profiles")
     .select("id, username, avatar_url")

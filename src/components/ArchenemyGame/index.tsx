@@ -28,7 +28,7 @@ import {
   IconDeviceFloppy,
   IconHistory,
 } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ArchenemyDeckSelectorModal from "~/components/ArchenemyDeckSelectorModal";
 import type { RootState } from "~/store";
@@ -49,15 +49,47 @@ import {
 import { updateTabConfig } from "~/store/reducers/gameTabsReducer";
 import { getDeckById } from "~/lib/api/decks";
 import { parseGameUtilityParams } from "~/lib/gameLinks";
+import {
+  getDefaultArchenemyDecks,
+  isDefaultDeckId,
+} from "~/lib/archenemy/defaultDecks";
 import fetchAllArchenemyDecks from "~/store/thunks/fetchAllDecks";
-import { CustomArchenemyCard } from "~/types";
+import { CustomArchenemyCard, CustomArchenemyDeck } from "~/types";
 
 const ArchenemyGame = ({ tabId = "default" }: { tabId?: string }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.user.isAuthenticated
+  );
+
+  // Built-in decks: playable by everyone, including signed-out visitors.
+  const [defaultDecks, setDefaultDecks] = useState<CustomArchenemyDeck[]>([]);
+  const [defaultDecksLoaded, setDefaultDecksLoaded] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    getDefaultArchenemyDecks()
+      .then((loaded) => {
+        if (!cancelled) setDefaultDecks(loaded);
+      })
+      .catch(() => {
+        // The picker still shows the user's own decks.
+      })
+      .finally(() => {
+        if (!cancelled) setDefaultDecksLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSelectDeck = (deckId: string) => {
-    dispatch(selectDeck({ deckId }));
-    dispatch(startGame());
+    if (isDefaultDeckId(deckId)) {
+      const deck = defaultDecks.find((d) => d.id === deckId);
+      if (deck) dispatch(startGameWithDeck(deck));
+    } else {
+      dispatch(selectDeck({ deckId }));
+      dispatch(startGame());
+    }
     closeDeckModal();
   };
   const isDesktop = useMediaQuery("(min-width: 1200px)");
@@ -106,10 +138,14 @@ const ArchenemyGame = ({ tabId = "default" }: { tabId?: string }) => {
         // Yield once so a cancelled (StrictMode) run never reaches confirm().
         await Promise.resolve();
         if (cancelled) return;
-        const deck =
-          decks.find((d) => d.id === requestedDeckId) ??
-          (await getDeckById(requestedDeckId));
+        const deck = isDefaultDeckId(requestedDeckId)
+          ? (await getDefaultArchenemyDecks()).find(
+              (d) => d.id === requestedDeckId
+            )
+          : decks.find((d) => d.id === requestedDeckId) ??
+            (await getDeckById(requestedDeckId));
         if (cancelled) return;
+        if (!deck) throw new Error("Deck not found");
 
         if (gameStarted) {
           const replace = window.confirm(
@@ -167,11 +203,16 @@ const ArchenemyGame = ({ tabId = "default" }: { tabId?: string }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
 
+  // Signed-in users' own decks, fetched once. (Re-running on `decks` would
+  // loop forever for a user with no decks: each fetch stores a new [].)
+  const fetchedUserDecks = useRef(false);
   useEffect(() => {
+    if (!isAuthenticated || fetchedUserDecks.current) return;
     if (!gameStarted && !deckSelected && !gameEnded && decks?.length === 0) {
+      fetchedUserDecks.current = true;
       dispatch(fetchAllArchenemyDecks());
     }
-  }, [dispatch, gameStarted, deckSelected, decks, gameEnded]);
+  }, [dispatch, isAuthenticated, gameStarted, deckSelected, decks, gameEnded]);
 
   const [cardModalOpened, { open: openCardModal, close: closeCardModal }] =
     useDisclosure(false);
@@ -235,7 +276,7 @@ const ArchenemyGame = ({ tabId = "default" }: { tabId?: string }) => {
         minHeight: "100vh",
       }}
     >
-      {decks?.length > 0 && (
+      {(defaultDecksLoaded || decks?.length > 0) && (
         <ArchenemyDeckSelectorModal
           open={
             !gameStarted &&
@@ -245,7 +286,9 @@ const ArchenemyGame = ({ tabId = "default" }: { tabId?: string }) => {
           }
           onClose={closeDeckModal}
           onSelectDeck={handleSelectDeck}
-          decks={decks}
+          decks={isAuthenticated ? decks : []}
+          defaultDecks={defaultDecks}
+          isAuthenticated={isAuthenticated}
         />
       )}
       <Modal

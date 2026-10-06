@@ -199,7 +199,8 @@ export async function middleware(request: NextRequest) {
     "/admin/:path*",
     "/decks",
     "/archenemy",
-    "/game",
+    // "/game" (Game Utilities) is open to everyone. "/games" is the game
+    // log, which needs an account. Matching is by prefix, so keep it listed.
     "/games",
     "/stats",
     "/friends",
@@ -207,9 +208,27 @@ export async function middleware(request: NextRequest) {
     "/deck-builder",
     "/popular-cards",
   ];
-  const isProtectedPath = protectedPaths.some((path) =>
-    pathname.startsWith(path)
-  );
+  // Exceptions inside protected prefixes that anyone may browse. Exact
+  // matches only: /archenemy/decks (My Decks) and the builder still need an
+  // account.
+  const publicPaths = [
+    "/archenemy",
+    "/archenemy/popular-cards",
+    "/archenemy/decks/public",
+    "/archenemy/decks/built-in",
+  ];
+  const normalizedPath =
+    pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  // Individual deck pages: the database only returns public decks to
+  // signed-out visitors, so private decks still show "not found".
+  const isDeckDetailPage =
+    /^\/archenemy\/decks\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      normalizedPath
+    );
+  const isProtectedPath =
+    !publicPaths.includes(normalizedPath) &&
+    !isDeckDetailPage &&
+    protectedPaths.some((path) => pathname.startsWith(path));
 
   // Redirect to signin if accessing protected route without auth
   if (isProtectedPath && !user) {

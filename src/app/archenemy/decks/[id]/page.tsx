@@ -19,15 +19,13 @@ import {
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useDisclosure } from "@mantine/hooks";
+import { useSelector } from "react-redux";
 import { getDeckById } from "~/lib/api/decks";
+import { getDeckAuthors } from "~/lib/api/deckAuthors";
+import { PlayDeckButton } from "~/components/PlayDeckButton";
+import type { RootState } from "~/store";
 import { CustomArchenemyCard } from "~/types";
-import {
-  IconArrowLeft,
-  IconEdit,
-  IconPlayerPlay,
-  IconX,
-} from "@tabler/icons-react";
-import { playArchenemyDeckHref } from "~/lib/gameLinks";
+import { IconArrowLeft, IconEdit, IconX } from "@tabler/icons-react";
 
 interface DeckWithCards {
   id: string;
@@ -46,7 +44,9 @@ const DeckDetailPage = () => {
   const params = useParams();
   const deckId = params.id as string;
 
+  const userId = useSelector((state: RootState) => state.user.id);
   const [deck, setDeck] = useState<DeckWithCards | null>(null);
+  const [author, setAuthor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,8 +61,12 @@ const DeckDetailPage = () => {
     const loadDeck = async () => {
       try {
         setLoading(true);
-        const deckData = await getDeckById(deckId);
+        const [deckData, authors] = await Promise.all([
+          getDeckById(deckId),
+          getDeckAuthors([deckId]),
+        ]);
         setDeck(deckData);
+        setAuthor(authors.get(deckId) ?? null);
       } catch (err) {
         setError("Failed to load deck");
       } finally {
@@ -78,10 +82,6 @@ const DeckDetailPage = () => {
     openModal();
   };
 
-  const handlePlayDeck = () => {
-    router.push(playArchenemyDeckHref(deckId));
-  };
-
   const handleEditDeck = () => {
     router.push(`/decks/builder?edit=${deckId}`);
   };
@@ -94,6 +94,11 @@ const DeckDetailPage = () => {
     );
   }
 
+  // Anyone can open a public deck's page; only its owner can edit it.
+  const isOwner = deck !== null && userId !== null && deck.user_id === userId;
+  const backHref = isOwner ? "/archenemy/decks" : "/archenemy/decks/public";
+  const backLabel = isOwner ? "Back to My Decks" : "Back to Community Decks";
+
   if (error || !deck) {
     return (
       <Container>
@@ -102,7 +107,9 @@ const DeckDetailPage = () => {
           <Text c="dimmed">
             {error || "This deck doesn't exist or you don't have access to it"}
           </Text>
-          <Button onClick={() => router.push("/decks")}>Back to Decks</Button>
+          <Button onClick={() => router.push("/archenemy/decks/public")}>
+            Browse Community Decks
+          </Button>
         </Stack>
       </Container>
     );
@@ -114,9 +121,9 @@ const DeckDetailPage = () => {
         <Button
           variant="subtle"
           leftSection={<IconArrowLeft size={16} />}
-          onClick={() => router.push("/decks")}
+          onClick={() => router.push(backHref)}
         >
-          Back to Decks
+          {backLabel}
         </Button>
 
         <Card shadow="sm" padding="lg" radius="md" withBorder>
@@ -146,24 +153,21 @@ const DeckDetailPage = () => {
               )}
               <Text size="sm" c="dimmed">
                 {deck.deck_cards.length} cards
+                {author ? ` · by ${author}` : null}
               </Text>
             </Box>
 
             <Group>
-              <Button
-                leftSection={<IconPlayerPlay size={16} />}
-                onClick={handlePlayDeck}
-                color="green"
-              >
-                Play
-              </Button>
-              <Button
-                leftSection={<IconEdit size={16} />}
-                onClick={handleEditDeck}
-                variant="light"
-              >
-                Edit
-              </Button>
+              <PlayDeckButton deckId={deck.id} color="green" />
+              {isOwner ? (
+                <Button
+                  leftSection={<IconEdit size={16} />}
+                  onClick={handleEditDeck}
+                  variant="light"
+                >
+                  Edit
+                </Button>
+              ) : null}
             </Group>
           </Flex>
         </Card>
@@ -174,7 +178,9 @@ const DeckDetailPage = () => {
           <Card shadow="sm" padding="xl" radius="md" withBorder>
             <Stack align="center">
               <Text c="dimmed">This deck doesn&apos;t have any cards yet</Text>
-              <Button onClick={handleEditDeck}>Add Cards</Button>
+              {isOwner ? (
+                <Button onClick={handleEditDeck}>Add Cards</Button>
+              ) : null}
             </Stack>
           </Card>
         ) : (

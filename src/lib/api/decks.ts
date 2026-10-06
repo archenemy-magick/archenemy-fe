@@ -5,7 +5,7 @@ import {
 } from "~/types";
 import { createClient } from "../supabase/client";
 import { flattenDeck } from "~/util";
-import { getPublicProfiles } from "./publicProfiles";
+import { getDeckAuthors } from "./deckAuthors";
 
 const supabase = createClient();
 
@@ -226,10 +226,10 @@ export async function getPublicDecks() {
   }
 
   const decks = (data as unknown as SupabaseDeckResponse[]).map(flattenDeck);
-  const authors = await getPublicProfiles(decks.map((deck) => deck.user_id));
+  const authors = await getDeckAuthors(decks.map((deck) => deck.id));
   return decks.map((deck) => {
-    const author = authors.get(deck.user_id);
-    return author ? { ...deck, profiles: { username: author.username } } : deck;
+    const username = authors.get(deck.id);
+    return username ? { ...deck, profiles: { username } } : deck;
   });
 }
 
@@ -437,14 +437,12 @@ export async function getUserLikedDecks() {
   };
 
   const likes = data as unknown as LikeResponse[];
-  const authors = await getPublicProfiles(
-    likes.map((like) => like.deck.user_id)
-  );
+  const authors = await getDeckAuthors(likes.map((like) => like.deck.id));
   return likes.map((like) => {
-    const author = authors.get(like.deck.user_id);
+    const username = authors.get(like.deck.id);
     return {
       ...flattenDeck(like.deck),
-      ...(author ? { profiles: { username: author.username } } : {}),
+      ...(username ? { profiles: { username } } : {}),
       liked_at: like.created_at,
     };
   });
@@ -522,21 +520,17 @@ export async function getTopPublicDecks(
     throw new Error("Failed to fetch top public decks");
   }
 
-  const authors = await getPublicProfiles(
-    (data || []).map((deck) => deck.user_id)
-  );
+  const authors = await getDeckAuthors((data || []).map((deck) => deck.id));
 
   // Transform the data to match CustomArchenemyDeck type
   return (data || []).map((deck) => {
-    const author = authors.get(deck.user_id);
+    const username = authors.get(deck.id);
     return {
       ...deck,
       deck_cards:
         deck.deck_cards?.map((junction: DeckCardJunction) => junction.card) ||
         [],
-      user_profile: author
-        ? { username: author.username, avatar_url: author.avatar_url }
-        : undefined,
+      user_profile: username ? { username } : undefined,
     };
   });
 }

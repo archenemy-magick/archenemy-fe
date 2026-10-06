@@ -25,7 +25,9 @@ describe("HomePage", () => {
     });
 
     expect(screen.getByText("Know your stats.")).toBeInTheDocument();
-    expect(screen.getByText("Get started free")).toBeInTheDocument();
+    // Utilities are usable without an account, so they lead.
+    expect(screen.getAllByText("Open Game Utilities")).toHaveLength(2);
+    expect(screen.getByText("Sign up to track stats")).toBeInTheDocument();
     expect(screen.getByText("Example")).toBeInTheDocument();
     expect(screen.getByText("The Archenemy Suite")).toBeInTheDocument();
   });
@@ -49,6 +51,8 @@ describe("HomePage", () => {
 
     expect(screen.getByText("View my stats")).toBeInTheDocument();
     expect(screen.getAllByText("Open Game Utilities")).toHaveLength(2);
-    expect(screen.queryByText("Get started free")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Sign up to track stats")
+    ).not.toBeInTheDocument();
   });
 });

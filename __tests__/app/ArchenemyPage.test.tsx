@@ -1,9 +1,20 @@
-import { render as testingLibraryRender, screen } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
-import ArchenemyPage from "~/app/archenemy/page";
+import { createAsyncThunk } from "@reduxjs/toolkit";
 
-const render = (ui: React.ReactElement) =>
-  testingLibraryRender(<MantineProvider>{ui}</MantineProvider>);
+// Mock thunks before importing the store helpers (see Footer.test.tsx).
+jest.mock("~/store/thunks/fetchAllDecks", () => ({
+  __esModule: true,
+  default: createAsyncThunk("decks/fetchAll", async () => []),
+}));
+jest.mock("~/store/thunks", () => ({
+  fetchAllArchenemyCards: createAsyncThunk("cards/fetchAll", async () => []),
+  deleteArchenemyDeck: createAsyncThunk("decks/delete", async () => "id"),
+  saveArchenemyDeck: createAsyncThunk("decks/save", async () => ({})),
+}));
+
+import { screen } from "@testing-library/react";
+import { render } from "~/testUtils/render";
+import ArchenemyPage from "~/app/archenemy/page";
+import { initialUserState } from "~/store/reducers/userReducer";
 
 describe("ArchenemyPage", () => {
   it("links each section box to its page", () => {
@@ -12,6 +23,7 @@ describe("ArchenemyPage", () => {
     const href = (title: string) =>
       screen.getByText(title).closest("a")?.getAttribute("href");
 
+    expect(href("Built-in Archenemy Decks")).toBe("/archenemy/decks/built-in");
     expect(href("Popular Cards")).toBe("/archenemy/popular-cards");
     expect(href("Community Archenemy Decks")).toBe("/archenemy/decks/public");
     expect(href("My Archenemy Decks")).toBe("/archenemy/decks");
@@ -28,5 +40,21 @@ describe("ArchenemyPage", () => {
       "href",
       "/archenemy/decks/builder"
     );
+  });
+
+  it("marks My Archenemy Decks as needing an account when signed out", () => {
+    render(<ArchenemyPage />, {
+      initialState: { user: { ...initialUserState, loading: false } },
+    });
+    expect(screen.getByText("Sign in to open")).toBeInTheDocument();
+  });
+
+  it("opens My Archenemy Decks normally when signed in", () => {
+    render(<ArchenemyPage />, {
+      initialState: {
+        user: { ...initialUserState, isAuthenticated: true, loading: false },
+      },
+    });
+    expect(screen.queryByText("Sign in to open")).not.toBeInTheDocument();
   });
 });

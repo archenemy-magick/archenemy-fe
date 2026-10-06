@@ -12,7 +12,10 @@ import {
   Stack,
   useMantineColorScheme,
   Group,
+  Alert,
 } from "@mantine/core";
+import { IconSparkles } from "@tabler/icons-react";
+import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "~/store/configureStore";
 import { signIn, clearError } from "~/store/reducers";
@@ -30,6 +33,8 @@ export function SignInForm() {
 
   // Get redirect path and decode it
   const redirectTo = searchParams.get("redirectTo") || "/decks";
+  // Sent here from a page that needs an account (stats, custom decks, ...).
+  const wasRedirected = searchParams.has("redirectTo");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +68,30 @@ export function SignInForm() {
           : "rgba(255, 255, 255, 0.95)",
       }}
     >
+      {wasRedirected ? (
+        <Alert
+          variant="light"
+          color="grape"
+          radius="md"
+          mb="lg"
+          icon={<IconSparkles size={18} />}
+        >
+          <Text size="sm" mb="sm">
+            Sign in or create a free account to use enhanced features like
+            stats, custom Archenemy decks, and more.
+          </Text>
+          <Button
+            component={Link}
+            href="/signup"
+            size="xs"
+            variant="light"
+            color="grape"
+          >
+            Create a free account
+          </Button>
+        </Alert>
+      ) : null}
+
       <Title order={2} mb="lg" ta="center" c={isDark ? "white" : "dark"}>
         Sign In
       </Title>
