@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch, useStore } from "react-redux";
 import { RootState } from "~/store";
 import {
   Container,
@@ -48,6 +48,7 @@ const TAB_LABELS: Record<GameTabType, string> = {
 
 export default function GamePage() {
   const dispatch = useDispatch();
+  const store = useStore<RootState>();
   const router = useRouter();
   const { tabs, activeTabId } = useSelector(
     (state: RootState) => state.gameTabs
@@ -60,7 +61,12 @@ export default function GamePage() {
     const { utility, deckId } = parseGameUtilityParams(window.location.search);
     if (!utility) return;
 
-    const existing = tabs.find((tab) => tab.type === utility);
+    // Read the store, not the render's `tabs`: a second run of this effect
+    // (React StrictMode in dev) must see the tab the first run added, or it
+    // opens a duplicate.
+    const existing = store
+      .getState()
+      .gameTabs.tabs.find((tab) => tab.type === utility);
     if (existing) {
       dispatch(setActiveTab(existing.id));
       if (deckId) {
@@ -76,7 +82,7 @@ export default function GamePage() {
       );
     }
     router.replace("/game");
-    // Mount only: tabs are read once to decide between focus and create.
+    // Mount only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

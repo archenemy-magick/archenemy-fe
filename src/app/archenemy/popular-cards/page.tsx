@@ -30,8 +30,8 @@ import { getPopularCards } from "~/lib/api/decks";
 import { CustomArchenemyCard } from "~/types";
 import CheckableCard from "~/components/common/CheckableCard/CheckableCard";
 import SaveDeckModal from "~/components/SaveDeckModal";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "~/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "~/store";
 import { saveArchenemyDeck } from "~/store/thunks";
 
 type PopularCard = CustomArchenemyCard & {
@@ -41,6 +41,10 @@ type PopularCard = CustomArchenemyCard & {
 
 const PopularCardsPage = () => {
   const router = useRouter();
+  // Browsing is public; saving a deck needs an account.
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.user.isAuthenticated
+  );
   const dispatch = useDispatch<AppDispatch>();
   const [cards, setCards] = useState<PopularCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -283,9 +287,20 @@ const PopularCardsPage = () => {
                     size="sm"
                     color="magenta"
                     leftSection={<IconPlus size={16} />}
-                    onClick={openSaveDeckModal}
+                    onClick={
+                      isAuthenticated
+                        ? openSaveDeckModal
+                        : () =>
+                            router.push(
+                              `/signin?redirectTo=${encodeURIComponent(
+                                "/archenemy/popular-cards"
+                              )}`
+                            )
+                    }
                   >
-                    Save as Deck
+                    {isAuthenticated
+                      ? "Save as Deck"
+                      : "Sign in to save as deck"}
                   </Button>
                   <Button
                     size="sm"
