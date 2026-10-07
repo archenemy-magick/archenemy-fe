@@ -51,7 +51,7 @@ export default function ConfirmPage() {
         if (data.session) {
           // Success! User is confirmed and logged in
           setStatus("success");
-          setTimeout(() => router.push("/decks"), 2000);
+          setTimeout(() => router.push("/home"), 2000);
         } else {
           setStatus("error");
           setErrorMessage("No session created");
@@ -86,7 +86,7 @@ export default function ConfirmPage() {
             <IconCheck size={64} color="green" />
             <Title order={2}>Email Confirmed! 🎉</Title>
             <Text c="dimmed" ta="center">
-              Your account is now active. Redirecting you to your decks...
+              Your account is now active. Redirecting you to your home page...
             </Text>
           </>
         )}

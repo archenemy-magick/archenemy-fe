@@ -204,6 +204,7 @@ export async function middleware(request: NextRequest) {
     "/games",
     "/stats",
     "/friends",
+    "/home",
     "/profile",
     "/deck-builder",
     "/popular-cards",
@@ -238,12 +239,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  // Signed-in users get their dashboard at /home. The public landing page at
+  // "/" stays server-rendered for search engines and signed-out visitors.
+  if (pathname === "/" && user) {
+    return NextResponse.redirect(new URL("/home", request.url));
+  }
+
   // Redirect to home if already authenticated and trying to access auth pages
   const authPaths = ["/signin", "/signup"];
   const isAuthPath = authPaths.some((path) => pathname.startsWith(path));
 
   if (isAuthPath && user) {
-    return NextResponse.redirect(new URL("/decks", request.url));
+    return NextResponse.redirect(new URL("/home", request.url));
   }
 
   return response;
