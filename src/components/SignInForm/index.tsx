@@ -32,7 +32,7 @@ export function SignInForm() {
   const { colorScheme } = useMantineColorScheme();
 
   // Get redirect path and decode it
-  const redirectTo = searchParams.get("redirectTo") || "/decks";
+  const redirectTo = searchParams.get("redirectTo") || "/home";
   // Sent here from a page that needs an account (stats, custom decks, ...).
   const wasRedirected = searchParams.has("redirectTo");
 
