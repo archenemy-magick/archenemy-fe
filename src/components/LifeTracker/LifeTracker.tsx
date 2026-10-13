@@ -1,7 +1,7 @@
 // components/game/LifeTracker/LifeTracker.tsx
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "~/store";
 import {
@@ -32,6 +32,9 @@ import {
   IconReload,
   IconUser,
   IconClipboardList,
+  IconX,
+  IconCheck,
+  IconLayoutGrid,
 } from "@tabler/icons-react";
 import {
   initializeGame,
@@ -43,10 +46,16 @@ import {
   resetAllPlayers,
   updatePlayer as updatePlayerAction,
   updateDefaultStartingLife as updateDefaultStartingLifeAction,
+  setLifeTrackerView,
 } from "~/store/reducers";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveRecordGameDraft } from "~/lib/gameRecordDraft";
+import { useHoldToRepeat } from "~/lib/hooks/useHoldToRepeat";
+import {
+  lifeTrackerLayout,
+  type LifeTrackerView,
+} from "~/lib/lifeTrackerLayout";
 
 interface Player {
   id: string;
@@ -85,6 +94,8 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
   );
   const players = game?.players || [];
   const defaultStartingLife = game?.defaultStartingLife || 40;
+  const view: LifeTrackerView = game?.view ?? "same";
+  const layout = lifeTrackerLayout(players.length, view);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
@@ -94,23 +105,14 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
     string | null
   >(null);
 
-  // Life hold detection
-  const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const holdIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const wasHeldRef = useRef(false);
-  const [activeButton, setActiveButton] = useState<{
-    playerId: string;
-    side: "left" | "right";
-  } | null>(null);
+  // Tap = ±1, hold = ±10 every half second. One hook per area; each button
+  // (keyed by player/side) has its own timers, so several people can press
+  // at once. See useHoldToRepeat for how holds are guaranteed to stop.
+  const lifeHold = useHoldToRepeat();
+  const commanderHold = useHoldToRepeat();
 
-  // Commander damage hold detection
-  const commanderHoldTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const commanderHoldIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const commanderWasHeldRef = useRef(false);
-  const [activeCommanderButton, setActiveCommanderButton] = useState<{
-    sourceId: string;
-    direction: "increase" | "decrease";
-  } | null>(null);
+  // Removing a player loses their life total and commander damage, so ask.
+  const [pendingRemoval, setPendingRemoval] = useState<Player | null>(null);
 
   // Initialize game on mount
   useEffect(() => {
@@ -127,7 +129,15 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
 
   const handleRemovePlayer = (playerId: string) => {
     if (players.length <= 2) return;
-    dispatch(removePlayerAction({ tabId, playerId }));
+    setPendingRemoval(players.find((p) => p.id === playerId) ?? null);
+  };
+
+  const confirmRemovePlayer = () => {
+    if (pendingRemoval) {
+      lifeHold.cancelAll();
+      dispatch(removePlayerAction({ tabId, playerId: pendingRemoval.id }));
+    }
+    setPendingRemoval(null);
   };
 
   const adjustLife = (playerId: string, amount: number) => {
@@ -182,143 +192,29 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
     dispatch(updateDefaultStartingLifeAction({ tabId, startingLife }));
   };
 
-  // Touch detection to prevent double events
-  const isTouchRef = useRef(false);
-  const isCommanderTouchRef = useRef(false);
-
-  // Life hold handlers - Continuous adjustment
-  const handlePressStart = (
-    playerId: string,
-    amount: number,
-    side: "left" | "right"
-  ) => {
-    // CRITICAL: Always cancel any existing hold first, regardless of which side
-    handlePressCancel();
-
-    // Small delay to ensure state is clean
-    setTimeout(() => {
-      wasHeldRef.current = false;
-      setActiveButton({ playerId, side });
-
-      holdTimerRef.current = setTimeout(() => {
-        wasHeldRef.current = true;
-        adjustLife(playerId, amount * 10);
-
-        holdIntervalRef.current = setInterval(() => {
-          adjustLife(playerId, amount * 10);
-        }, 500);
-      }, 1000);
-    }, 10);
+  const lifeKey = (playerId: string, side: "left" | "right") =>
+    `${playerId}:${side}`;
+  const bindLife = (playerId: string, side: "left" | "right") => {
+    const step = side === "left" ? -1 : 1;
+    return lifeHold.bind(lifeKey(playerId, side), {
+      onTap: () => adjustLife(playerId, step),
+      onRepeat: () => adjustLife(playerId, step * 10),
+    });
   };
 
-  const handlePressEnd = (playerId: string, amount: number) => {
-    // Save the held state BEFORE clearing timers
-    const wasHeld = wasHeldRef.current;
-
-    // Clear timers
-    if (holdTimerRef.current) {
-      clearTimeout(holdTimerRef.current);
-      holdTimerRef.current = null;
-    }
-    if (holdIntervalRef.current) {
-      clearInterval(holdIntervalRef.current);
-      holdIntervalRef.current = null;
-    }
-
-    // Reset state
-    wasHeldRef.current = false;
-    setActiveButton(null);
-
-    // Only adjust life if this wasn't a hold
-    if (!wasHeld) {
-      adjustLife(playerId, amount);
-    }
-  };
-
-  const handlePressCancel = () => {
-    if (holdTimerRef.current) {
-      clearTimeout(holdTimerRef.current);
-    }
-    if (holdIntervalRef.current) {
-      clearInterval(holdIntervalRef.current);
-    }
-
-    holdTimerRef.current = null;
-    holdIntervalRef.current = null;
-    wasHeldRef.current = false;
-    setActiveButton(null);
-  };
-
-  // Commander damage hold handlers
-  const handleCommanderPressStart = (
+  const commanderKey = (sourceId: string, direction: "increase" | "decrease") =>
+    `${sourceId}:${direction}`;
+  const bindCommander = (
     targetPlayerId: string,
-    sourcePlayerId: string,
-    amount: number,
+    sourceId: string,
     direction: "increase" | "decrease"
   ) => {
-    // Clear any existing commander timers first
-    if (commanderHoldTimerRef.current) {
-      clearTimeout(commanderHoldTimerRef.current);
-    }
-    if (commanderHoldIntervalRef.current) {
-      clearInterval(commanderHoldIntervalRef.current);
-    }
-
-    commanderHoldTimerRef.current = null;
-    commanderHoldIntervalRef.current = null;
-    commanderWasHeldRef.current = false;
-    setActiveCommanderButton({ sourceId: sourcePlayerId, direction });
-
-    commanderHoldTimerRef.current = setTimeout(() => {
-      commanderWasHeldRef.current = true;
-      updateCommanderDamage(targetPlayerId, sourcePlayerId, amount * 10);
-
-      commanderHoldIntervalRef.current = setInterval(() => {
-        updateCommanderDamage(targetPlayerId, sourcePlayerId, amount * 10);
-      }, 500);
-    }, 1000);
-  };
-
-  const handleCommanderPressEnd = (
-    targetPlayerId: string,
-    sourcePlayerId: string,
-    amount: number
-  ) => {
-    // Save the held state BEFORE clearing timers
-    const wasHeld = commanderWasHeldRef.current;
-
-    // Clear timers
-    if (commanderHoldTimerRef.current) {
-      clearTimeout(commanderHoldTimerRef.current);
-      commanderHoldTimerRef.current = null;
-    }
-    if (commanderHoldIntervalRef.current) {
-      clearInterval(commanderHoldIntervalRef.current);
-      commanderHoldIntervalRef.current = null;
-    }
-
-    // Reset state
-    commanderWasHeldRef.current = false;
-    setActiveCommanderButton(null);
-
-    // Only adjust if this wasn't a hold
-    if (!wasHeld) {
-      updateCommanderDamage(targetPlayerId, sourcePlayerId, amount);
-    }
-  };
-
-  const handleCommanderPressCancel = () => {
-    if (commanderHoldTimerRef.current) {
-      clearTimeout(commanderHoldTimerRef.current);
-    }
-    if (commanderHoldIntervalRef.current) {
-      clearInterval(commanderHoldIntervalRef.current);
-    }
-
-    commanderHoldTimerRef.current = null;
-    commanderHoldIntervalRef.current = null;
-    commanderWasHeldRef.current = false;
-    setActiveCommanderButton(null);
+    const step = direction === "decrease" ? -1 : 1;
+    return commanderHold.bind(commanderKey(sourceId, direction), {
+      onTap: () => updateCommanderDamage(targetPlayerId, sourceId, step),
+      onRepeat: () =>
+        updateCommanderDamage(targetPlayerId, sourceId, step * 10),
+    });
   };
 
   const openCommanderDamageModal = (playerId: string) => {
@@ -370,98 +266,150 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
             </Text>
           </div>
 
-          {/* Actions Menu */}
-          <Menu shadow="md" width={200} position="bottom-end">
-            <Menu.Target>
-              <Button
-                leftSection={<IconSettings size={18} />}
-                variant="light"
-                color="gray"
-                size="sm"
-              >
-                Actions
-              </Button>
-            </Menu.Target>
-
-            <Menu.Dropdown>
-              <Menu.Label>Life Tracker Controls</Menu.Label>
-
-              <Menu.Item
-                leftSection={<IconUserPlus size={16} />}
-                onClick={handleAddPlayer}
-                disabled={players.length >= 6}
-                color="green"
-              >
-                Add Player {players.length < 6 && `(${players.length}/6)`}
-              </Menu.Item>
-
-              {/* Remove Player Submenu */}
-              {players.length > 2 && (
-                <Menu
-                  trigger="hover"
-                  position="right-start"
-                  offset={2}
-                  withArrow
+          <Group gap="xs">
+            {/* View Menu */}
+            <Menu shadow="md" width={240} position="bottom-end">
+              <Menu.Target>
+                <Button
+                  leftSection={<IconLayoutGrid size={18} />}
+                  variant="light"
+                  color="gray"
+                  size="sm"
                 >
-                  <Menu.Target>
-                    <Menu.Item
-                      leftSection={<IconUserMinus size={16} />}
-                      rightSection="›"
-                      color="red"
-                    >
-                      Remove Player
-                    </Menu.Item>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Label>Select Player</Menu.Label>
-                    {players.map((player) => (
+                  View
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Label>Card direction</Menu.Label>
+                {(
+                  [
+                    {
+                      value: "same",
+                      label: "All face the same way",
+                      hint: "Phone held by one player",
+                    },
+                    {
+                      value: "outward",
+                      label: "Face outwards",
+                      hint: "Phone flat in the middle of the table",
+                    },
+                  ] as const
+                ).map((option) => (
+                  <Menu.Item
+                    key={option.value}
+                    onClick={() =>
+                      dispatch(
+                        setLifeTrackerView({ tabId, view: option.value })
+                      )
+                    }
+                    rightSection={
+                      view === option.value ? <IconCheck size={16} /> : null
+                    }
+                  >
+                    <Text size="sm">{option.label}</Text>
+                    <Text size="xs" c="dimmed">
+                      {option.hint}
+                    </Text>
+                  </Menu.Item>
+                ))}
+              </Menu.Dropdown>
+            </Menu>
+
+            {/* Actions Menu */}
+            <Menu shadow="md" width={200} position="bottom-end">
+              <Menu.Target>
+                <Button
+                  leftSection={<IconSettings size={18} />}
+                  variant="light"
+                  color="gray"
+                  size="sm"
+                >
+                  Actions
+                </Button>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Label>Life Tracker Controls</Menu.Label>
+
+                <Menu.Item
+                  leftSection={<IconUserPlus size={16} />}
+                  onClick={handleAddPlayer}
+                  disabled={players.length >= 6}
+                  color="green"
+                >
+                  Add Player {players.length < 6 && `(${players.length}/6)`}
+                </Menu.Item>
+
+                {/* Remove Player Submenu */}
+                {players.length > 2 && (
+                  <Menu
+                    trigger="hover"
+                    position="right-start"
+                    offset={2}
+                    withArrow
+                  >
+                    <Menu.Target>
                       <Menu.Item
-                        key={player.id}
-                        leftSection={<IconUser size={14} />}
-                        onClick={() => handleRemovePlayer(player.id)}
+                        leftSection={<IconUserMinus size={16} />}
+                        rightSection="›"
                         color="red"
                       >
-                        {player.name}
+                        Remove Player
                       </Menu.Item>
-                    ))}
-                  </Menu.Dropdown>
-                </Menu>
-              )}
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Label>Select Player</Menu.Label>
+                      {players.map((player) => (
+                        <Menu.Item
+                          key={player.id}
+                          leftSection={<IconUser size={14} />}
+                          onClick={() => handleRemovePlayer(player.id)}
+                          color="red"
+                        >
+                          {player.name}
+                        </Menu.Item>
+                      ))}
+                    </Menu.Dropdown>
+                  </Menu>
+                )}
 
-              <Menu.Divider />
+                <Menu.Divider />
 
-              <Menu.Item
-                leftSection={<IconReload size={16} />}
-                onClick={handleNewGame}
-                color="orange"
-              >
-                New Game
-              </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconReload size={16} />}
+                  onClick={handleNewGame}
+                  color="orange"
+                >
+                  New Game
+                </Menu.Item>
 
-              <Menu.Item
-                leftSection={<IconClipboardList size={16} />}
-                onClick={handleRecordGame}
-                color="grape"
-              >
-                {/* Signed-out users go through sign-in; the draft is kept. */}
-                {isAuthenticated ? "Record Game" : "Record Game (sign in)"}
-              </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconClipboardList size={16} />}
+                  onClick={handleRecordGame}
+                  color="grape"
+                >
+                  {/* Signed-out users go through sign-in; the draft is kept. */}
+                  {isAuthenticated ? "Record Game" : "Record Game (sign in)"}
+                </Menu.Item>
 
-              <Menu.Divider />
+                <Menu.Divider />
 
-              <Menu.Item
-                leftSection={<IconSettings size={16} />}
-                onClick={() => setSettingsOpen(true)}
-              >
-                Settings
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+                <Menu.Item
+                  leftSection={<IconSettings size={16} />}
+                  onClick={() => setSettingsOpen(true)}
+                >
+                  Settings
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Group>
         </Group>
 
         {/* Player Cards */}
-        <SimpleGrid cols={2} spacing="xs">
-          {players.map((player) => {
+        <SimpleGrid cols={layout.cols} spacing="xs">
+          {players.map((player, index) => {
+            // In "outward" view the top rows face the far side of the table.
+            const flipped = layout.isFlipped(index);
             const totalCommanderDamage = Object.values(
               player.commanderDamage
             ).reduce((sum, dmg) => sum + dmg, 0);
@@ -481,6 +429,7 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                   position: "relative",
                   opacity: isPlayerDead ? 0.6 : 1,
                   filter: isPlayerDead ? "grayscale(50%)" : "none",
+                  transform: flipped ? "rotate(180deg)" : undefined,
                   transition: "all 0.3s ease",
                 }}
               >
@@ -551,9 +500,12 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                           size="xs"
                           variant="subtle"
                           color="white"
+                          aria-label={`Remove ${player.name}`}
+                          title={`Remove ${player.name}`}
                           onClick={() => handleRemovePlayer(player.id)}
                         >
-                          <IconMinus size={12} />
+                          {/* Not a minus: that read as "lose life". */}
+                          <IconX size={12} />
                         </ActionIcon>
                       )}
                     </Group>
@@ -572,49 +524,25 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                         alignItems: "center",
                         justifyContent: "center",
                         cursor: "pointer",
-                        backgroundColor:
-                          activeButton?.playerId === player.id &&
-                          activeButton?.side === "left"
-                            ? "rgba(239, 68, 68, 0.2)"
-                            : "rgba(239, 68, 68, 0.05)",
+                        backgroundColor: lifeHold.isActive(
+                          lifeKey(player.id, "left")
+                        )
+                          ? "rgba(239, 68, 68, 0.2)"
+                          : "rgba(239, 68, 68, 0.05)",
                         userSelect: "none",
                         WebkitUserSelect: "none",
                         WebkitTouchCallout: "none",
+                        // No double-tap zoom; a scroll gesture cancels the hold.
+                        touchAction: "manipulation",
                         transition: "background-color 0.15s ease",
                       }}
-                      onMouseDown={(e) => {
-                        if (isTouchRef.current) return;
-                        e.preventDefault();
-                        handlePressStart(player.id, -1, "left");
-                      }}
-                      onMouseUp={(e) => {
-                        if (isTouchRef.current) {
-                          isTouchRef.current = false;
-                          return;
-                        }
-                        e.preventDefault();
-                        handlePressEnd(player.id, -1);
-                      }}
-                      onMouseLeave={handlePressCancel}
-                      onTouchStart={() => {
-                        isTouchRef.current = true;
-                        handlePressStart(player.id, -1, "left");
-                      }}
-                      onTouchEnd={() => {
-                        handlePressEnd(player.id, -1);
-                        setTimeout(() => {
-                          isTouchRef.current = false;
-                        }, 300);
-                      }}
-                      onTouchCancel={handlePressCancel}
-                      onContextMenu={(e) => e.preventDefault()}
+                      {...bindLife(player.id, "left")}
                     >
                       <IconMinus
                         size={24}
                         color="#ef4444"
                         opacity={
-                          activeButton?.playerId === player.id &&
-                          activeButton?.side === "left"
+                          lifeHold.isActive(lifeKey(player.id, "left"))
                             ? 0.8
                             : 0.3
                         }
@@ -631,49 +559,25 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                         alignItems: "center",
                         justifyContent: "center",
                         cursor: "pointer",
-                        backgroundColor:
-                          activeButton?.playerId === player.id &&
-                          activeButton?.side === "right"
-                            ? "rgba(16, 185, 129, 0.2)"
-                            : "rgba(16, 185, 129, 0.05)",
+                        backgroundColor: lifeHold.isActive(
+                          lifeKey(player.id, "right")
+                        )
+                          ? "rgba(16, 185, 129, 0.2)"
+                          : "rgba(16, 185, 129, 0.05)",
                         userSelect: "none",
                         WebkitUserSelect: "none",
                         WebkitTouchCallout: "none",
+                        // No double-tap zoom; a scroll gesture cancels the hold.
+                        touchAction: "manipulation",
                         transition: "background-color 0.15s ease",
                       }}
-                      onMouseDown={(e) => {
-                        if (isTouchRef.current) return;
-                        e.preventDefault();
-                        handlePressStart(player.id, 1, "right");
-                      }}
-                      onMouseUp={(e) => {
-                        if (isTouchRef.current) {
-                          isTouchRef.current = false;
-                          return;
-                        }
-                        e.preventDefault();
-                        handlePressEnd(player.id, 1);
-                      }}
-                      onMouseLeave={handlePressCancel}
-                      onTouchStart={() => {
-                        isTouchRef.current = true;
-                        handlePressStart(player.id, 1, "right");
-                      }}
-                      onTouchEnd={() => {
-                        handlePressEnd(player.id, 1);
-                        setTimeout(() => {
-                          isTouchRef.current = false;
-                        }, 300);
-                      }}
-                      onTouchCancel={handlePressCancel}
-                      onContextMenu={(e) => e.preventDefault()}
+                      {...bindLife(player.id, "right")}
                     >
                       <IconPlus
                         size={24}
                         color="#10b981"
                         opacity={
-                          activeButton?.playerId === player.id &&
-                          activeButton?.side === "right"
+                          lifeHold.isActive(lifeKey(player.id, "right"))
                             ? 0.8
                             : 0.3
                         }
@@ -842,12 +746,33 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
           )}
         </Modal>
 
+        {/* Remove Player Confirmation */}
+        <Modal
+          opened={pendingRemoval !== null}
+          onClose={() => setPendingRemoval(null)}
+          title={`Remove ${pendingRemoval?.name ?? "player"}?`}
+          centered
+          size="sm"
+        >
+          <Text size="sm" mb="lg">
+            Their life total and commander damage will be lost.
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setPendingRemoval(null)}>
+              Cancel
+            </Button>
+            <Button color="red" onClick={confirmRemovePlayer}>
+              Remove
+            </Button>
+          </Group>
+        </Modal>
+
         {/* Commander Damage Modal */}
         <Modal
           opened={commanderDamageModalOpen}
           onClose={() => {
             setCommanderDamageModalOpen(false);
-            handleCommanderPressCancel(); // Clean up any active holds
+            commanderHold.cancelAll(); // Clean up any active holds
           }}
           title={`Commander Damage to ${selectedPlayer?.name}`}
           centered
@@ -863,12 +788,12 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                 .map((source) => {
                   const damage = selectedPlayer.commanderDamage[source.id] || 0;
                   const isLethal = damage >= 21;
-                  const isDecreaseActive =
-                    activeCommanderButton?.sourceId === source.id &&
-                    activeCommanderButton?.direction === "decrease";
-                  const isIncreaseActive =
-                    activeCommanderButton?.sourceId === source.id &&
-                    activeCommanderButton?.direction === "increase";
+                  const isDecreaseActive = commanderHold.isActive(
+                    commanderKey(source.id, "decrease")
+                  );
+                  const isIncreaseActive = commanderHold.isActive(
+                    commanderKey(source.id, "increase")
+                  );
 
                   return (
                     <Card
@@ -912,53 +837,11 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                                 : undefined,
                               transition: "background-color 0.15s ease",
                             }}
-                            onMouseDown={(e) => {
-                              if (isCommanderTouchRef.current) return;
-                              e.preventDefault();
-                              if (damage > 0) {
-                                handleCommanderPressStart(
-                                  selectedPlayer.id,
-                                  source.id,
-                                  -1,
-                                  "decrease"
-                                );
-                              }
-                            }}
-                            onMouseUp={(e) => {
-                              if (isCommanderTouchRef.current) {
-                                isCommanderTouchRef.current = false;
-                                return;
-                              }
-                              e.preventDefault();
-                              handleCommanderPressEnd(
-                                selectedPlayer.id,
-                                source.id,
-                                -1
-                              );
-                            }}
-                            onMouseLeave={handleCommanderPressCancel}
-                            onTouchStart={() => {
-                              isCommanderTouchRef.current = true;
-                              if (damage > 0) {
-                                handleCommanderPressStart(
-                                  selectedPlayer.id,
-                                  source.id,
-                                  -1,
-                                  "decrease"
-                                );
-                              }
-                            }}
-                            onTouchEnd={() => {
-                              handleCommanderPressEnd(
-                                selectedPlayer.id,
-                                source.id,
-                                -1
-                              );
-                              setTimeout(() => {
-                                isCommanderTouchRef.current = false;
-                              }, 300);
-                            }}
-                            onTouchCancel={handleCommanderPressCancel}
+                            {...bindCommander(
+                              selectedPlayer.id,
+                              source.id,
+                              "decrease"
+                            )}
                           >
                             <IconMinus size={18} />
                           </ActionIcon>
@@ -985,49 +868,11 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                                 : undefined,
                               transition: "background-color 0.15s ease",
                             }}
-                            onMouseDown={(e) => {
-                              if (isCommanderTouchRef.current) return;
-                              e.preventDefault();
-                              handleCommanderPressStart(
-                                selectedPlayer.id,
-                                source.id,
-                                1,
-                                "increase"
-                              );
-                            }}
-                            onMouseUp={(e) => {
-                              if (isCommanderTouchRef.current) {
-                                isCommanderTouchRef.current = false;
-                                return;
-                              }
-                              e.preventDefault();
-                              handleCommanderPressEnd(
-                                selectedPlayer.id,
-                                source.id,
-                                1
-                              );
-                            }}
-                            onMouseLeave={handleCommanderPressCancel}
-                            onTouchStart={() => {
-                              isCommanderTouchRef.current = true;
-                              handleCommanderPressStart(
-                                selectedPlayer.id,
-                                source.id,
-                                1,
-                                "increase"
-                              );
-                            }}
-                            onTouchEnd={() => {
-                              handleCommanderPressEnd(
-                                selectedPlayer.id,
-                                source.id,
-                                1
-                              );
-                              setTimeout(() => {
-                                isCommanderTouchRef.current = false;
-                              }, 300);
-                            }}
-                            onTouchCancel={handleCommanderPressCancel}
+                            {...bindCommander(
+                              selectedPlayer.id,
+                              source.id,
+                              "increase"
+                            )}
                           >
                             <IconPlus size={18} />
                           </ActionIcon>
