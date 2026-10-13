@@ -183,6 +183,15 @@ const Footer = () => {
               Questions or feedback?
             </Text>
             <Anchor
+              href="/feedback"
+              size="sm"
+              c="magenta.4"
+              fw={500}
+              style={{ textDecoration: "none" }}
+            >
+              Send feedback
+            </Anchor>
+            <Anchor
               href="mailto:contact@magicsak.com"
               size="sm"
               c="magenta.4"

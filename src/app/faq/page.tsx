@@ -4,11 +4,11 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "FAQ - Frequently Asked Questions",
   description:
-    "Find answers to common questions about MagicSAK, including how to build Archenemy decks, play games, and learn about upcoming features like Planechase support, dungeon tracking, and speed counters.",
+    "Answers to common questions about MagicSAK: the game utilities, recording games and stats, friends, Archenemy decks, and what's coming next.",
   openGraph: {
     title: "FAQ | MagicSAK",
     description:
-      "Find answers to common questions about MagicSAK and learn about upcoming features like Planechase, dungeons, and more.",
+      "Answers to common questions about MagicSAK's game utilities, stats, friends, and Archenemy decks.",
   },
 };
 

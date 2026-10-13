@@ -34,7 +34,7 @@ export async function generateMetadata({
   const description =
     article.meta_description ||
     article.excerpt ||
-    `Read ${article.title} on MagicSAK - Your ultimate Archenemy deck building and strategy resource for Magic: The Gathering.`;
+    `Read ${article.title} on MagicSAK: game utilities, stats, and strategy for Magic: The Gathering.`;
   const imageUrl =
     article.og_image_url ||
     article.featured_image ||
