@@ -1,5 +1,6 @@
 // store/reducers/lifeTrackerReducer.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { LifeTrackerView } from "~/lib/lifeTrackerLayout";
 
 interface Player {
   id: string;
@@ -13,6 +14,8 @@ interface Player {
 interface GameState {
   players: Player[];
   defaultStartingLife: number;
+  /** Card orientation; absent in older saved state, meaning "same". */
+  view?: LifeTrackerView;
 }
 
 export type InitialLifeTrackerState = {
@@ -32,6 +35,24 @@ const DEFAULT_COLORS = [
   "#8b5cf6", // purple
   "#ec4899", // pink
 ];
+
+// Lowest "Player N" not already used, so removing Player 3 and adding a
+// player gives "Player 3" again rather than a duplicate "Player 5".
+function nextPlayerName(players: Player[]): string {
+  const taken = new Set(players.map((p) => p.name.trim().toLowerCase()));
+  let n = 1;
+  while (taken.has(`player ${n}`)) n += 1;
+  return `Player ${n}`;
+}
+
+// First default color no current player has; cycles if all are taken.
+function nextPlayerColor(players: Player[]): string {
+  const taken = new Set(players.map((p) => p.color));
+  return (
+    DEFAULT_COLORS.find((color) => !taken.has(color)) ??
+    DEFAULT_COLORS[players.length % DEFAULT_COLORS.length]
+  );
+}
 
 const lifeTrackerSliceReducer = {
   // Initialize game for a tab
@@ -92,13 +113,16 @@ const lifeTrackerSliceReducer = {
     const game = state.games[tabId];
 
     if (game && game.players.length < 6) {
-      const newPlayerId = String(Date.now());
+      // Unique even for two adds in the same millisecond.
+      const newPlayerId = `${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}`;
       const newPlayer: Player = {
         id: newPlayerId,
-        name: `Player ${game.players.length + 1}`,
+        name: nextPlayerName(game.players),
         life: game.defaultStartingLife,
         startingLife: game.defaultStartingLife,
-        color: DEFAULT_COLORS[game.players.length % DEFAULT_COLORS.length],
+        color: nextPlayerColor(game.players),
         commanderDamage: {},
       };
 
@@ -168,13 +192,14 @@ const lifeTrackerSliceReducer = {
       const player = game.players.find((p) => p.id === targetPlayerId);
       if (player) {
         const currentDamage = player.commanderDamage[sourcePlayerId] || 0;
-        player.commanderDamage[sourcePlayerId] = Math.max(
-          0,
-          currentDamage + amount
-        );
+        const nextDamage = Math.max(0, currentDamage + amount);
+        player.commanderDamage[sourcePlayerId] = nextDamage;
 
-        // Also adjust life total when commander damage changes
-        player.life = Math.max(0, player.life - amount);
+        // Life moves by the damage actually applied. Removing 10 damage when
+        // only 3 was dealt gives back 3 life, and once damage is 0, holding
+        // "-" no longer adds life.
+        const applied = nextDamage - currentDamage;
+        player.life = Math.max(0, player.life - applied);
       }
     }
   },
@@ -228,6 +253,15 @@ const lifeTrackerSliceReducer = {
     }
   },
 
+  // Card orientation: all facing one way, or the top half turned around
+  setView(
+    state: InitialLifeTrackerState,
+    action: PayloadAction<{ tabId: string; view: LifeTrackerView }>
+  ) {
+    const game = state.games[action.payload.tabId];
+    if (game) game.view = action.payload.view;
+  },
+
   // Clear game (when tab closes)
   clearGame(state: InitialLifeTrackerState, action: PayloadAction<string>) {
     const tabId = action.payload;
@@ -251,5 +285,6 @@ export const {
   resetAllPlayers,
   updatePlayer,
   updateDefaultStartingLife,
+  setView,
   clearGame,
 } = lifeTrackerSlice.actions;

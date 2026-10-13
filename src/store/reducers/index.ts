@@ -48,5 +48,6 @@ export {
   resetAllPlayers,
   updatePlayer,
   updateDefaultStartingLife,
+  setView as setLifeTrackerView,
   clearGame,
 } from "./lifeTrackerReducer";
