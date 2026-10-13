@@ -1,11 +1,11 @@
 {
-  "name": "Archenemy Deck Builder",
-  "short_name": "Archenemy",
-  "description": "Build and play Magic: The Gathering Archenemy scheme decks",
+  "name": "MagicSAK",
+  "short_name": "MagicSAK",
+  "description": "Game utilities and stats for Magic: The Gathering: life tracker, Archenemy, dungeons, coin flipper, and game records.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#228be6",
+  "background_color": "#26262e",
+  "theme_color": "#e91e8c",
   "orientation": "portrait",
   "icons": [
     {

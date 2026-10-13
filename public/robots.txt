@@ -1,9 +1,17 @@
-# Allow all search engines to crawl everything
+# Allow all search engines to crawl the public site
 User-agent: *
 Allow: /
 
-# Don't crawl API routes (they're not useful for search engines)
+# API routes aren't useful to search engines
 Disallow: /api/
 
-# Point to your sitemap (we'll create this in Step 4)
+# Signed-in-only pages: crawlers would just be redirected to sign-in
+Disallow: /admin
+Disallow: /home
+Disallow: /stats
+Disallow: /games
+Disallow: /friends
+Disallow: /profile
+Disallow: /archenemy/decks/builder
+
 Sitemap: https://magicsak.com/sitemap.xml

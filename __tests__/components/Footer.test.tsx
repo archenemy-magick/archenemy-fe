@@ -277,3 +277,13 @@ describe("Footer", () => {
     });
   });
 });
+
+describe("Footer feedback link", () => {
+  it("links to the feedback page", () => {
+    render(<Footer />);
+    expect(screen.getByText("Send feedback").closest("a")).toHaveAttribute(
+      "href",
+      "/feedback"
+    );
+  });
+});

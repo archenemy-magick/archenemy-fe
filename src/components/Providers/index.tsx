@@ -41,8 +41,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     startPersistence();
   }, []);
 
-  // Only load reCAPTCHA on signup and signin pages
-  const needsRecaptcha = pathname === "/signup" || pathname === "/signin";
+  // Only load reCAPTCHA where it's used.
+  const needsRecaptcha =
+    pathname === "/signup" ||
+    pathname === "/signin" ||
+    pathname === "/feedback";
 
   const content = (
     <StoreProvider store={store}>

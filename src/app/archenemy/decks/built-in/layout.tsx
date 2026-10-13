@@ -1,10 +1,6 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "~/config/metadata";
 
-export const metadata: Metadata = {
-  title: "Built-in Archenemy Decks",
-  description:
-    "Ready-to-play Archenemy scheme decks, including Archenemy: Nicol Bolas. No account needed.",
-};
+export const metadata = pageMetadata.builtInDecks;
 
 export default function BuiltInDecksLayout({
   children,
