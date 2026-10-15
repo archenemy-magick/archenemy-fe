@@ -5,6 +5,7 @@ export const GAME_UTILITY_TYPES: readonly GameTabType[] = [
   "dungeons",
   "life-tracker",
   "coin-flipper",
+  "dice-roller",
 ];
 
 /**

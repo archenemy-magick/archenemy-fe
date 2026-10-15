@@ -206,6 +206,8 @@ export function RecordGameForm({ game }: RecordGameFormProps = {}) {
     const draft = consumeRecordGameDraft();
     if (draft) {
       setFormat(draft.format);
+      if (draft.endedOnTurn) setEndedOnTurn(draft.endedOnTurn);
+      if (draft.winCondition) setWinCondition(draft.winCondition);
       const nextPlayers = draft.players.map((player, index) => ({
         ...emptyPlayer(player.isRecorder || index === 0),
         display_name: player.displayName,

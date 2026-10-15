@@ -47,11 +47,27 @@ import {
   updatePlayer as updatePlayerAction,
   updateDefaultStartingLife as updateDefaultStartingLifeAction,
   setLifeTrackerView,
+  adjustCounter,
+  setTableRole,
+  startTurnTracking,
+  stepTurnAction,
+  setTurnsPaused,
+  stopTurnTracking,
 } from "~/store/reducers";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveRecordGameDraft } from "~/lib/gameRecordDraft";
 import { useHoldToRepeat } from "~/lib/hooks/useHoldToRepeat";
+import { isEliminated } from "~/lib/lifeTracker/turns";
+import { TurnBar } from "./TurnBar";
+import { CountersModal } from "./CountersModal";
+import {
+  counterDisplayValue,
+  PLAYER_COUNTERS,
+  TABLE_ROLES,
+  type PlayerCounters,
+} from "~/lib/lifeTracker/counters";
+import { LETHAL_POISON } from "~/lib/lifeTracker/turns";
 import {
   lifeTrackerLayout,
   type LifeTrackerView,
@@ -64,6 +80,7 @@ interface Player {
   startingLife: number;
   color: string;
   commanderDamage: Record<string, number>;
+  counters?: PlayerCounters;
 }
 
 interface LifeTrackerProps {
@@ -95,6 +112,10 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
   const players = game?.players || [];
   const defaultStartingLife = game?.defaultStartingLife || 40;
   const view: LifeTrackerView = game?.view ?? "same";
+  const turn = game?.turn ?? null;
+  const roles = game?.roles ?? {};
+  const [countersPlayerId, setCountersPlayerId] = useState<string | null>(null);
+  const countersPlayer = players.find((p) => p.id === countersPlayerId) ?? null;
   const layout = lifeTrackerLayout(players.length, view);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -174,6 +195,12 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
 
     saveRecordGameDraft({
       format: defaultStartingLife >= 40 ? "commander" : "other",
+      endedOnTurn: turn?.round ?? null,
+      winCondition: players.some(
+        (p) => (p.counters?.poison ?? 0) >= LETHAL_POISON
+      )
+        ? "poison"
+        : null,
       players: players.map((player, index) => ({
         displayName: player.name,
         endingLife: player.life,
@@ -230,9 +257,8 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
     return Object.values(player.commanderDamage).some((damage) => damage >= 21);
   };
 
-  const isDead = (player: Player) => {
-    return player.life <= 0 || hasLethalCommanderDamage(player);
-  };
+  // Shared with turn order, so eliminated players are skipped consistently.
+  const isDead = (player: Player) => isEliminated(player);
 
   if (!game) {
     return null; // Loading or initializing
@@ -405,11 +431,29 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
           </Group>
         </Group>
 
+        <TurnBar
+          players={players}
+          turn={turn}
+          onStart={(firstPlayerId) =>
+            dispatch(
+              startTurnTracking({ tabId, firstPlayerId, now: Date.now() })
+            )
+          }
+          onStep={(direction) =>
+            dispatch(stepTurnAction({ tabId, direction, now: Date.now() }))
+          }
+          onSetPaused={(paused) =>
+            dispatch(setTurnsPaused({ tabId, paused, now: Date.now() }))
+          }
+          onStop={() => dispatch(stopTurnTracking(tabId))}
+        />
+
         {/* Player Cards */}
         <SimpleGrid cols={layout.cols} spacing="xs">
           {players.map((player, index) => {
             // In "outward" view the top rows face the far side of the table.
             const flipped = layout.isFlipped(index);
+            const isActiveTurn = turn?.activePlayerId === player.id;
             const totalCommanderDamage = Object.values(
               player.commanderDamage
             ).reduce((sum, dmg) => sum + dmg, 0);
@@ -430,6 +474,10 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                   opacity: isPlayerDead ? 0.6 : 1,
                   filter: isPlayerDead ? "grayscale(50%)" : "none",
                   transform: flipped ? "rotate(180deg)" : undefined,
+                  // Whose turn it is, visible from across the table.
+                  boxShadow: isActiveTurn
+                    ? `0 0 0 3px ${player.color}, 0 0 18px ${player.color}`
+                    : undefined,
                   transition: "all 0.3s ease",
                 }}
               >
@@ -482,7 +530,12 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                     >
                       {player.name}
                     </Text>
-                    <Group gap={2}>
+                    <Group gap={2} wrap="nowrap">
+                      {isActiveTurn && (
+                        <Badge size="xs" color="dark" variant="white">
+                          Turn
+                        </Badge>
+                      )}
                       {totalCommanderDamage > 0 && (
                         <Badge
                           size="xs"
@@ -511,6 +564,66 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                     </Group>
                   </Group>
                 </Box>
+
+                {/* Counters and table roles (only when there are any) */}
+                {(() => {
+                  const roleBadges = TABLE_ROLES.filter(
+                    (role) => roles[role.key] === player.id
+                  );
+                  const counterBadges = PLAYER_COUNTERS.filter(
+                    (counter) => (player.counters?.[counter.key] ?? 0) > 0
+                  );
+                  if (roleBadges.length + counterBadges.length === 0) {
+                    return null;
+                  }
+                  return (
+                    <Group
+                      gap={4}
+                      px={4}
+                      pt={4}
+                      wrap="wrap"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => setCountersPlayerId(player.id)}
+                    >
+                      {roleBadges.map((role) => {
+                        const Icon = role.icon;
+                        return (
+                          <Badge
+                            key={role.key}
+                            size="sm"
+                            color={role.color}
+                            variant="filled"
+                            leftSection={<Icon size={12} />}
+                          >
+                            {role.key === "monarch" ? "Monarch" : "Initiative"}
+                          </Badge>
+                        );
+                      })}
+                      {counterBadges.map((counter) => {
+                        const Icon = counter.icon;
+                        const value = player.counters?.[counter.key] ?? 0;
+                        return (
+                          <Badge
+                            key={counter.key}
+                            size="sm"
+                            color={
+                              counter.key === "poison" && value >= LETHAL_POISON
+                                ? "red"
+                                : counter.color
+                            }
+                            variant="light"
+                            leftSection={<Icon size={12} />}
+                            aria-label={`${
+                              counter.label
+                            }: ${counterDisplayValue(counter.key, value)}`}
+                          >
+                            {counterDisplayValue(counter.key, value)}
+                          </Badge>
+                        );
+                      })}
+                    </Group>
+                  );
+                })()}
 
                 {/* Life Display with Split Touch Areas */}
                 <Box style={{ position: "relative", height: "140px" }}>
@@ -611,8 +724,8 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                   </Box>
                 </Box>
 
-                {/* Commander Damage Button */}
-                <Box p={4}>
+                {/* Commander Damage and Counters Buttons */}
+                <Group p={4} gap={4} grow wrap="nowrap">
                   <Button
                     fullWidth
                     size="xs"
@@ -624,7 +737,8 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                       root: {
                         fontSize: "0.65rem",
                         height: "24px",
-                        padding: "0 8px",
+                        // Tight: two buttons share half a phone-width card.
+                        padding: "0 4px",
                       },
                       label: {
                         overflow: "hidden",
@@ -636,11 +750,56 @@ export function LifeTracker({ tabId = "default" }: LifeTrackerProps) {
                     Cmdr{" "}
                     {totalCommanderDamage > 0 && `(${totalCommanderDamage})`}
                   </Button>
-                </Box>
+                  <Button
+                    size="xs"
+                    variant="light"
+                    color="gray"
+                    // No icon: half a phone-width card can't fit icon + label.
+                    onClick={() => setCountersPlayerId(player.id)}
+                    styles={{
+                      root: {
+                        fontSize: "0.65rem",
+                        height: "24px",
+                        // Tight: two buttons share half a phone-width card.
+                        padding: "0 4px",
+                      },
+                    }}
+                  >
+                    Counters
+                  </Button>
+                </Group>
               </Card>
             );
           })}
         </SimpleGrid>
+
+        <CountersModal
+          player={countersPlayer}
+          roles={roles}
+          roleHolderName={(id) => players.find((p) => p.id === id)?.name}
+          onAdjust={(counter, amount) =>
+            countersPlayer &&
+            dispatch(
+              adjustCounter({
+                tabId,
+                playerId: countersPlayer.id,
+                counter,
+                amount,
+              })
+            )
+          }
+          onSetRole={(role, holds) =>
+            countersPlayer &&
+            dispatch(
+              setTableRole({
+                tabId,
+                role,
+                playerId: holds ? countersPlayer.id : null,
+              })
+            )
+          }
+          onClose={() => setCountersPlayerId(null)}
+        />
 
         {/* Settings Modal */}
         <Modal

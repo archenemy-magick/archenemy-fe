@@ -107,4 +107,8 @@ export type RecordGameDraftPlayer = {
 export type RecordGameDraft = {
   format: GameFormat;
   players: RecordGameDraftPlayer[];
+  /** Round the game ended on, from the life tracker's turn tracker. */
+  endedOnTurn?: number | null;
+  /** e.g. "poison" when someone hit 10 poison counters. */
+  winCondition?: WinCondition | null;
 };
