@@ -24,6 +24,7 @@ import {
   IconX,
   IconPlus,
   IconCoin,
+  IconDice5,
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import {
@@ -38,12 +39,23 @@ import ArchenemyGame from "~/components/ArchenemyGame";
 import DungeonContainer from "~/components/DungeonContainer";
 import LifeTracker from "~/components/LifeTracker";
 import CoinFlipper from "~/components/CoinFlipper";
+import DiceRoller from "~/components/DiceRoller";
+
+// Record<GameTabType, ...> makes TypeScript require an icon for every type.
+const TAB_ICONS: Record<GameTabType, typeof IconSword> = {
+  archenemy: IconSword,
+  dungeons: IconMapSearch,
+  "life-tracker": IconHeart,
+  "coin-flipper": IconCoin,
+  "dice-roller": IconDice5,
+};
 
 const TAB_LABELS: Record<GameTabType, string> = {
   archenemy: "Archenemy",
   dungeons: "Dungeons",
   "life-tracker": "Life Tracker",
   "coin-flipper": "Coin Flipper",
+  "dice-roller": "Dice Roller",
 };
 
 export default function GamePage() {
@@ -125,6 +137,15 @@ export default function GamePage() {
     );
   };
 
+  const handleAddDiceRoller = () => {
+    dispatch(
+      addTab({
+        type: "dice-roller",
+        label: "Dice Roller",
+      })
+    );
+  };
+
   const handleCloseTab = (tabId: string) => {
     dispatch(removeTab(tabId));
   };
@@ -142,6 +163,8 @@ export default function GamePage() {
         return <LifeTracker tabId={tab.id} />;
       case "coin-flipper":
         return <CoinFlipper tabId={tab.id} />;
+      case "dice-roller":
+        return <DiceRoller />;
       default:
         return null;
     }
@@ -207,6 +230,14 @@ export default function GamePage() {
               >
                 Coin Flipper
               </Menu.Item>
+              <Menu.Item
+                leftSection={<IconDice5 size={16} />}
+                onClick={handleAddDiceRoller}
+                disabled={checkIfTabExists("dice-roller")}
+                color="cyan"
+              >
+                Dice Roller
+              </Menu.Item>
             </Menu.Dropdown>
           </Menu>
         </Group>
@@ -236,15 +267,10 @@ export default function GamePage() {
                   <Tabs.Tab
                     key={tab.id}
                     value={tab.id}
-                    leftSection={
-                      tab.type === "archenemy" ? (
-                        <IconSword size={16} />
-                      ) : tab.type === "dungeons" ? (
-                        <IconMapSearch size={16} />
-                      ) : (
-                        <IconHeart size={16} />
-                      )
-                    }
+                    leftSection={(() => {
+                      const TabIcon = TAB_ICONS[tab.type] ?? IconHeart;
+                      return <TabIcon size={16} />;
+                    })()}
                     rightSection={
                       <Box
                         component="span"

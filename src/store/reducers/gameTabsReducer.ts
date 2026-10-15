@@ -5,7 +5,8 @@ export type GameTabType =
   | "archenemy"
   | "dungeons"
   | "life-tracker"
-  | "coin-flipper";
+  | "coin-flipper"
+  | "dice-roller";
 
 interface GameTabConfig {
   deckId?: string;

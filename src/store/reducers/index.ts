@@ -49,5 +49,11 @@ export {
   updatePlayer,
   updateDefaultStartingLife,
   setView as setLifeTrackerView,
+  adjustCounter,
+  setTableRole,
+  startTurnTracking,
+  stepTurnAction,
+  setTurnsPaused,
+  stopTurnTracking,
   clearGame,
 } from "./lifeTrackerReducer";

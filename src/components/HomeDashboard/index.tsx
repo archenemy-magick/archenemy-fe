@@ -18,6 +18,7 @@ import {
   IconChartBar,
   IconClipboardList,
   IconCoin,
+  IconDice5,
   IconHeart,
   IconHistory,
   IconMapSearch,
@@ -83,6 +84,13 @@ const UTILITIES: {
     description: "Heads or tails, fast",
     color: "yellow",
     href: gameUtilityHref("coin-flipper"),
+  },
+  {
+    icon: IconDice5,
+    title: "Dice Roller",
+    description: "d4 to d20, plus planar",
+    color: "cyan",
+    href: gameUtilityHref("dice-roller"),
   },
 ];
 
@@ -342,7 +350,7 @@ export function HomeDashboard() {
       {/* Utilities */}
       <Stack gap="sm">
         <SectionTitle>Game Utilities</SectionTitle>
-        <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="md">
+        <SimpleGrid cols={{ base: 1, xs: 2, md: 3, lg: 5 }} spacing="md">
           {UTILITIES.map((utility) => (
             <LinkTile key={utility.title} {...utility} />
           ))}

@@ -18,7 +18,7 @@ export const pageMetadata = {
   gameUtilities: {
     title: "Game Utilities",
     description:
-      "Free Magic: The Gathering game utilities: life tracker, Archenemy, dungeons, and a coin flipper. Run several at once in tabs. No account needed.",
+      "Free Magic: The Gathering game utilities: life tracker, Archenemy, dungeons, coin flipper, and dice roller. Run several at once in tabs. No account needed.",
   } as Metadata,
 
   archenemy: {

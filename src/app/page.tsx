@@ -29,6 +29,7 @@ import {
   IconFlame,
   IconSparkles,
   IconCoin,
+  IconDice5,
   IconClipboardList,
   IconChartBar,
   IconPlayerPlay,
@@ -92,6 +93,7 @@ const HomePage = () => {
       "Archenemy game interface and deck builder",
       "Dungeon Tracker",
       "Coin Flipper",
+      "Dice Roller",
     ],
   };
 
@@ -100,7 +102,7 @@ const HomePage = () => {
       icon: IconPlayerPlay,
       title: "Play",
       description:
-        "Open the Life Tracker, Archenemy, Dungeons, or the Coin Flipper. Run several at once in tabs without losing your place.",
+        "Open the Life Tracker, Archenemy, Dungeons, the Coin Flipper, or the Dice Roller. Run several at once in tabs without losing your place.",
     },
     {
       icon: IconClipboardList,
@@ -145,6 +147,13 @@ const HomePage = () => {
       description: "Flip one coin or a handful for every Krark's Thumb moment",
       color: "yellow",
       href: gameUtilityHref("coin-flipper"),
+    },
+    {
+      icon: IconDice5,
+      title: "Dice Roller",
+      description: "Any die from d4 to d20, plus the planar die",
+      color: "cyan",
+      href: gameUtilityHref("dice-roller"),
     },
   ];
 
@@ -354,7 +363,7 @@ const HomePage = () => {
                 </Text>
               </Box>
 
-              <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="lg">
+              <SimpleGrid cols={{ base: 1, xs: 2, md: 3, lg: 5 }} spacing="lg">
                 {gameUtilities.map((utility) => {
                   const Icon = utility.icon;
                   return (

@@ -1,6 +1,19 @@
 // store/reducers/lifeTrackerReducer.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { LifeTrackerView } from "~/lib/lifeTrackerLayout";
+import type {
+  CounterKey,
+  PlayerCounters,
+  TableRole,
+} from "~/lib/lifeTracker/counters";
+import {
+  afterPlayerRemoved,
+  pauseClock,
+  resumeClock,
+  startTurns,
+  stepTurn,
+  type TurnState,
+} from "~/lib/lifeTracker/turns";
 
 interface Player {
   id: string;
@@ -9,6 +22,8 @@ interface Player {
   startingLife: number;
   color: string;
   commanderDamage: Record<string, number>;
+  /** Poison, energy, etc. Absent in older saved state. */
+  counters?: PlayerCounters;
 }
 
 interface GameState {
@@ -16,6 +31,10 @@ interface GameState {
   defaultStartingLife: number;
   /** Card orientation; absent in older saved state, meaning "same". */
   view?: LifeTrackerView;
+  /** Turn tracking and game timer; absent until started. */
+  turn?: TurnState | null;
+  /** Player holding each table-wide marker (monarch, initiative). */
+  roles?: Partial<Record<TableRole, string | null>>;
 }
 
 export type InitialLifeTrackerState = {
@@ -93,10 +112,13 @@ const lifeTrackerSliceReducer = {
     const game = state.games[tabId];
 
     if (game) {
+      game.turn = null;
+      game.roles = {};
       // Keep the same number of players, names, colors, and starting life
       game.players = game.players.map((p) => ({
         ...p,
         life: p.startingLife,
+        counters: {},
         commanderDamage: game.players.reduce((acc, player) => {
           if (player.id !== p.id) {
             acc[player.id] = 0;
@@ -150,6 +172,18 @@ const lifeTrackerSliceReducer = {
     const game = state.games[tabId];
 
     if (game && game.players.length > 2) {
+      // A removed player can't keep the crown or the initiative.
+      for (const role of Object.keys(game.roles ?? {}) as TableRole[]) {
+        if (game.roles?.[role] === playerId) game.roles[role] = null;
+      }
+      if (game.turn) {
+        game.turn = afterPlayerRemoved(
+          game.turn,
+          game.players,
+          playerId,
+          Date.now()
+        );
+      }
       game.players = game.players
         .filter((p) => p.id !== playerId)
         .map((p) => {
@@ -262,6 +296,85 @@ const lifeTrackerSliceReducer = {
     if (game) game.view = action.payload.view;
   },
 
+  // Per-player counters (poison, energy, ...); never below 0.
+  adjustCounter(
+    state: InitialLifeTrackerState,
+    action: PayloadAction<{
+      tabId: string;
+      playerId: string;
+      counter: CounterKey;
+      amount: number;
+    }>
+  ) {
+    const { tabId, playerId, counter, amount } = action.payload;
+    const player = state.games[tabId]?.players.find((p) => p.id === playerId);
+    if (!player) return;
+    const counters = (player.counters ??= {});
+    counters[counter] = Math.max(0, (counters[counter] ?? 0) + amount);
+  },
+
+  // Give a table-wide marker to a player (taking it from whoever had it),
+  // or clear it with playerId null.
+  setTableRole(
+    state: InitialLifeTrackerState,
+    action: PayloadAction<{
+      tabId: string;
+      role: TableRole;
+      playerId: string | null;
+    }>
+  ) {
+    const { tabId, role, playerId } = action.payload;
+    const game = state.games[tabId];
+    if (!game) return;
+    if (playerId !== null && !game.players.some((p) => p.id === playerId)) {
+      return;
+    }
+    (game.roles ??= {})[role] = playerId;
+  },
+
+  // Turn tracking. `now` is passed in so reducers stay pure (and testable).
+  startTurnTracking(
+    state: InitialLifeTrackerState,
+    action: PayloadAction<{ tabId: string; firstPlayerId: string; now: number }>
+  ) {
+    const { tabId, firstPlayerId, now } = action.payload;
+    const game = state.games[tabId];
+    if (game && game.players.some((p) => p.id === firstPlayerId)) {
+      game.turn = startTurns(firstPlayerId, now);
+    }
+  },
+
+  stepTurn(
+    state: InitialLifeTrackerState,
+    action: PayloadAction<{ tabId: string; direction: 1 | -1; now: number }>
+  ) {
+    const { tabId, direction, now } = action.payload;
+    const game = state.games[tabId];
+    if (game?.turn) {
+      game.turn = stepTurn(game.turn, game.players, direction, now);
+    }
+  },
+
+  setTurnsPaused(
+    state: InitialLifeTrackerState,
+    action: PayloadAction<{ tabId: string; paused: boolean; now: number }>
+  ) {
+    const { tabId, paused, now } = action.payload;
+    const turn = state.games[tabId]?.turn;
+    if (!turn) return;
+    const apply = paused ? pauseClock : resumeClock;
+    turn.gameClock = apply(turn.gameClock, now);
+    turn.turnClock = apply(turn.turnClock, now);
+  },
+
+  stopTurnTracking(
+    state: InitialLifeTrackerState,
+    action: PayloadAction<string>
+  ) {
+    const game = state.games[action.payload];
+    if (game) game.turn = null;
+  },
+
   // Clear game (when tab closes)
   clearGame(state: InitialLifeTrackerState, action: PayloadAction<string>) {
     const tabId = action.payload;
@@ -286,5 +399,11 @@ export const {
   updatePlayer,
   updateDefaultStartingLife,
   setView,
+  adjustCounter,
+  setTableRole,
+  startTurnTracking,
+  stepTurn: stepTurnAction,
+  setTurnsPaused,
+  stopTurnTracking,
   clearGame,
 } = lifeTrackerSlice.actions;

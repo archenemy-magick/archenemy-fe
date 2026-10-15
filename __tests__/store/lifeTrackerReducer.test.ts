@@ -1,5 +1,10 @@
 import {
   addPlayer,
+  adjustCounter,
+  newGame,
+  setTableRole,
+  startTurnTracking,
+  stepTurnAction,
   initializeGame,
   lifeTrackerSlice,
   removePlayer,
@@ -100,5 +105,94 @@ describe("lifeTracker view", () => {
     expect(state.games[TAB].view).toBeUndefined();
     state = reduce(state, setView({ tabId: TAB, view: "outward" }));
     expect(state.games[TAB].view).toBe("outward");
+  });
+});
+
+describe("lifeTracker counters and table roles", () => {
+  const player = (state: InitialLifeTrackerState, i: number) =>
+    state.games[TAB].players[i];
+
+  it("adjusts counters and never goes below zero", () => {
+    let state = gameWith(2);
+    const id = player(state, 0).id;
+    state = reduce(
+      state,
+      adjustCounter({ tabId: TAB, playerId: id, counter: "poison", amount: 3 })
+    );
+    state = reduce(
+      state,
+      adjustCounter({ tabId: TAB, playerId: id, counter: "poison", amount: -5 })
+    );
+    state = reduce(
+      state,
+      adjustCounter({ tabId: TAB, playerId: id, counter: "energy", amount: 2 })
+    );
+    expect(player(state, 0).counters).toEqual({ poison: 0, energy: 2 });
+  });
+
+  it("moves the monarch between players and can clear it", () => {
+    let state = gameWith(3);
+    const [a, b] = [player(state, 0).id, player(state, 1).id];
+    state = reduce(
+      state,
+      setTableRole({ tabId: TAB, role: "monarch", playerId: a })
+    );
+    state = reduce(
+      state,
+      setTableRole({ tabId: TAB, role: "monarch", playerId: b })
+    );
+    expect(state.games[TAB].roles?.monarch).toBe(b);
+    state = reduce(
+      state,
+      setTableRole({ tabId: TAB, role: "monarch", playerId: null })
+    );
+    expect(state.games[TAB].roles?.monarch).toBeNull();
+  });
+
+  it("clears a role when its holder is removed", () => {
+    let state = gameWith(3);
+    const c = player(state, 2).id;
+    state = reduce(
+      state,
+      setTableRole({ tabId: TAB, role: "initiative", playerId: c })
+    );
+    state = reduce(state, removePlayer({ tabId: TAB, playerId: c }));
+    expect(state.games[TAB].roles?.initiative).toBeNull();
+  });
+
+  it("resets counters, roles, and turns on New Game", () => {
+    let state = gameWith(2);
+    const a = player(state, 0).id;
+    state = reduce(
+      state,
+      adjustCounter({ tabId: TAB, playerId: a, counter: "rad", amount: 4 })
+    );
+    state = reduce(
+      state,
+      setTableRole({ tabId: TAB, role: "monarch", playerId: a })
+    );
+    state = reduce(
+      state,
+      startTurnTracking({ tabId: TAB, firstPlayerId: a, now: 0 })
+    );
+    state = reduce(state, newGame(TAB));
+    expect(player(state, 0).counters).toEqual({});
+    expect(state.games[TAB].roles).toEqual({});
+    expect(state.games[TAB].turn).toBeNull();
+  });
+
+  it("skips a player with 10 poison when passing the turn", () => {
+    let state = gameWith(3);
+    const [a, b, c] = [0, 1, 2].map((i) => player(state, i).id);
+    state = reduce(
+      state,
+      adjustCounter({ tabId: TAB, playerId: b, counter: "poison", amount: 10 })
+    );
+    state = reduce(
+      state,
+      startTurnTracking({ tabId: TAB, firstPlayerId: a, now: 0 })
+    );
+    state = reduce(state, stepTurnAction({ tabId: TAB, direction: 1, now: 1 }));
+    expect(state.games[TAB].turn?.activePlayerId).toBe(c);
   });
 });
